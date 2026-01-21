@@ -1,0 +1,495 @@
+"use client";
+import { useState, useEffect } from "react";
+
+import { mockDisputes } from "@/services/mockData";
+import {
+  Search,
+  Filter,
+  CheckCircle,
+  AlertCircle,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Trash2,
+  X,
+  Save,
+} from "lucide-react";
+import { useNotificationStore } from "@/store";
+
+type FilterType = "ALL" | "OPEN" | "RESOLVED";
+const filters: FilterType[] = ["ALL", "OPEN", "RESOLVED"];
+const AdminDisputes = () => {
+  const notify = useNotificationStore((state) => state.notify);
+  const [disputes, setDisputes] = useState<Dispute[]>(mockDisputes);
+  const [filter, setFilter] = useState<FilterType>("OPEN");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDispute, setSelectedDispute] = useState<string | null>(null);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // Create Modal State
+  const [isCreating, setIsCreating] = useState(false);
+  const [newDispute, setNewDispute] = useState<Partial<Dispute>>({
+    user: "",
+    amount: 0,
+    currency: "UGX",
+    reason: "",
+    status: "OPEN",
+    transactionId: "",
+  });
+
+  const handleResolve = (id: string, decision: "RESOLVED" | "REJECTED") => {
+    setDisputes(
+      disputes.map((d) => (d.id === id ? { ...d, status: decision } : d)),
+    );
+    setSelectedDispute(null);
+    notify(
+      decision === "RESOLVED" ? "success" : "info",
+      decision === "RESOLVED"
+        ? "Dispute resolved and refund processed."
+        : "Dispute rejected.",
+    );
+  };
+
+  const handleDelete = (id: string) => {
+    if (
+      window.confirm("Are you sure you want to remove this dispute record?")
+    ) {
+      setDisputes(disputes.filter((d) => d.id !== id));
+      setSelectedDispute(null);
+      notify("info", "Dispute record deleted.");
+    }
+  };
+
+  const handleCreateDispute = () => {
+    if (!newDispute.user || !newDispute.reason || !newDispute.amount) {
+      notify("error", "Please fill in all required fields.");
+      return;
+    }
+
+    const createdDispute: Dispute = {
+      id: `dp_new_${Date.now()}`,
+      transactionId:
+        newDispute.transactionId ||
+        `tx_manual_${Math.floor(Math.random() * 1000)}`,
+      user: newDispute.user,
+      amount: newDispute.amount,
+      currency: newDispute.currency as "UGX" | "USD",
+      reason: newDispute.reason,
+      status: "OPEN",
+      date: new Date().toISOString().split("T")[0],
+      evidence: "Manual Entry",
+    };
+
+    setDisputes([createdDispute, ...disputes]);
+    setIsCreating(false);
+    setNewDispute({
+      user: "",
+      amount: 0,
+      currency: "UGX",
+      reason: "",
+      status: "OPEN",
+      transactionId: "",
+    });
+    notify("success", "New dispute ticket created successfully.");
+  };
+
+  const filteredDisputes = disputes.filter((d) => {
+    const matchesFilter = filter === "ALL" || d.status === filter;
+    const matchesSearch =
+      d.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      d.transactionId.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredDisputes.length / itemsPerPage);
+  const paginatedDisputes = filteredDisputes.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
+
+  // Reset page on filter change
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentPage(1);
+  }, [filter, searchTerm]);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+          Dispute Resolution
+        </h2>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setIsCreating(true)}
+            className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-indigo-700 transition-colors flex items-center gap-1"
+          >
+            <Plus size={14} /> New Ticket
+          </button>
+          <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-1 flex">
+            {filters.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                  filter === f
+                    ? "bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                }`}
+              >
+                {f.charAt(0) + f.slice(1).toLowerCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm flex items-center gap-4 transition-colors">
+        <Search className="text-gray-400 dark:text-gray-500" size={20} />
+        <input
+          type="text"
+          placeholder="Search by User or Transaction ID..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1 bg-transparent text-gray-900 dark:text-white focus:outline-none text-sm placeholder-gray-500 dark:placeholder-gray-400"
+        />
+        <Filter
+          className="text-gray-400 dark:text-gray-500 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300"
+          size={20}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Dispute List with Pagination */}
+        <div className="lg:col-span-2 flex flex-col h-[600px]">
+          <div className="flex-1 space-y-4 overflow-y-auto pr-2">
+            {paginatedDisputes.length === 0 ? (
+              <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
+                <div className="mx-auto w-12 h-12 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 mb-3">
+                  <CheckCircle size={24} />
+                </div>
+                <p className="text-gray-500 dark:text-gray-400 font-medium">
+                  No disputes found matching your criteria.
+                </p>
+              </div>
+            ) : (
+              paginatedDisputes.map((dispute) => (
+                <div
+                  key={dispute.id}
+                  onClick={() => setSelectedDispute(dispute.id)}
+                  className={`bg-white dark:bg-slate-800 rounded-xl border p-5 cursor-pointer transition-all hover:shadow-md ${
+                    selectedDispute === dispute.id
+                      ? "border-indigo-500 ring-1 ring-indigo-500 dark:ring-indigo-400 dark:border-indigo-400"
+                      : "border-gray-200 dark:border-slate-700"
+                  }`}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          dispute.status === "OPEN"
+                            ? "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300"
+                            : dispute.status === "RESOLVED"
+                              ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                              : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                        }`}
+                      >
+                        {dispute.status}
+                      </span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500">
+                        #{dispute.id}
+                      </span>
+                    </div>
+                    <span className="text-sm font-bold text-gray-900 dark:text-white">
+                      {dispute.currency} {dispute.amount.toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-200">
+                        {dispute.user}
+                      </h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {dispute.reason}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-gray-400 dark:text-gray-500">
+                        {dispute.date}
+                      </p>
+                      <p className="text-xs font-mono text-indigo-600 dark:text-indigo-400 mt-1">
+                        {dispute.transactionId}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Pagination Controls */}
+          {filteredDisputes.length > 0 && (
+            <div className="pt-4 flex items-center justify-between border-t border-gray-200 dark:border-slate-700 mt-2">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                Page {currentPage} of {totalPages}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-600 dark:text-gray-300"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="p-2 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-600 dark:text-gray-300"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Detail Panel */}
+        <div className="lg:col-span-1">
+          {selectedDispute ? (
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-lg p-6 sticky top-6 animate-fade-in-up transition-colors">
+              <div className="pb-4 border-b border-gray-100 dark:border-slate-700 mb-4 flex justify-between items-start">
+                <div>
+                  <h3 className="font-bold text-gray-900 dark:text-white">
+                    Dispute Details
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Review details before taking action
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleDelete(selectedDispute)}
+                  className="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+
+              {(() => {
+                const d = disputes.find((x) => x.id === selectedDispute)!;
+                return (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">
+                        Reason
+                      </label>
+                      <p className="text-sm text-gray-800 dark:text-gray-200 bg-gray-50 dark:bg-slate-700 p-3 rounded-lg mt-1 border border-gray-100 dark:border-slate-600">
+                        {d.reason}
+                      </p>
+                    </div>
+
+                    {d.evidence && (
+                      <div>
+                        <label className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">
+                          Evidence
+                        </label>
+                        <div className="flex items-center gap-2 mt-1 p-2 border border-gray-200 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 cursor-pointer transition-colors">
+                          <FileText
+                            size={16}
+                            className="text-indigo-600 dark:text-indigo-400"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300 underline decoration-indigo-200 dark:decoration-indigo-700">
+                            {d.evidence}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="text-xs text-gray-500 dark:text-gray-400 uppercase font-semibold">
+                        Transaction Info
+                      </label>
+                      <div className="grid grid-cols-2 gap-2 mt-1">
+                        <div className="bg-gray-50 dark:bg-slate-700 p-2 rounded">
+                          <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                            TX ID
+                          </p>
+                          <p className="text-xs font-mono font-medium text-gray-900 dark:text-gray-200">
+                            {d.transactionId}
+                          </p>
+                        </div>
+                        <div className="bg-gray-50 dark:bg-slate-700 p-2 rounded">
+                          <p className="text-[10px] text-gray-400 dark:text-gray-500">
+                            Date
+                          </p>
+                          <p className="text-xs font-medium text-gray-900 dark:text-gray-200">
+                            {d.date}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {d.status === "OPEN" && (
+                      <div className="pt-4 flex gap-3">
+                        <button
+                          onClick={() => handleResolve(d.id, "REJECTED")}
+                          className="flex-1 py-2 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-medium transition-colors"
+                        >
+                          Reject
+                        </button>
+                        <button
+                          onClick={() => handleResolve(d.id, "RESOLVED")}
+                          className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
+                        >
+                          Refund
+                        </button>
+                      </div>
+                    )}
+
+                    {d.status !== "OPEN" && (
+                      <div
+                        className={`p-3 rounded-lg text-center text-sm font-medium ${
+                          d.status === "RESOLVED"
+                            ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
+                            : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
+                        }`}
+                      >
+                        This dispute has been {d.status.toLowerCase()}.
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          ) : (
+            <div className="bg-gray-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-gray-200 dark:border-slate-700 p-8 text-center text-gray-400 dark:text-gray-500 h-64 flex flex-col items-center justify-center transition-colors">
+              <AlertCircle size={32} className="mb-2 opacity-50" />
+              <p>Select a dispute to view details</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Manual Creation Modal */}
+      {isCreating && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md p-6 animate-fade-in-up transition-colors">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                Open New Ticket
+              </h3>
+              <button
+                onClick={() => setIsCreating(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  User Name
+                </label>
+                <input
+                  type="text"
+                  value={newDispute.user}
+                  onChange={(e) =>
+                    setNewDispute({ ...newDispute, user: e.target.value })
+                  }
+                  className="w-full bg-white dark:bg-slate-700 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  placeholder="e.g. Alex Mukasa"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Amount
+                  </label>
+                  <input
+                    type="number"
+                    value={newDispute.amount}
+                    onChange={(e) =>
+                      setNewDispute({
+                        ...newDispute,
+                        amount: Number(e.target.value),
+                      })
+                    }
+                    className="w-full bg-white dark:bg-slate-700 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Currency
+                  </label>
+                  <select
+                    value={newDispute.currency}
+                    onChange={(e) =>
+                      setNewDispute({
+                        ...newDispute,
+                        currency: e.target.value as "UGX" | "USD",
+                      })
+                    }
+                    className="w-full bg-white dark:bg-slate-700 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  >
+                    <option value="UGX">UGX</option>
+                    <option value="USD">USD</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Reason
+                </label>
+                <textarea
+                  value={newDispute.reason}
+                  onChange={(e) =>
+                    setNewDispute({ ...newDispute, reason: e.target.value })
+                  }
+                  className="w-full bg-white dark:bg-slate-700 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  rows={3}
+                  placeholder="Describe the issue..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Transaction ID (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={newDispute.transactionId}
+                  onChange={(e) =>
+                    setNewDispute({
+                      ...newDispute,
+                      transactionId: e.target.value,
+                    })
+                  }
+                  className="w-full bg-white dark:bg-slate-700 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  placeholder="e.g. tx_001"
+                />
+              </div>
+              <div className="pt-2">
+                <button
+                  onClick={handleCreateDispute}
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-2"
+                >
+                  <Save size={16} /> Create Ticket
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AdminDisputes;

@@ -1,0 +1,270 @@
+"use client";
+import React from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  AreaChart,
+  Area,
+  Legend,
+} from "recharts";
+import { userSpendingData, categoryData } from "@/services/mockData";
+import {
+  DollarSign,
+  Wallet,
+  PieChart as PieIcon,
+  Calendar,
+} from "lucide-react";
+
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: {
+  active: boolean;
+  payload: {
+    name: string;
+    value: number;
+    color: string;
+  }[];
+  label: string;
+}) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white dark:bg-slate-800 p-4 border border-gray-100 dark:border-slate-700 shadow-xl rounded-lg">
+        <p className="font-bold text-gray-900 dark:text-white mb-2">{label}</p>
+        {payload.map((p, index: number) => (
+          <div key={index} className="flex items-center gap-2 text-sm mb-1">
+            <div
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: p.color }}
+            />
+            <span className="text-gray-500 dark:text-gray-400 capitalize">
+              {p.name}:
+            </span>
+            <span className="font-mono font-medium text-gray-900 dark:text-gray-200">
+              UGX {p.value.toLocaleString()}
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+const UserAnalytics: React.FC = () => {
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+          Financial Insights
+        </h2>
+        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <Calendar size={16} />
+          <span>Last 30 Days</span>
+        </div>
+      </div>
+
+      {/* Main Income vs Expense Chart */}
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm transition-colors">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400">
+              <Wallet size={20} />
+            </div>
+            <div>
+              <h3 className="font-bold text-gray-900 dark:text-white">
+                Cash Flow Analysis
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Income vs Spending this week
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <div className="text-right">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Total Income
+              </p>
+              <p className="font-bold text-green-600 dark:text-green-400">
+                +UGX 700k
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Total Spent
+              </p>
+              <p className="font-bold text-red-500 dark:text-red-400">
+                -UGX 399k
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={userSpendingData}>
+              <defs>
+                <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10B981" stopOpacity={0.1} />
+                  <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#EF4444" stopOpacity={0.1} />
+                  <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="#374151"
+                strokeOpacity={0.2}
+              />
+              <XAxis
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                dy={10}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                tickFormatter={(value) => `${value / 1000}k`}
+              />
+
+              <Tooltip
+                content={<CustomTooltip active={true} payload={[]} label="" />}
+              />
+              <Legend verticalAlign="top" height={36} iconType="circle" />
+
+              <Area
+                type="monotone"
+                dataKey="income"
+                name="Income"
+                stroke="#10B981"
+                strokeWidth={3}
+                fillOpacity={1}
+                fill="url(#colorIncome)"
+              />
+              <Area
+                type="monotone"
+                dataKey="spend"
+                name="Spending"
+                stroke="#EF4444"
+                strokeWidth={3}
+                fillOpacity={1}
+                fill="url(#colorSpend)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Category Spending (Donut) */}
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-purple-50 dark:bg-purple-900/30 rounded-lg text-purple-600 dark:text-purple-400">
+              <PieIcon size={20} />
+            </div>
+            <h3 className="font-bold text-gray-900 dark:text-white">
+              Where money goes
+            </h3>
+          </div>
+
+          <div className="h-64 relative">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={categoryData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {categoryData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry.color}
+                      strokeWidth={0}
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+              <span className="block text-2xl font-bold text-gray-900 dark:text-white">
+                5
+              </span>
+              <span className="block text-xs text-gray-500 dark:text-gray-400">
+                Categories
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Daily Transaction Volume */}
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm transition-colors">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-orange-50 dark:bg-orange-900/30 rounded-lg text-orange-600 dark:text-orange-400">
+              <DollarSign size={20} />
+            </div>
+            <h3 className="font-bold text-gray-900 dark:text-white">
+              Activity Volume
+            </h3>
+          </div>
+
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={userSpendingData}>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="#374151"
+                  strokeOpacity={0.2}
+                />
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#9CA3AF", fontSize: 12 }}
+                />
+                <Tooltip
+                  cursor={{ fill: "#374151", opacity: 0.1 }}
+                  contentStyle={{
+                    backgroundColor: "var(--tw-bg-opacity, 1)",
+                    borderRadius: "8px",
+                    border: "none",
+                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                  }}
+                />
+                <Bar
+                  dataKey="spend"
+                  fill="#4F46E5"
+                  radius={[4, 4, 0, 0]}
+                  barSize={24}
+                  name="Transaction Vol"
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default UserAnalytics;
