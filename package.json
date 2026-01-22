@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "generate": "bunx prisma generate",
-    "prisma:migrate": "bunx prisma migrate dev",
-    "prisma:studio": "bunx prisma studio"
+    "migrate": "bunx prisma migrate dev",
+    "studio": "bunx prisma studio"
   },
   "dependencies": {
     "@google/genai": "^1.31.0",
