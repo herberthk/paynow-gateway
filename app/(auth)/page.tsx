@@ -4,7 +4,7 @@ import { Eye, EyeOff, Lock } from "lucide-react";
 import { useNotificationStore } from "@/store";
 import { adminUser, currentUser } from "@/services/mockData";
 import { useRouter } from "nextjs-toploader/app";
-import { createSession } from "@/lib";
+import { createSession, getUserData } from "@/lib";
 import Link from "next/link";
 
 const LoginPage = () => {
@@ -16,19 +16,21 @@ const LoginPage = () => {
   const notify = useNotificationStore((state) => state.notify);
 
   // Form State
-  const [email, setEmail] = useState("demo@paynow.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("password");
   // const [name, setName] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    const user = await getUserData(email);
+    console.log("user", user);
+    // setIsLoading(true);
     // Simulate network delay
-    setTimeout(() => {
-      setIsLoading(false);
-      const userName = selectedRole === "ADMIN" ? "Admin User" : "Alex Mukasa";
-      handleLogin(selectedRole, userName);
-    }, 1500);
+    // setTimeout(() => {
+    //   setIsLoading(false);
+    //   const userName = selectedRole === "ADMIN" ? "Admin User" : "Alex Mukasa";
+    //   handleLogin(selectedRole, userName);
+    // }, 1500);
   };
   // console.log("selectedRole", selectedRole);
   const handleLogin = async (role: UserRole, name: string) => {
@@ -46,7 +48,7 @@ const LoginPage = () => {
     // setActiveTab(role === UserRole.ADMIN ? "admin-overview" : "dashboard");
     notify("success", `Welcome back, ${name}!`);
     const path = role === "ADMIN" ? "/dashboard/admin" : "/dashboard/user";
-    console.log("path", path);
+    // console.log("path", path);
     router.push(path);
   };
 
