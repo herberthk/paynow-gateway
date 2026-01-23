@@ -22,8 +22,13 @@ const LoginPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const user = await getUserData(email);
-    console.log("user", user);
+    try {
+      const user = await getUserData(email);
+      console.log("user", user);
+    } catch (error) {
+      console.log("error", error);
+    }
+
     // setIsLoading(true);
     // Simulate network delay
     // setTimeout(() => {
