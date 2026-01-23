@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 
-export const getUserData = async (email: string) => {
+export const login = async (email: string, password: string) => {
   try {
     const user = await prisma.user.findUnique({
       where: {
@@ -23,9 +23,9 @@ export const getUserData = async (email: string) => {
   }
 };
 
-// export const createUser = async (email: string, password: string) => {
-//   const user = await prisma.users.create({
-//     data: { email, password },
-//   });
-//   return user;
-// };
+export const sendOtp = async (email: string) => {
+  const user = await prisma.user.create({
+    data: { email },
+  });
+  return user;
+};

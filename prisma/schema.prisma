@@ -1942,6 +1942,7 @@ model User {
   disputes         Dispute[]
   auditLogs        AuditLog[]
   systemNotifications SystemNotification[]
+  paymentOtp             Otp?
   @@index([privilege], map: "idx_user_preveledge")
   @@index([id, name, profile], map: "idx_users_covering")
   @@index([id], map: "idx_users_id")
@@ -1955,10 +1956,12 @@ model User {
 
 model Otp{
   id String @id @default(uuid())
-  otp String @unique
-  expired Boolean @default(false)
+  userId Int @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  otpHash String
+  expiresAt  DateTime
   createdAt DateTime @default(now())
-  expiresAt DateTime
+  attempts Int @default(0)
   @@map("Payment_otp")
 }
 
