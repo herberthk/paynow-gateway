@@ -47,3 +47,9 @@ export const verifyOTPWithSalt = (
     Buffer.from(storedHashedOTP),
   );
 };
+
+// console.log("Otp", generateOTP());
+// const otp = "916050";
+// console.log("Otp", hashOTP(otp));
+// const hash = "652e60d3e3f4a795660f5abe8968439fe5f30fa88a2ac61ead69178d405be32d";
+// console.log("Otp", verifyOTP(otp, hashOTP(otp)));

@@ -4,7 +4,7 @@ import { Eye, EyeOff, Lock } from "lucide-react";
 import { useNotificationStore } from "@/store";
 import { adminUser, currentUser } from "@/services/mockData";
 import { useRouter } from "nextjs-toploader/app";
-import { createSession, getUserData } from "@/lib";
+import { createSession, login } from "@/lib";
 import Link from "next/link";
 
 const LoginPage = () => {
@@ -16,17 +16,22 @@ const LoginPage = () => {
   const notify = useNotificationStore((state) => state.notify);
 
   // Form State
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("password");
+  const [email, setEmail] = useState("herbertbruce8@gmail.com");
+  const [password, setPassword] = useState("1245689");
   // const [name, setName] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
-      const user = await getUserData(email);
-      console.log("user", user);
+      await login(email, password);
+      // console.log("user", user);
+      setIsLoading(false);
     } catch (error) {
       console.log("error", error);
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
     }
 
     // setIsLoading(true);
