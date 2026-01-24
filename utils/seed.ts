@@ -1,12 +1,25 @@
 import prisma from "@/lib/prisma";
+import bcrypt from "bcrypt";
+
+const hashPassword = async (password: string) =>
+  await bcrypt.hash(password, 10);
 
 // Seed data for Users
 export const seedUsers = [
   {
     name: "Admin User",
     email: "admin@paynow.com",
-    tel: "+256700000001",
-    password: "1245689", // Remember to hash passwords properly
+    tel: "+256700700001",
+    password: await hashPassword("1245689"), // Remember to hash passwords properly
+    privilege: "admin" as const,
+    status: true,
+    ispaid: true,
+  },
+  {
+    name: "Kavuma Herbert",
+    email: "herbertbruce8@gmail.com",
+    tel: "+256700800001",
+    password: await hashPassword("1245689"), // Remember to hash passwords properly
     privilege: "admin" as const,
     status: true,
     ispaid: true,
@@ -15,7 +28,7 @@ export const seedUsers = [
     name: "John Doe",
     email: "john.doe@example.com",
     tel: "+256700000002",
-    password: "1245689",
+    password: await hashPassword("1245689"),
     privilege: "none" as const,
     status: true,
     ispaid: false,
@@ -24,7 +37,7 @@ export const seedUsers = [
     name: "Jane Smith",
     email: "jane.smith@example.com",
     tel: "+256700000003",
-    password: "1245689",
+    password: await hashPassword("1245689"),
     privilege: "none" as const,
     status: true,
     ispaid: true,
@@ -33,7 +46,7 @@ export const seedUsers = [
     name: "Bob Johnson",
     email: "bob.johnson@example.com",
     tel: "+256700000004",
-    password: "1245689",
+    password: await hashPassword("1245689"),
     privilege: "none" as const,
     status: true,
     ispaid: false,
@@ -42,7 +55,7 @@ export const seedUsers = [
     name: "Alice Williams",
     email: "alice.williams@example.com",
     tel: "+256700000005",
-    password: "1245689",
+    password: await hashPassword("1245689"),
     privilege: "none" as const,
     status: true,
     ispaid: true,

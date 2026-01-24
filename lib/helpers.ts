@@ -11,3 +11,8 @@ export const decodeBase64Email = async (encodedEmail: string) => {
     return { success: false, error: "Invalid email encoding" };
   }
 };
+
+export const decodeBase64Url = async (encodedId: string): Promise<number> => {
+  const decoded = Buffer.from(encodedId, "base64url").toString("utf8");
+  return Number(decoded);
+};

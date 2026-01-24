@@ -5,19 +5,27 @@ const LayoutTitle = () => {
 
   let title = "Authentication";
   let desc = `Experience the next generation of financial management. Secure, fast, and comprehensive tools for your personal wallet and enterprise administration`;
+
   if (pathname === "/") {
     title = "Welcome Back!";
-  } else if (pathname === "/register") {
+  }
+  if (pathname === "/register") {
     title = "Join the Revolution";
-  } else if (
-    pathname === "/forgot-password" ||
-    pathname.includes("/email-sent")
-  ) {
+  }
+  if (pathname === "/forgot-password") {
     title = "Account Recovery";
     desc =
       "Don’t worry, it happens to the best of us. We’ll help you get back into your account in no time.";
   }
-
+  if (pathname.includes("/otp")) {
+    title = "OTP Verification";
+    desc = "Enter the OTP sent to your email to verify your account.";
+  }
+  if (pathname.includes("/email-sent")) {
+    title = "Email Sent";
+    desc = "We have sent OTP code to your email to verify your account.";
+  }
+  // console.log("pathname", pathname);
   return (
     <div>
       <div className="flex items-center gap-3 mb-8">
