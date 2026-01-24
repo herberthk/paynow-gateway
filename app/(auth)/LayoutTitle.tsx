@@ -19,7 +19,8 @@ const LayoutTitle = () => {
   }
   if (pathname.includes("/otp")) {
     title = "OTP Verification";
-    desc = "Enter the OTP sent to your email to verify your account.";
+    desc =
+      "Enter the OTP sent to your email to verify your login or reset password.";
   }
   if (pathname.includes("/email-sent")) {
     title = "Email Sent";

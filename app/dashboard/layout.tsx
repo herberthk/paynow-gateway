@@ -2,7 +2,6 @@ import DashboardAssistant from "@/components/DashboardAssistant";
 import Header from "@/components/Header";
 import PaymentModal from "@/components/PaymentModal";
 import Sidebar from "@/components/Sidebar";
-import Toast from "@/components/Toast";
 import { getSession } from "@/lib";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
@@ -23,7 +22,6 @@ const RootLayout = async ({
   }
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-200">
-      <Toast />
       <Sidebar user={user as User} />
 
       <div className="flex-1 flex flex-col overflow-hidden">

@@ -4,6 +4,7 @@ import "./globals.css";
 import NextTopLoader from "nextjs-toploader";
 import { Inter } from "next/font/google";
 import ThemeInitializer from "@/components/ThemeInitializer";
+import Toast from "@/components/Toast";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -55,6 +56,7 @@ const RootLayout = ({
       >
         <ThemeInitializer />
         <NextTopLoader />
+        <Toast />
         {children}
       </body>
     </html>

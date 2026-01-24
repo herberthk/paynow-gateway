@@ -1,25 +1,34 @@
 "use client";
+import { resetPassword } from "@/lib";
 import { ArrowLeft, Mail } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "nextjs-toploader/app";
+// import { useRouter } from "nextjs-toploader/app";
 import { useState } from "react";
 
 const ForgetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  // const router = useRouter();
   const [email, setEmail] = useState("demo@paynow.com");
 
-  const handleResetSubmit = (e: React.FormEvent) => {
+  const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    try {
+      const result = await resetPassword(email);
+      console.log("result", result);
+      setIsLoading(false);
+    } catch (error) {
+      console.log("error", error);
+      setIsLoading(false);
+    }
 
     // Simulate API call for password reset
-    setTimeout(() => {
-      setIsLoading(false);
-      //encord email to base64
-      const encodedEmail = btoa(email);
-      router.push(`/email-sent/${encodedEmail}`);
-    }, 1500);
+    // setTimeout(() => {
+    //   setIsLoading(false);
+    //   //encord email to base64
+    //   const encodedEmail = btoa(email);
+    //   router.push(`/email-sent/${encodedEmail}`);
+    // }, 1500);
   };
 
   return (
@@ -40,7 +49,7 @@ const ForgetPassword = () => {
           send you a link to reset your password.
         </p>
 
-        <form onSubmit={handleResetSubmit} className="space-y-6">
+        <form onSubmit={handleReset} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Email Address

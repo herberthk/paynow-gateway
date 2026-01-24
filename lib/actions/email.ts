@@ -30,18 +30,18 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const sendOtp = async ({
-  id,
-  email,
-  name,
-}: {
+type Props = {
   id: number;
   email: string;
   name: string;
-}) => {
+  type?: "verify" | "reset";
+};
+
+export const sendOtp = async ({ id, email, name, type = "verify" }: Props) => {
   const otp = generateOTP();
   const otpHash = await hashOTP(otp);
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+  // 15 minutes expiry
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
   try {
     await prisma.otp.upsert({
       where: { userId: id },
@@ -59,7 +59,7 @@ export const sendOtp = async ({
     // await sendEmail({ otp: OTP, email, name, expiry: 10 });
     // Render React component to HTML
     const emailHtml = await render(
-      OTPEmail({ otp, userName: name, expiryMinutes: 10 }),
+      OTPEmail({ otp, userName: name, expiryMinutes: 15, type }),
     );
     const mailOptions = {
       from: '"Paynow Gateway" <info@netbritz.com>',
