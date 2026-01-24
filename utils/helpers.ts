@@ -49,7 +49,7 @@ export const verifyOTPWithSalt = (
 };
 
 // console.log("Otp", generateOTP());
-// const otp = "916050";
+// const otp = "222886";
 // console.log("Otp", hashOTP(otp));
-// const hash = "652e60d3e3f4a795660f5abe8968439fe5f30fa88a2ac61ead69178d405be32d";
-// console.log("Otp", verifyOTP(otp, hashOTP(otp)));
+// const hash = "4d75a220ec79632b861ae05290b4eccc813ee63ed96020f4aba0d12a8e5482bb";
+// console.log("Otp", verifyOTP(otp, hash));

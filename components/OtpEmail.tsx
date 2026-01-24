@@ -4,8 +4,9 @@ type Props = {
   otp?: string;
   userName?: string;
   expiryMinutes?: number;
+  type?: "verify" | "reset";
 };
-const OTPEmail = ({ otp, userName, expiryMinutes }: Props) => {
+const OTPEmail = ({ otp, userName, expiryMinutes, type = "verify" }: Props) => {
   const layersIcon =
     "https://firebasestorage.googleapis.com/v0/b/connect-app-1f5ca.appspot.com/o/FCMImages%2Flayers.png?alt=media&token=4d0ab890-81ed-4f8c-9b40-8ff3c5337048";
   return (
@@ -77,13 +78,29 @@ const OTPEmail = ({ otp, userName, expiryMinutes }: Props) => {
                 strokeLinejoin="round"
               />
             </svg> */}
-            <img
+            {/* <img
               src={layersIcon}
               alt="Security"
               width="32"
               height="32"
               style={{ display: "block", margin: "0 auto" }}
-            />
+            /> */}
+            {/* <div
+              style={{
+                width: "2.5rem",
+                height: "2.5rem",
+                borderRadius: "0.5rem",
+                backgroundColor: "#6366f1",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: "bold",
+                color: "white",
+                fontSize: "1.25rem",
+              }}
+            >
+              P
+            </div> */}
           </div>
           <h1
             style={{
@@ -94,7 +111,7 @@ const OTPEmail = ({ otp, userName, expiryMinutes }: Props) => {
               letterSpacing: "-0.5px",
             }}
           >
-            Verify Your Email
+            {type === "verify" ? "Verify Your Login" : "Reset your password"}
           </h1>
         </div>
 
@@ -119,8 +136,11 @@ const OTPEmail = ({ otp, userName, expiryMinutes }: Props) => {
               margin: "0 0 32px 0",
             }}
           >
-            We received a request to verify your email address. Use the code
-            below to complete your verification:
+            {type === "verify"
+              ? `We received a request to verify your login to our payment gateway. Use the code
+            below to complete your verification`
+              : `We received a request to reset your password. Use the code
+            below to complete your verification process `}
           </p>
 
           {/* OTP Box */}

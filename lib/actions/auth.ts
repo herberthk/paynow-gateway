@@ -2,9 +2,13 @@
 import bcrypt from "bcrypt";
 import prisma from "@/lib/prisma";
 import { verifyOTP } from "@/utils";
-import { sendOtp } from "../email";
+import { sendOtp } from "./email";
 import { redirect } from "next/navigation";
-
+type VerifyProps = {
+  id: number;
+  otp: string;
+  action?: "verify" | "reset";
+};
 export const login = async (email: string, password: string) => {
   let encodedId = "";
   try {
@@ -40,9 +44,10 @@ export const login = async (email: string, password: string) => {
     if (!sent) {
       return "Failed to send otp";
     }
+    const action = "verify";
     //encode id to base64 on server
-    // const encodedId = Buffer.from(user.id.toString()).toString("base64");
-    encodedId = Buffer.from(user.id.toString()).toString("base64url");
+    const toEncode = `${user.id}-${user.email}-${user.name}-${action}`;
+    encodedId = Buffer.from(toEncode).toString("base64url");
     console.log("encodedId", encodedId);
     // return "Verified successfully";
   } catch (error) {
@@ -61,38 +66,98 @@ export const login = async (email: string, password: string) => {
   }
 };
 
-export const verifyOtp = async ({ id, otp }: { id: number; otp: string }) => {
+export const VerifyUserOtp = async ({
+  id,
+  otp,
+  action = "verify",
+}: VerifyProps) => {
   try {
     const otpData = await prisma.otp.findUnique({
       where: {
         userId: id,
       },
     });
+
     if (!otpData) {
-      return "Otp not found";
-    }
-    const isOtpValid = verifyOTP(otp, otpData.otpHash);
-    if (!isOtpValid) {
-      if (otpData?.attempts >= 3) {
-        await prisma.user.delete({
-          where: {
-            id: id,
-          },
-        });
-      }
-      await prisma.otp.update({
-        where: {
-          userId: id,
-        },
-        data: {
-          attempts: otpData?.attempts + 1,
-        },
-      });
       return "Invalid otp";
     }
+    console.log("otpData", otpData);
+    const validOtp = verifyOTP(otp, otpData.otpHash);
+    const isExpired = otpData.expiresAt < new Date();
+    if (!validOtp) {
+      if (otpData?.attempts >= 3 || isExpired) {
+        await prisma.otp.delete({
+          where: {
+            userId: id,
+          },
+        });
+        return "Invalid otp";
+      } else {
+        await prisma.otp.update({
+          where: {
+            userId: id,
+          },
+          data: {
+            attempts: otpData?.attempts + 1,
+          },
+        });
+        return "Invalid otp";
+      }
+    }
+    await prisma.otp.delete({
+      where: {
+        userId: id,
+      },
+    });
+    if (action === "verify") {
+      //TODO: create session and redirect to dashboard
+      // redirect("/dashboard");
+    }
+    if (action === "reset") {
+      //TODO: create session and redirect to dashboard
+      // redirect("/reset-password");
+    }
+    //TODO: create session and redirect to dashboard
     return "Otp verified successfully";
   } catch (error) {
     console.log("error", error);
     return "Failed to verify otp";
+  }
+};
+
+export const resetPassword = async (email: string) => {
+  let encodedId = "";
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        email: email,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+    if (!user) {
+      return "User not found";
+    }
+    const sent = await sendOtp({
+      id: user.id,
+      email: user.email!,
+      name: user.name!,
+      type: "reset",
+    });
+    const action = "reset";
+    const toEncode = `${user.id}-${user.email}-${user.name}-${action}`;
+    encodedId = Buffer.from(toEncode).toString("base64url");
+    if (!sent) {
+      return "Failed to send otp";
+    }
+    console.log("reset sent successfully");
+  } catch (error) {
+    console.log("error", error);
+  }
+  if (encodedId) {
+    redirect(`/otp/${encodedId}`);
   }
 };
