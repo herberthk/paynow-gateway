@@ -1,22 +1,30 @@
 import { redirect } from "next/navigation";
-import Sent from "./Sent";
+import ResetPage from "./Reset";
+import { verifyOTP } from "@/utils";
+const passwordResetSecret = process.env.PASSWORD_RESSET_SECRET;
+const Page = async ({ params }: { params: { data: string } }) => {
+  const { data } = await params;
 
-const SentPage = async ({ params }: { params: { email: string } }) => {
-  const { email } = await params;
-
-  if (!email) {
+  if (!data) {
     return redirect("/");
   }
   // Decode base64 on server
-  let decodedEmail = "";
+  let decodedData = "";
 
   try {
-    decodedEmail = Buffer.from(email, "base64url").toString("utf-8");
+    decodedData = Buffer.from(data, "base64url").toString("utf-8");
   } catch (error) {
-    console.error("Failed to decode email:", error);
+    console.error("Failed to decode data:", error);
   }
-  // console.log("email", decodedEmail);
-  return <Sent email={decodedEmail} />;
+  const [id, secretHash] = decodedData.split("-");
+  // console.log("data", decodedData);
+  const validSecret = verifyOTP(passwordResetSecret!, secretHash);
+  // console.log("isSecretValid", validSecret);
+  if (!validSecret) {
+    return redirect("/");
+  }
+  console.log({ id, secretHash });
+  return <ResetPage id={Number(id)} />;
 };
 
-export default SentPage;
+export default Page;

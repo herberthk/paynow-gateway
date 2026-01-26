@@ -1,5 +1,5 @@
 "use client";
-import { resetPassword } from "@/lib";
+import { initPasswordReset } from "@/lib";
 import { ArrowLeft, Mail } from "lucide-react";
 import Link from "next/link";
 // import { useRouter } from "nextjs-toploader/app";
@@ -14,7 +14,7 @@ const ForgetPassword = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const result = await resetPassword(email);
+      const result = await initPasswordReset(email);
       console.log("result", result);
       setIsLoading(false);
     } catch (error) {
@@ -46,7 +46,7 @@ const ForgetPassword = () => {
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
           Enter the email address associated with your account and we&apos;ll
-          send you a link to reset your password.
+          send you a verification code to reset your password.
         </p>
 
         <form onSubmit={handleReset} className="space-y-6">
@@ -79,7 +79,7 @@ const ForgetPassword = () => {
                 : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg"
             }`}
           >
-            {isLoading ? "Sending Link..." : "Send Reset Link"}
+            {isLoading ? "Sending Code..." : "Send Reset Code"}
           </button>
         </form>
       </div>

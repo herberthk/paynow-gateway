@@ -1,7 +1,7 @@
 "use server";
 import bcrypt from "bcrypt";
 import prisma from "@/lib/prisma";
-import { verifyOTP } from "@/utils";
+import { hashOTP, verifyOTP } from "@/utils";
 import { sendOtp } from "./email";
 import { redirect } from "next/navigation";
 type VerifyProps = {
@@ -9,6 +9,7 @@ type VerifyProps = {
   otp: string;
   action?: "verify" | "reset";
 };
+const passwordResetSecret = process.env.PASSWORD_RESSET_SECRET;
 export const login = async (email: string, password: string) => {
   let encodedId = "";
   try {
@@ -71,10 +72,21 @@ export const VerifyUserOtp = async ({
   otp,
   action = "verify",
 }: VerifyProps) => {
+  let encodedData = "";
+  let route = "";
   try {
-    const otpData = await prisma.otp.findUnique({
+    if (!passwordResetSecret) {
+      // return "Password reset secret not found";
+      console.log("Password reset secret not found");
+      return;
+    }
+    console.log("passwordResetSecret", passwordResetSecret);
+    const otpData = await prisma.otp.findFirst({
       where: {
         userId: id,
+        expiresAt: {
+          gt: new Date(),
+        },
       },
     });
 
@@ -83,9 +95,9 @@ export const VerifyUserOtp = async ({
     }
     console.log("otpData", otpData);
     const validOtp = verifyOTP(otp, otpData.otpHash);
-    const isExpired = otpData.expiresAt < new Date();
+
     if (!validOtp) {
-      if (otpData?.attempts >= 3 || isExpired) {
+      if (otpData?.attempts >= 3) {
         await prisma.otp.delete({
           where: {
             userId: id,
@@ -98,7 +110,8 @@ export const VerifyUserOtp = async ({
             userId: id,
           },
           data: {
-            attempts: otpData?.attempts + 1,
+            // attempts: otpData?.attempts + 1,
+            attempts: { increment: 1 },
           },
         });
         return "Invalid otp";
@@ -111,21 +124,23 @@ export const VerifyUserOtp = async ({
     });
     if (action === "verify") {
       //TODO: create session and redirect to dashboard
-      // redirect("/dashboard");
+      return "Otp verified successfully";
     }
     if (action === "reset") {
-      //TODO: create session and redirect to dashboard
-      // redirect("/reset-password");
+      const secretHash = await hashOTP(passwordResetSecret);
+      encodedData = Buffer.from(`${id}-${secretHash}`).toString("base64url");
+      route = "reset";
     }
     //TODO: create session and redirect to dashboard
-    return "Otp verified successfully";
+    // return "Otp verified successfully";
   } catch (error) {
     console.log("error", error);
-    return "Failed to verify otp";
+    // return "Failed to verify otp";
   }
+  redirect(`/${route}/${encodedData}`);
 };
 
-export const resetPassword = async (email: string) => {
+export const initPasswordReset = async (email: string) => {
   let encodedId = "";
   try {
     const user = await prisma.user.findUnique({
@@ -159,5 +174,36 @@ export const resetPassword = async (email: string) => {
   }
   if (encodedId) {
     redirect(`/otp/${encodedId}`);
+  }
+};
+
+export const resetPassword = async (id: number, password: string) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
+    if (!user) {
+      return "User not found";
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await prisma.user.update({
+      where: {
+        id,
+      },
+      data: {
+        password: hashedPassword,
+      },
+    });
+    console.log("reset password successfully");
+    return "Password reset successfully";
+  } catch (error) {
+    console.log("error", error);
   }
 };
