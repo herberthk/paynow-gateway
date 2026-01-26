@@ -39,7 +39,7 @@ const Otp: FC<Props> = ({ id, name, email, action }) => {
     }
     console.log("otp", otp);
     try {
-      const result = await VerifyUserOtp({ id: Number(id), otp });
+      const result = await VerifyUserOtp({ id: Number(id), otp, action });
       console.log("result", result);
       if (result === "Invalid otp") {
         setIsLoading(false);
@@ -89,6 +89,8 @@ const Otp: FC<Props> = ({ id, name, email, action }) => {
   }, [email, notify]);
 
   console.log("action", action);
+  const message =
+    action === "verify" ? "to verify your account." : "to reset your password.";
   return (
     <div className="w-full md:w-1/2 p-8 md:p-12">
       <div className="h-full flex flex-col justify-center animate-fade-in-up">
@@ -100,11 +102,10 @@ const Otp: FC<Props> = ({ id, name, email, action }) => {
         </Link>
 
         <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 text-center">
-          Enter OTP
+          Enter Code
         </h3>
         <p className="text-xs italic text-gray-900 dark:text-white mb-4">
-          {name} enter the OTP sent to your email {email} to verify your
-          account.
+          Enter the Code sent to {email} {message}
         </p>
 
         <div className="space-y-6">
