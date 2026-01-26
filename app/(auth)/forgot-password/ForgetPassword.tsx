@@ -1,5 +1,6 @@
 "use client";
 import { initPasswordReset } from "@/lib";
+import { useNotificationStore } from "@/store";
 import { ArrowLeft, Mail } from "lucide-react";
 import Link from "next/link";
 // import { useRouter } from "nextjs-toploader/app";
@@ -7,7 +8,7 @@ import { useState } from "react";
 
 const ForgetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
-  // const router = useRouter();
+  const notify = useNotificationStore((state) => state.notify);
   const [email, setEmail] = useState("demo@paynow.com");
 
   const handleReset = async (e: React.FormEvent) => {
@@ -16,19 +17,14 @@ const ForgetPassword = () => {
     try {
       const result = await initPasswordReset(email);
       console.log("result", result);
+      if (result) {
+        notify("error", result);
+      }
       setIsLoading(false);
     } catch (error) {
       console.log("error", error);
       setIsLoading(false);
     }
-
-    // Simulate API call for password reset
-    // setTimeout(() => {
-    //   setIsLoading(false);
-    //   //encord email to base64
-    //   const encodedEmail = btoa(email);
-    //   router.push(`/email-sent/${encodedEmail}`);
-    // }, 1500);
   };
 
   return (
