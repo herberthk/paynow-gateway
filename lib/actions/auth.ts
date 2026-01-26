@@ -80,7 +80,7 @@ export const VerifyUserOtp = async ({
       console.log("Password reset secret not found");
       return;
     }
-    console.log("passwordResetSecret", passwordResetSecret);
+    // console.log("passwordResetSecret", passwordResetSecret);
     const otpData = await prisma.otp.findFirst({
       where: {
         userId: id,
@@ -93,7 +93,7 @@ export const VerifyUserOtp = async ({
     if (!otpData) {
       return "Invalid otp";
     }
-    console.log("otpData", otpData);
+
     const validOtp = verifyOTP(otp, otpData.otpHash);
 
     if (!validOtp) {
@@ -103,6 +103,7 @@ export const VerifyUserOtp = async ({
             userId: id,
           },
         });
+        console.log("otpData", otpData);
         return "Invalid otp";
       } else {
         await prisma.otp.update({
@@ -110,10 +111,11 @@ export const VerifyUserOtp = async ({
             userId: id,
           },
           data: {
-            // attempts: otpData?.attempts + 1,
-            attempts: { increment: 1 },
+            attempts: otpData?.attempts + 1,
+            // attempts: { increment: 1 },
           },
         });
+        console.log("otpData", otpData);
         return "Invalid otp";
       }
     }
@@ -202,6 +204,7 @@ export const resetPassword = async (id: number, password: string) => {
       },
     });
     console.log("reset password successfully");
+    //TODO: create session and redirect to dashboard
     return "Password reset successfully";
   } catch (error) {
     console.log("error", error);

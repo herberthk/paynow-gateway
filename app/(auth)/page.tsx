@@ -6,26 +6,27 @@ import { Eye, EyeOff, Lock } from "lucide-react";
 // import { useRouter } from "nextjs-toploader/app";
 import { login } from "@/lib";
 import Link from "next/link";
+import { useNotificationStore } from "@/store";
 
 const LoginPage = () => {
-  // const router = useRouter();
-  const [selectedRole, setSelectedRole] = useState<UserRole>("USER");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // const notify = useNotificationStore((state) => state.notify);
+  const notify = useNotificationStore((state) => state.notify);
 
   // Form State
   const [email, setEmail] = useState("herbertbruce8@gmail.com");
   const [password, setPassword] = useState("1245689");
-  // const [name, setName] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await login(email, password);
-      // console.log("user", user);
+      const result = await login(email, password);
+      if (result) {
+        notify("error", result);
+      }
+      console.log("result", result);
       setIsLoading(false);
     } catch (error) {
       console.log("error", error);
@@ -68,7 +69,7 @@ const LoginPage = () => {
         <h3 className="text-xl font-bold text-gray-900 dark:text-white">
           Sign In
         </h3>
-        <div className="flex bg-gray-100 dark:bg-slate-700 p-1 rounded-lg">
+        {/* <div className="flex bg-gray-100 dark:bg-slate-700 p-1 rounded-lg">
           <button
             onClick={() => setSelectedRole("USER")}
             className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${selectedRole === "USER" ? "bg-white dark:bg-slate-600 text-indigo-600 dark:text-indigo-400 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
@@ -81,7 +82,7 @@ const LoginPage = () => {
           >
             Admin
           </button>
-        </div>
+        </div> */}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">

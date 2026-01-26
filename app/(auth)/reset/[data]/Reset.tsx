@@ -29,7 +29,7 @@ const ResetPage = ({ id }: Props) => {
       if (result === "Password reset successfully") {
         notify("success", result);
         notify("info", "Please login with your new password");
-        router.push("/");
+        // router.push("/");
       } else {
         notify("error", result!);
         notify("info", "Please try again");
