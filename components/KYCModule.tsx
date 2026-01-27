@@ -94,7 +94,7 @@ const KYCModule = ({ user }: UserProps) => {
     setTimeout(() => {
       setIsUploading(false);
       setUploadedFile("national_id_front.jpg");
-      handleUpdateUser({ kycStatus: "PENDING" }); // Update status to pending
+      handleUpdateUser({ status: false }); // Update status to pending
       notify(
         "success",
         "Document uploaded successfully. Verification in progress.",
@@ -169,7 +169,8 @@ const KYCModule = ({ user }: UserProps) => {
                   {user?.name}
                 </h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  Personal Account • {user?.role}
+                  Personal Account •{" "}
+                  {user?.privilege === "super_admin" ? "ADMIN" : "USER"}
                 </p>
               </div>
             </div>
@@ -281,7 +282,7 @@ const KYCModule = ({ user }: UserProps) => {
           <div className="text-center mb-8">
             <div
               className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-                user?.kycStatus === "VERIFIED"
+                user?.status
                   ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
                   : "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
               }`}
@@ -292,17 +293,15 @@ const KYCModule = ({ user }: UserProps) => {
               Identity Verification
             </h2>
             <p className="text-gray-500 dark:text-gray-400 mt-2">
-              Current Status:{" "}
+              Current Status:
               <span
                 className={`font-bold ${
-                  user?.kycStatus === "VERIFIED"
+                  user?.status
                     ? "text-green-600 dark:text-green-400"
-                    : user?.kycStatus === "PENDING"
-                      ? "text-yellow-600 dark:text-yellow-400"
-                      : "text-gray-600 dark:text-gray-300"
+                    : "text-yellow-600 dark:text-yellow-400"
                 }`}
               >
-                {user?.kycStatus}
+                {user?.status ? "VERIFIED" : "PENDING"}
               </span>
             </p>
           </div>
@@ -325,17 +324,17 @@ const KYCModule = ({ user }: UserProps) => {
             </div>
             <div
               className={`border-2 p-4 rounded-lg text-center relative shadow-sm transition-colors ${
-                user?.kycStatus === "VERIFIED"
+                user?.status
                   ? "border-green-500 dark:border-green-600 bg-green-50/30 dark:bg-green-900/10"
                   : "border-indigo-500 dark:border-indigo-600 bg-white dark:bg-slate-700"
               }`}
             >
-              {user?.kycStatus !== "VERIFIED" && (
+              {!user?.status && (
                 <div className="absolute top-0 right-0 bg-indigo-500 text-white text-xs px-2 py-1 rounded-bl-lg">
                   Current
                 </div>
               )}
-              {user?.kycStatus === "VERIFIED" ? (
+              {user?.status ? (
                 <CheckCircle
                   className="mx-auto text-green-500 dark:text-green-400 mb-2"
                   size={24}
@@ -353,9 +352,9 @@ const KYCModule = ({ user }: UserProps) => {
                 National ID Upload
               </p>
               <p
-                className={`text-xs font-semibold mt-2 ${user?.kycStatus === "VERIFIED" ? "text-green-700 dark:text-green-400" : "text-indigo-700 dark:text-indigo-400"}`}
+                className={`text-xs font-semibold mt-2 ${user?.status ? "text-green-700 dark:text-green-400" : "text-indigo-700 dark:text-indigo-400"}`}
               >
-                {user?.kycStatus === "VERIFIED" ? "Verified" : "Required"}
+                {user?.status ? "Verified" : "Required"}
               </p>
             </div>
             <div className="border border-gray-200 dark:border-slate-700 p-4 rounded-lg text-center opacity-60">
@@ -375,7 +374,7 @@ const KYCModule = ({ user }: UserProps) => {
             </div>
           </div>
 
-          {user?.kycStatus !== "VERIFIED" && user?.kycStatus !== "PENDING" && (
+          {user?.status && (
             <div className="space-y-4">
               {!isUploading && !uploadedFile ? (
                 <div
@@ -434,7 +433,7 @@ const KYCModule = ({ user }: UserProps) => {
             </div>
           )}
 
-          {user?.kycStatus === "PENDING" && (
+          {!user?.status && (
             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 text-center">
               <Loader2
                 className="animate-spin text-yellow-600 dark:text-yellow-400 mx-auto mb-2"

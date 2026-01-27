@@ -22,7 +22,7 @@ export const decrypt = async (session: string = "") => {
     });
     return payload;
   } catch (error) {
-    console.log("Failed to verify session");
+    console.log("Failed to verify session", error);
     return null;
   }
 };
@@ -48,7 +48,7 @@ export const deleteSession = async () => {
   });
 };
 
-export const getSession = async () => {
+export const getUserSession = async () => {
   const cookieStore = await cookies();
   const session = cookieStore.get("session")?.value;
   if (!session) {

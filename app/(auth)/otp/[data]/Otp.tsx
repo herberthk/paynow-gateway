@@ -57,7 +57,7 @@ const Otp: FC<Props> = ({ id, name, email, action }) => {
     } catch (error) {
       console.log("error", error);
       setIsLoading(false);
-      notify("error", `Failed to verify otp`);
+      // notify("error", `Failed to verify otp`);
     }
   };
 

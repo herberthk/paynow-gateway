@@ -2,7 +2,7 @@ import DashboardAssistant from "@/components/DashboardAssistant";
 import Header from "@/components/Header";
 import PaymentModal from "@/components/PaymentModal";
 import Sidebar from "@/components/Sidebar";
-import { getSession } from "@/lib";
+import { getUserSession } from "@/lib";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
@@ -16,7 +16,7 @@ const RootLayout = async ({
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
-  const user = await getSession();
+  const user = await getUserSession();
   if (!user) {
     redirect("/");
   }

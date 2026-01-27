@@ -1,8 +1,13 @@
 import WalletView from "@/components/WalletView";
-import { getSession } from "@/lib/session";
+// import { getUserWallet } from "@/lib/actions/wallet";
+import { getUserSession } from "@/lib/session";
 
 const Wallet = async () => {
-  const user = await getSession();
+  const user = await getUserSession();
+  if (!user) {
+    return;
+  }
+  // const wallet = await getUserWallet(user.id);
   return <WalletView user={user as User} />;
 };
 

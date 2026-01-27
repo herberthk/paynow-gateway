@@ -1,7 +1,9 @@
 import AdminUserProfile from "@/components/AdminUserProfile";
+import { getUserSession } from "@/lib";
 
-const Profile = () => {
-  return <AdminUserProfile />;
+const Profile = async () => {
+  const user = await getUserSession();
+  return <AdminUserProfile user={user!} />;
 };
 
 export default Profile;

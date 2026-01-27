@@ -103,7 +103,7 @@ const Header: React.FC<UserProps> = ({ user }) => {
 
       <div className="flex items-center gap-2 sm:gap-4">
         {/* Role Badge */}
-        <div
+        {/* <div
           className={`hidden sm:block px-3 py-1 rounded-full text-xs font-semibold border ${
             user?.role === "ADMIN"
               ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800"
@@ -111,7 +111,7 @@ const Header: React.FC<UserProps> = ({ user }) => {
           }`}
         >
           {user?.role}
-        </div>
+        </div> */}
 
         {/* Theme Toggle */}
         <button
@@ -187,12 +187,12 @@ const Header: React.FC<UserProps> = ({ user }) => {
                   </p>
                   <span
                     className={`text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded mt-1 inline-block border ${
-                      user?.role === "ADMIN"
+                      user?.privilege === "super_admin"
                         ? "bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-100 dark:border-purple-800"
                         : "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-800"
                     }`}
                   >
-                    {user?.role}
+                    {user?.privilege !== "super_admin" ? "USER" : "ADMIN"}
                   </span>
                 </div>
               </div>
@@ -205,7 +205,7 @@ const Header: React.FC<UserProps> = ({ user }) => {
                     <span>Balance</span>
                   </div>
                   <span className="font-bold text-indigo-600 dark:text-indigo-400 text-sm">
-                    UGX {user?.wallet.balanceUGX.toLocaleString()}
+                    UGX {user?.wallet?.balance.toLocaleString()}
                   </span>
                 </div>
 
@@ -215,9 +215,9 @@ const Header: React.FC<UserProps> = ({ user }) => {
                     <span>KYC Status</span>
                   </div>
                   <span
-                    className={`text-xs px-2 py-1 rounded-full font-bold ${getKycStatusColor(user?.kycStatus)}`}
+                    className={`text-xs px-2 py-1 rounded-full font-bold ${getKycStatusColor(user?.status ? "VERIFIED" : "PENDING")}`}
                   >
-                    {user?.kycStatus}
+                    {user?.status ? "VERIFIED" : "PENDING"}
                   </span>
                 </div>
               </div>

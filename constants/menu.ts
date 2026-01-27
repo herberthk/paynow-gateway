@@ -10,47 +10,9 @@ import {
   Code2,
   Banknote,
 } from "lucide-react";
-export const menuItems = (userRole: UserRole) =>
-  userRole === "USER"
+export const menuItems = (userRole: Privilege) =>
+  userRole === "super_admin"
     ? [
-        {
-          id: "dashboard",
-          label: "Dashboard",
-          icon: LayoutDashboard,
-          href: "/dashboard/user",
-        },
-        {
-          id: "wallet",
-          label: "My Wallet",
-          icon: Wallet,
-          href: "/dashboard/user/wallet",
-        },
-        {
-          id: "analytics",
-          label: "Analytics",
-          icon: PieChart,
-          href: "/dashboard/user/analytics",
-        },
-        {
-          id: "transactions",
-          label: "Transactions",
-          icon: History,
-          href: "/dashboard/user/transactions",
-        },
-        {
-          id: "developers",
-          label: "Developers",
-          icon: Code2,
-          href: "/dashboard/user/developers",
-        },
-        {
-          id: "settings",
-          label: "Settings",
-          icon: Settings,
-          href: "/dashboard/user/settings",
-        },
-      ]
-    : [
         {
           id: "admin-dashboard",
           label: "Overview",
@@ -92,5 +54,43 @@ export const menuItems = (userRole: UserRole) =>
           label: "Fee Management",
           icon: Settings,
           href: "/dashboard/admin/settings",
+        },
+      ]
+    : [
+        {
+          id: "dashboard",
+          label: "Dashboard",
+          icon: LayoutDashboard,
+          href: "/dashboard/user",
+        },
+        {
+          id: "wallet",
+          label: "My Wallet",
+          icon: Wallet,
+          href: "/dashboard/user/wallet",
+        },
+        {
+          id: "analytics",
+          label: "Analytics",
+          icon: PieChart,
+          href: "/dashboard/user/analytics",
+        },
+        {
+          id: "transactions",
+          label: "Transactions",
+          icon: History,
+          href: "/dashboard/user/transactions",
+        },
+        {
+          id: "developers",
+          label: "Developers",
+          icon: Code2,
+          href: "/dashboard/user/developers",
+        },
+        {
+          id: "settings",
+          label: "Settings",
+          icon: Settings,
+          href: "/dashboard/user/settings",
         },
       ];

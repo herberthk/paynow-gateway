@@ -1,70 +1,73 @@
 // const UserRole = typeof UserRole.USER
 export const currentUser: User = {
-  id: "u123",
+  id: Number("u123"),
   name: "Alex Mukasa",
   email: "alex.m@example.com",
-  role: "USER",
-  kycStatus: "VERIFIED",
-  joinDate: "2023-01-15",
+  privilege: "super_admin",
+  status: false,
+  created_at: "2023-01-15",
   wallet: {
-    balanceUGX: 2540000,
-    balanceUSD: 1250,
-    linkedMethods: [
-      {
-        id: "m1",
-        type: "MOBILE_MONEY",
-        name: "MTN MoMo",
-        detail: "+256 772 *** 888",
-      },
-      { id: "m2", type: "CARD", name: "Visa Debit", detail: "**** 4242" },
-    ],
+    balance: 2540000,
+    id: "ret54",
+    // balanceUSD: 1250,
+    // linkedMethods: [],
   },
 };
+
+export const linkedMethods = [
+  {
+    id: "m1",
+    type: "MOBILE_MONEY",
+    name: "MTN MoMo",
+    detail: "+256 772 *** 888",
+  },
+  { id: "m2", type: "CARD", name: "Visa Debit", detail: "**** 4242" },
+];
 
 export const adminUser: User = {
   ...currentUser,
   name: "Admin User",
-  role: "ADMIN",
+  // role: "ADMIN",
 };
 
 // Expanded User List for Admin
 export const mockUsers: User[] = [
   currentUser,
   {
-    id: "u124",
+    id: Number("u124"),
     name: "Sarah N",
     email: "sarah.n@example.com",
-    role: "USER",
-    kycStatus: "PENDING",
-    joinDate: "2023-10-20",
-    wallet: { balanceUGX: 0, balanceUSD: 0, linkedMethods: [] },
+    privilege: "admin",
+    status: false,
+    created_at: "2023-10-20",
+    wallet: { balance: 0, id: "trt" },
   },
   {
-    id: "u125",
+    id: Number("u125"),
     name: "John Doe",
     email: "john.d@company.com",
-    role: "USER",
-    kycStatus: "UNVERIFIED",
-    joinDate: "2023-10-22",
-    wallet: { balanceUGX: 5000, balanceUSD: 0, linkedMethods: [] },
+    privilege: "admin",
+    status: true,
+    created_at: "2023-10-22",
+    wallet: { balance: 5000, id: "657t" },
   },
   {
-    id: "u126",
+    id: Number("u126"),
     name: "Tech Solutions Ltd",
     email: "billing@techsol.com",
-    role: "USER",
-    kycStatus: "VERIFIED",
-    joinDate: "2023-05-10",
-    wallet: { balanceUGX: 15000000, balanceUSD: 4500, linkedMethods: [] },
+    privilege: "super_admin",
+    status: true,
+    created_at: "2023-05-10",
+    wallet: { balance: 15000000, id: "trt56" },
   },
   {
-    id: "u127",
+    id: Number("u127"),
     name: "Grace K",
     email: "grace.k@example.com",
-    role: "USER",
-    kycStatus: "REJECTED",
-    joinDate: "2023-09-01",
-    wallet: { balanceUGX: 12000, balanceUSD: 0, linkedMethods: [] },
+    privilege: "admin",
+    status: true,
+    created_at: "2023-09-01",
+    wallet: { balance: 12000, id: "tytrd" },
   },
 ];
 

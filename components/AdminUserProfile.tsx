@@ -1,8 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, type FC } from "react";
 import {
   transactions as allTransactions,
-  mockUsers,
+  linkedMethods,
 } from "@/services/mockData";
 import TransactionTable from "./TransactionTable";
 import {
@@ -23,11 +23,14 @@ import {
 } from "lucide-react";
 import { useNotificationStore } from "@/store";
 
-const AdminUserProfile = () => {
+type Props = {
+  user: User;
+};
+const AdminUserProfile: FC<Props> = ({ user }) => {
   // Find user or fallback to first user for safety
-  const initialUser = mockUsers.find((u) => u.id === "u123") || mockUsers[0];
+  // const initialUser = mockUsers.find((u) => u.id === "u123") || mockUsers[0];
   const notify = useNotificationStore((state) => state.notify);
-  const [user, setUser] = useState<User>(initialUser);
+  const [currentUser, setUser] = useState<User>(user);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<
     "overview" | "transactions" | "notes"
@@ -49,7 +52,7 @@ const AdminUserProfile = () => {
   const userTransactions = allTransactions.filter(
     (t) =>
       t.recipient === user.name ||
-      t.id.includes(user.id) ||
+      t.id.includes(String(currentUser.id)) ||
       // eslint-disable-next-line react-hooks/purity
       Math.random() > 0.7, // Mocking ownership
   );
@@ -125,18 +128,23 @@ const AdminUserProfile = () => {
 
             <div className="flex justify-center gap-2 mb-6">
               <span
+                // className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${
+                //   currentUser.status
+                //     ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800"
+                //     : user.kycStatus === "PENDING"
+                //       ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800"
+                //       : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800"
+                // }`}
                 className={`px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${
-                  user.kycStatus === "VERIFIED"
+                  currentUser.status
                     ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800"
-                    : user.kycStatus === "PENDING"
-                      ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800"
-                      : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800"
+                    : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800"
                 }`}
               >
-                {user.kycStatus}
+                {user.status ? "VERIFIED" : "PENDING"}
               </span>
               <span className="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-600">
-                {user.role}
+                {user.privilege === "super_admin" ? "ADMIN" : "USER"}
               </span>
             </div>
 
@@ -222,7 +230,7 @@ const AdminUserProfile = () => {
                     Joined Date
                   </p>
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {user.joinDate || "Jan 15, 2023"}
+                    {user.created_at || "Jan 15, 2023"}
                   </p>
                 </div>
               </div>
@@ -259,7 +267,7 @@ const AdminUserProfile = () => {
                       Wallet Balance (UGX)
                     </p>
                     <h3 className="text-3xl font-bold text-gray-900 dark:text-white">
-                      {user.wallet.balanceUGX.toLocaleString()}
+                      {user?.wallet?.balance.toLocaleString()}
                     </h3>
                   </div>
                   <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-5 rounded-xl border border-emerald-100 dark:border-emerald-800">
@@ -267,7 +275,7 @@ const AdminUserProfile = () => {
                       Wallet Balance (USD)
                     </p>
                     <h3 className="text-3xl font-bold text-gray-900 dark:text-white">
-                      ${user.wallet.balanceUSD.toLocaleString()}
+                      ${(Number(user?.wallet?.balance) / 3670).toLocaleString()}
                     </h3>
                   </div>
                 </div>
@@ -278,9 +286,8 @@ const AdminUserProfile = () => {
                     <CreditCard size={18} /> Linked Payment Methods
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {user.wallet.linkedMethods &&
-                    user.wallet.linkedMethods.length > 0 ? (
-                      user.wallet.linkedMethods.map((method) => (
+                    {linkedMethods.length > 0 ? (
+                      linkedMethods.map((method) => (
                         <div
                           key={method.id}
                           className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-700/50 rounded-lg border border-gray-200 dark:border-slate-700"
@@ -339,7 +346,7 @@ const AdminUserProfile = () => {
                         View Document
                       </button>
                     </div>
-                    {user.kycStatus === "PENDING" && (
+                    {user.status && (
                       <div className="p-4 bg-yellow-50 dark:bg-yellow-900/10 flex items-center justify-between">
                         <div className="flex items-center gap-2 text-yellow-700 dark:text-yellow-400 text-sm">
                           <AlertTriangle size={16} />

@@ -3,11 +3,17 @@ import DashboardCharts from "@/components/DashboardCharts";
 import StatCard from "@/components/StatCard";
 import TransactionTable from "@/components/TransactionTable";
 import { useAppStore } from "@/store";
-import { ArrowDownLeft, ArrowUpRight, CreditCard, Wallet } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  CreditCard,
+  Wallet as WalletIcon,
+} from "lucide-react";
 import { transactions } from "@/services/mockData";
 
 type UserProps = {
   user: User;
+  // wallet: Wallet;
 };
 const UserDashboard = ({ user }: UserProps) => {
   const setActiveTab = useAppStore((state) => state.setActiveTab);
@@ -20,8 +26,8 @@ const UserDashboard = ({ user }: UserProps) => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Balance"
-          value={`UGX ${user?.wallet.balanceUGX.toLocaleString()}`}
-          icon={Wallet}
+          value={`UGX ${user.wallet?.balance.toLocaleString()}`}
+          icon={WalletIcon}
           color="blue"
           trend="up"
           trendValue="+12%"

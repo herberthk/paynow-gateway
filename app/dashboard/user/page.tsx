@@ -1,8 +1,14 @@
 import UserDashboard from "@/components/UserDashboard";
-import { getSession } from "@/lib/session";
+import { getUserSession } from "@/lib";
+// import { getUserWallet } from "@/lib/actions/wallet";
 
 const UserDashboardPage = async () => {
-  const user = await getSession();
+  const user = await getUserSession();
+  if (!user) {
+    return;
+  }
+  // const wallet = await getUserWallet(user?.id);
+
   return <UserDashboard user={user as User} />;
 };
 
