@@ -8,9 +8,11 @@ import {
   Smartphone,
 } from "lucide-react";
 import { useAppStore } from "@/store";
+import { linkedMethods } from "@/services/mockData";
 
 type UserProps = {
   user: User;
+  // wallet: Wallet;
 };
 const WalletView = ({ user }: UserProps) => {
   const openPaymentModal = useAppStore((state) => state.openPaymentModal);
@@ -28,12 +30,12 @@ const WalletView = ({ user }: UserProps) => {
               Total Balance (UGX)
             </p>
             <h2 className="text-4xl font-bold mb-4">
-              UGX {user?.wallet.balanceUGX.toLocaleString()}
+              UGX {user?.wallet?.balance.toLocaleString()}
             </h2>
 
             <p className="text-indigo-100 font-medium mb-1 mt-6">USD Balance</p>
             <h3 className="text-2xl font-bold">
-              $ {user?.wallet.balanceUSD.toLocaleString()}
+              $ {(Number(user?.wallet?.balance) / 3650).toLocaleString()}
             </h3>
           </div>
           <div className="mt-6 flex gap-3 relative z-10">
@@ -61,7 +63,7 @@ const WalletView = ({ user }: UserProps) => {
             Linked Methods
           </h3>
           <div className="space-y-3">
-            {user?.wallet.linkedMethods.map((method) => (
+            {linkedMethods.map((method) => (
               <div
                 key={method.id}
                 className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700 rounded-lg border border-gray-100 dark:border-slate-600 transition-colors"

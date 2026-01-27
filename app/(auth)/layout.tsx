@@ -1,4 +1,4 @@
-import { getSession } from "@/lib";
+import { getUserSession } from "@/lib";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { ShieldCheck, Wallet } from "lucide-react";
@@ -13,10 +13,12 @@ const AuthLayout = async ({
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
-  const session = await getSession();
+  const session = await getUserSession();
   if (session) {
     const path =
-      session.role === "ADMIN" ? "/dashboard/admin" : "/dashboard/user";
+      session.privilege === "super_admin"
+        ? "/dashboard/admin"
+        : "/dashboard/user";
     console.log("path", path);
     console.log("session", session);
     redirect(path);

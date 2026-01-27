@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { mockUsers } from "@/services/mockData";
+import { linkedMethods, mockUsers } from "@/services/mockData";
 import {
   Check,
   X,
@@ -31,7 +31,7 @@ const AdminUsersKYC = () => {
   const [users, setUsers] = useState<User[]>(mockUsers);
   const [filter, setFilter] = useState<"ALL" | "PENDING" | "VERIFIED">("ALL");
   const [searchTerm, setSearchTerm] = useState("");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -43,32 +43,31 @@ const AdminUsersKYC = () => {
   const [currentUserData, setCurrentUserData] = useState<Partial<User>>({
     name: "",
     email: "",
-    role: "USER",
-    kycStatus: "UNVERIFIED",
-    wallet: { balanceUGX: 0, balanceUSD: 0, linkedMethods: [] },
+    privilege: "none",
+    status: false,
+    wallet: { balance: 0, id: "6578t" },
   });
 
-  const toggleExpand = (id: string) => {
+  const toggleExpand = (id: number) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
   const handleStatusChange = (
-    userId: string,
-    status: User["kycStatus"],
+    userId: number,
+    status: boolean,
     e: React.MouseEvent,
   ) => {
     e.stopPropagation();
     setUsers(
       users.map((u) => (u.id === userId ? { ...u, kycStatus: status } : u)),
     );
-    const message =
-      status === "VERIFIED"
-        ? "User approved successfully."
-        : "User KYC rejected.";
-    notify(status === "VERIFIED" ? "success" : "info", message);
+    const message = status
+      ? "User approved successfully."
+      : "User KYC rejected.";
+    notify(status === true ? "success" : "info", message);
   };
 
-  const handleDeleteUser = (userId: string, e: React.MouseEvent) => {
+  const handleDeleteUser = (userId: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (
       window.confirm(
@@ -85,9 +84,9 @@ const AdminUsersKYC = () => {
     setCurrentUserData({
       name: "",
       email: "",
-      role: "USER",
-      kycStatus: "UNVERIFIED",
-      wallet: { balanceUGX: 0, balanceUSD: 0, linkedMethods: [] },
+      privilege: "none",
+      status: false,
+      wallet: { balance: 0, id: "rrerd54" },
     });
     setIsModalOpen(true);
   };
@@ -108,9 +107,9 @@ const AdminUsersKYC = () => {
     if (modalMode === "create") {
       const newUser: User = {
         ...(currentUserData as User),
-        id: `u_${Date.now()}`,
-        joinDate: new Date().toISOString().split("T")[0],
-        wallet: { balanceUGX: 0, balanceUSD: 0, linkedMethods: [] },
+        id: Date.now(),
+        created_at: new Date().toISOString().split("T")[0],
+        wallet: { balance: 0, id: "retyty45" },
       };
       setUsers([newUser, ...users]);
       notify("success", "User account created successfully.");
@@ -126,7 +125,9 @@ const AdminUsersKYC = () => {
   };
 
   const filteredUsers = users.filter((u) => {
-    const matchesFilter = filter === "ALL" || u.kycStatus === filter;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    //@ts-expect-error
+    const matchesFilter = filter === "ALL" || u.status === filter;
     const matchesSearch =
       u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.email.toLowerCase().includes(searchTerm.toLowerCase());
@@ -146,14 +147,14 @@ const AdminUsersKYC = () => {
     setExpandedId(null);
   }, [filter, searchTerm]);
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: boolean) => {
     switch (status) {
-      case "VERIFIED":
+      case true:
         return "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border-green-200 dark:border-green-800";
-      case "PENDING":
+      case false:
         return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800";
-      case "REJECTED":
-        return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800";
+      // case "REJECTED":
+      //   return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800";
       default:
         return "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-600";
     }
@@ -256,20 +257,22 @@ const AdminUsersKYC = () => {
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                          user.role === "ADMIN"
+                          user.privilege === "super_admin"
                             ? "bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-100 dark:border-purple-800"
                             : "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-800"
                         }`}
                       >
-                        {user.role === "ADMIN" && <Shield size={10} />}
-                        {user.role}
+                        {user.privilege === "super_admin" && (
+                          <Shield size={10} />
+                        )}
+                        {user.privilege === "super_admin" ? "ADMIN" : "USER"}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(user.kycStatus)}`}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(user.status)}`}
                       >
-                        {user.kycStatus}
+                        {user.status ? "VERIFIED" : "PENDING"}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-gray-500 dark:text-gray-400">
@@ -278,16 +281,16 @@ const AdminUsersKYC = () => {
                           size={14}
                           className="text-gray-400 dark:text-gray-500"
                         />
-                        {user.joinDate || "2023-01-01"}
+                        {user.created_at || "2023-01-01"}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {user.kycStatus === "PENDING" && (
+                        {!user.status && (
                           <>
                             <button
                               onClick={(e) =>
-                                handleStatusChange(user.id, "VERIFIED", e)
+                                handleStatusChange(user.id, true, e)
                               }
                               className="p-1.5 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors"
                               title="Approve KYC"
@@ -296,7 +299,7 @@ const AdminUsersKYC = () => {
                             </button>
                             <button
                               onClick={(e) =>
-                                handleStatusChange(user.id, "REJECTED", e)
+                                handleStatusChange(user.id, false, e)
                               }
                               className="p-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
                               title="Reject KYC"
@@ -347,7 +350,7 @@ const AdminUsersKYC = () => {
                                     UGX
                                   </span>
                                   <span className="font-bold text-gray-900 dark:text-white">
-                                    {user.wallet.balanceUGX.toLocaleString()}
+                                    {user?.wallet?.balance.toLocaleString()}
                                   </span>
                                 </div>
                                 <div className="flex justify-between items-center">
@@ -355,7 +358,10 @@ const AdminUsersKYC = () => {
                                     USD
                                   </span>
                                   <span className="font-bold text-gray-900 dark:text-white">
-                                    ${user.wallet.balanceUSD.toLocaleString()}
+                                    $
+                                    {(
+                                      Number(user?.wallet?.balance) / 3650
+                                    ).toLocaleString()}
                                   </span>
                                 </div>
                               </div>
@@ -369,7 +375,7 @@ const AdminUsersKYC = () => {
                               <div className="space-y-2">
                                 <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                                   <Phone size={14} className="text-gray-400" />
-                                  {user.id === "u123"
+                                  {user.id === Number("u123")
                                     ? "+256 772 123 456"
                                     : "+256 700 000 000"}
                                 </div>
@@ -390,9 +396,8 @@ const AdminUsersKYC = () => {
                                 <CreditCard size={14} /> Payment Methods
                               </h4>
                               <div className="space-y-2">
-                                {user.wallet.linkedMethods &&
-                                user.wallet.linkedMethods.length > 0 ? (
-                                  user.wallet.linkedMethods.map((m) => (
+                                {linkedMethods.length > 0 ? (
+                                  linkedMethods.map((m) => (
                                     <div
                                       key={m.id}
                                       className="flex items-center gap-2 text-sm bg-white dark:bg-slate-900 p-2 rounded border border-gray-100 dark:border-slate-800"
@@ -533,17 +538,17 @@ const AdminUsersKYC = () => {
                     Role
                   </label>
                   <select
-                    value={currentUserData.role}
+                    value={currentUserData.privilege}
                     onChange={(e) =>
                       setCurrentUserData({
                         ...currentUserData,
-                        role: e.target.value as "USER" | "ADMIN",
+                        privilege: e.target.value as Privilege,
                       })
                     }
                     className="w-full bg-white dark:bg-slate-700 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   >
-                    <option value="USER">User</option>
-                    <option value="ADMIN">Admin</option>
+                    <option value="none">User</option>
+                    <option value="super_admin">Admin</option>
                   </select>
                 </div>
                 <div>
@@ -551,19 +556,19 @@ const AdminUsersKYC = () => {
                     Status
                   </label>
                   <select
-                    value={currentUserData.kycStatus}
+                    value={String(currentUserData?.status)}
                     onChange={(e) =>
                       setCurrentUserData({
                         ...currentUserData,
-                        kycStatus: e.target.value as never,
+                        status: e.target.value as never,
                       })
                     }
                     className="w-full bg-white dark:bg-slate-700 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   >
-                    <option value="UNVERIFIED">Unverified</option>
-                    <option value="PENDING">Pending</option>
-                    <option value="VERIFIED">Verified</option>
-                    <option value="REJECTED">Rejected</option>
+                    <option value="true">VERIFIED</option>
+                    <option value="false">Pending</option>
+                    {/* <option value="VERIFIED">Verified</option>
+                    <option value="REJECTED">Rejected</option> */}
                   </select>
                 </div>
               </div>

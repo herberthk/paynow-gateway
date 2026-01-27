@@ -9,6 +9,9 @@ body {
   font-family: "Inter", sans-serif;
 }
 
+button {
+  cursor: pointer;
+}
 /* Custom scrollbar for better aesthetics */
 ::-webkit-scrollbar {
   width: 6px;

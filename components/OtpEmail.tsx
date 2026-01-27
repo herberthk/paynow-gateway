@@ -1,5 +1,3 @@
-import { Head, Html, Body } from "@react-email/components";
-
 type Props = {
   otp?: string;
   userName?: string;
@@ -7,8 +5,8 @@ type Props = {
   type?: "verify" | "reset";
 };
 const OTPEmail = ({ otp, userName, expiryMinutes, type = "verify" }: Props) => {
-  const layersIcon =
-    "https://firebasestorage.googleapis.com/v0/b/connect-app-1f5ca.appspot.com/o/FCMImages%2Flayers.png?alt=media&token=4d0ab890-81ed-4f8c-9b40-8ff3c5337048";
+  // const layersIcon =
+  //   "https://firebasestorage.googleapis.com/v0/b/connect-app-1f5ca.appspot.com/o/FCMImages%2Flayers.png?alt=media&token=4d0ab890-81ed-4f8c-9b40-8ff3c5337048";
   return (
     <div
       style={{

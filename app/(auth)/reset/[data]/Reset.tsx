@@ -37,7 +37,7 @@ const ResetPage = ({ id }: Props) => {
       }
       setIsLoading(false);
     } catch (error) {
-      notify("error", "Failed to reset password");
+      // notify("error", "Failed to reset password");
       setIsLoading(false);
       console.log("error", error);
     } finally {

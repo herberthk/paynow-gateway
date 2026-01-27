@@ -23,24 +23,26 @@ declare global {
   }
 
   interface Wallet {
-    balanceUGX: number;
-    balanceUSD: number;
-    linkedMethods: Array<{
-      id: string;
-      type: "CARD" | "MOBILE_MONEY" | "BANK";
-      name: string;
-      detail: string;
-    }>;
+    balance: number;
+    id: string;
+    createdAt?: string;
+    updatedAt?: string;
+    userId?: number;
   }
 
+  type Privilege = "none" | "super_admin" | "admin";
+
   interface User {
-    id: string;
+    id: number;
     name: string;
     email: string;
-    role: UserRole;
-    kycStatus: "VERIFIED" | "PENDING" | "UNVERIFIED" | "REJECTED";
-    wallet: Wallet;
-    joinDate?: string;
+    privilege: Privilege;
+    status: boolean;
+    wallet?: Wallet;
+    created_at: string;
+    // kycStatus: "VERIFIED" | "PENDING" | "UNVERIFIED" | "REJECTED";
+    // wallet: Wallet;
+    // joinDate?: string;
   }
 
   interface SessionUser {

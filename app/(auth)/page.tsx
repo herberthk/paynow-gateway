@@ -1,9 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import { Eye, EyeOff, Lock } from "lucide-react";
-// import { useNotificationStore } from "@/store";
-// import { adminUser, currentUser } from "@/services/mockData";
-// import { useRouter } from "nextjs-toploader/app";
 import { login } from "@/lib";
 import Link from "next/link";
 import { useNotificationStore } from "@/store";
@@ -34,34 +31,7 @@ const LoginPage = () => {
     } finally {
       setIsLoading(false);
     }
-
-    // setIsLoading(true);
-    // Simulate network delay
-    // setTimeout(() => {
-    //   setIsLoading(false);
-    //   const userName = selectedRole === "ADMIN" ? "Admin User" : "Alex Mukasa";
-    //   handleLogin(selectedRole, userName);
-    // }, 1500);
   };
-  // console.log("selectedRole", selectedRole);
-  // const handleLogin = async (role: UserRole, name: string) => {
-  //   // Select the correct base user object based on role
-  //   const baseUser = role === "ADMIN" ? adminUser : currentUser;
-
-  //   // Update the name for personalization
-  //   const loggedInUser = { ...baseUser, name };
-
-  //   // setCurrentUser(loggedInUser);
-  //   await createSession(loggedInUser);
-  //   // setIsAuthenticated(true);
-
-  //   // Set default tab based on role
-  //   // setActiveTab(role === UserRole.ADMIN ? "admin-overview" : "dashboard");
-  //   notify("success", `Welcome back, ${name}!`);
-  //   const path = role === "ADMIN" ? "/dashboard/admin" : "/dashboard/user";
-  //   // console.log("path", path);
-  //   router.push(path);
-  // };
 
   return (
     <div className="w-full md:w-1/2 p-8 md:p-12">

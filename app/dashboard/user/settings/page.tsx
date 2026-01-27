@@ -1,8 +1,8 @@
 import KYCModule from "@/components/KYCModule";
-import { getSession } from "@/lib/session";
+import { getUserSession } from "@/lib";
 
 const Settings = async () => {
-  const user = await getSession();
+  const user = await getUserSession();
   return <KYCModule user={user as User} />;
 };
 

@@ -20,7 +20,7 @@ const Sidebar: React.FC<UserProps> = ({ user }) => {
     notify("info", "You have been logged out.");
   };
   // const pathname = usePathname();
-  const items = menuItems(user.role);
+  const items = menuItems(user.privilege);
   // console.log("pathname", pathname);
   return (
     <>

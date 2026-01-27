@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 "use server";
 import bcrypt from "bcrypt";
 import prisma from "@/lib/prisma";
 import { hashOTP, verifyOTP } from "@/utils";
 import { sendOtp } from "./email";
 import { redirect } from "next/navigation";
+import { createSession } from "@/lib";
 type VerifyProps = {
   id: number;
   otp: string;
@@ -72,74 +74,113 @@ export const VerifyUserOtp = async ({
   otp,
   action = "verify",
 }: VerifyProps) => {
-  let encodedData = "";
-  let route = "";
-  try {
-    if (!passwordResetSecret) {
-      // return "Password reset secret not found";
-      console.log("Password reset secret not found");
-      return;
-    }
-    // console.log("passwordResetSecret", passwordResetSecret);
-    const otpData = await prisma.otp.findFirst({
-      where: {
-        userId: id,
-        expiresAt: {
-          gt: new Date(),
-        },
+  // try {
+  if (!passwordResetSecret) {
+    // return "Password reset secret not found";
+    console.log("Password reset secret not found");
+    return;
+  }
+  // console.log("passwordResetSecret", passwordResetSecret);
+  const otpData = await prisma.otp.findFirst({
+    where: {
+      userId: id,
+      expiresAt: {
+        gt: new Date(),
       },
-    });
+    },
+  });
 
-    if (!otpData) {
+  if (!otpData) {
+    return "Invalid otp";
+  }
+
+  const validOtp = verifyOTP(otp, otpData.otpHash);
+  console.log("otp data", otpData);
+  if (!validOtp) {
+    if (otpData?.attempts >= 3) {
+      await prisma.otp.delete({
+        where: {
+          userId: id,
+        },
+      });
+      // console.log("otpData", otpData);
+      return "Invalid otp";
+    } else {
+      await prisma.otp.update({
+        where: {
+          userId: id,
+        },
+        data: {
+          attempts: otpData?.attempts + 1,
+          // attempts: { increment: 1 },
+        },
+      });
+      // console.log("otpData", otpData);
       return "Invalid otp";
     }
-
-    const validOtp = verifyOTP(otp, otpData.otpHash);
-
-    if (!validOtp) {
-      if (otpData?.attempts >= 3) {
-        await prisma.otp.delete({
-          where: {
-            userId: id,
-          },
-        });
-        console.log("otpData", otpData);
-        return "Invalid otp";
-      } else {
-        await prisma.otp.update({
-          where: {
-            userId: id,
-          },
-          data: {
-            attempts: otpData?.attempts + 1,
-            // attempts: { increment: 1 },
-          },
-        });
-        console.log("otpData", otpData);
-        return "Invalid otp";
-      }
-    }
-    await prisma.otp.delete({
-      where: {
-        userId: id,
-      },
-    });
-    if (action === "verify") {
-      //TODO: create session and redirect to dashboard
-      return "Otp verified successfully";
-    }
-    if (action === "reset") {
-      const secretHash = await hashOTP(passwordResetSecret);
-      encodedData = Buffer.from(`${id}-${secretHash}`).toString("base64url");
-      route = "reset";
-    }
-    //TODO: create session and redirect to dashboard
-    // return "Otp verified successfully";
-  } catch (error) {
-    console.log("error", error);
-    // return "Failed to verify otp";
   }
-  redirect(`/${route}/${encodedData}`);
+  await prisma.otp.delete({
+    where: {
+      userId: id,
+    },
+  });
+  if (action === "verify") {
+    console.log("Otp verified successfully");
+    await loginNow(id);
+    return "Otp verified successfully";
+  }
+  if (action === "reset") {
+    const secretHash = await hashOTP(passwordResetSecret);
+    const encodedData = Buffer.from(`${id}-${secretHash}`).toString(
+      "base64url",
+    );
+    gotoReset(`/reset/${encodedData}`);
+    return "Otp verified successfully";
+  }
+  // } catch (error) {
+  // console.log("error", error);
+  // return "Failed to verify otp";
+  // }
+};
+
+const gotoReset = (path: string) => redirect(path);
+
+const loginNow = async (id: number) => {
+  const user = await prisma.user.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      privilege: true,
+      status: true,
+      wallet: true,
+      created_at: true,
+    },
+  });
+  if (!user) {
+    return "User not found";
+  }
+  await createSession({
+    name: user.name!,
+    email: user.email!,
+    privilege: user.privilege!,
+    status: user?.status!,
+    id: user.id,
+    created_at: user.created_at?.toDateString()!,
+    wallet: {
+      ...user.wallet,
+      id: user.wallet?.id!,
+      balance: Number(user.wallet?.balance),
+      createdAt: user.wallet?.createdAt.toDateString()!,
+      updatedAt: user.wallet?.updatedAt.toDateString()!,
+    },
+  });
+  const path =
+    user.privilege === "super_admin" ? "/dashboard/admin" : "/dashboard/user";
+  redirect(path);
 };
 
 export const initPasswordReset = async (email: string) => {
@@ -180,6 +221,7 @@ export const initPasswordReset = async (email: string) => {
 };
 
 export const resetPassword = async (id: number, password: string) => {
+  let path = "";
   try {
     const user = await prisma.user.findUnique({
       where: {
@@ -189,6 +231,10 @@ export const resetPassword = async (id: number, password: string) => {
         id: true,
         name: true,
         email: true,
+        privilege: true,
+        status: true,
+        wallet: true,
+        created_at: true,
       },
     });
     if (!user) {
@@ -203,10 +249,28 @@ export const resetPassword = async (id: number, password: string) => {
         password: hashedPassword,
       },
     });
+    // console.log("user", user);
     console.log("reset password successfully");
-    //TODO: create session and redirect to dashboard
-    return "Password reset successfully";
+    // Create session and login the user
+    await createSession({
+      name: user.name!,
+      email: user.email!,
+      privilege: user.privilege!,
+      status: user?.status!,
+      id: user.id,
+      created_at: user.created_at?.toDateString()!,
+      wallet: {
+        ...user.wallet,
+        id: user.wallet?.id!,
+        balance: Number(user.wallet?.balance),
+        createdAt: user.wallet?.createdAt.toDateString()!,
+        updatedAt: user.wallet?.updatedAt.toDateString()!,
+      },
+    });
+    path =
+      user.privilege === "super_admin" ? "/dashboard/admin" : "/dashboard/user";
   } catch (error) {
     console.log("error", error);
   }
+  redirect(path);
 };
