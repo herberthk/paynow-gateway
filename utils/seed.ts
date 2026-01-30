@@ -7,16 +7,16 @@ const hashPassword = async (password: string) =>
 // Seed data for Users
 export const seedUsers = [
   {
-    name: "Admin User",
-    email: "admin@paynow.com",
+    name: "Herbert James",
+    email: "herberthtk100@gmail.com",
     tel: "+256700700001",
     password: await hashPassword("1245689"), // Remember to hash passwords properly
-    privilege: "admin" as const,
+    privilege: "super_admin" as const,
     status: true,
     ispaid: true,
   },
   {
-    name: "Kavuma Herbert",
+    name: "John Doe",
     email: "herbertbruce8@gmail.com",
     tel: "+256700800001",
     password: await hashPassword("1245689"), // Remember to hash passwords properly
@@ -303,6 +303,7 @@ export async function seedDatabase() {
     await prisma.fee.deleteMany();
     await prisma.paymentMethod.deleteMany();
     await prisma.wallet.deleteMany();
+    await prisma.user.deleteMany();
     // Note: We're not deleting users as they might be referenced elsewhere
 
     // Seed Users

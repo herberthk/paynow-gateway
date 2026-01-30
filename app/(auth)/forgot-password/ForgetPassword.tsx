@@ -9,7 +9,7 @@ import { useState } from "react";
 const ForgetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const notify = useNotificationStore((state) => state.notify);
-  const [email, setEmail] = useState("demo@paynow.com");
+  const [email, setEmail] = useState("");
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();

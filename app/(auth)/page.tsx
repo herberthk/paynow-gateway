@@ -12,7 +12,7 @@ const LoginPage = () => {
   const notify = useNotificationStore((state) => state.notify);
 
   // Form State
-  const [email, setEmail] = useState("herbertbruce8@gmail.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("1245689");
 
   const handleSubmit = async (e: React.FormEvent) => {

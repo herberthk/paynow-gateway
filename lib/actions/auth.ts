@@ -95,29 +95,28 @@ export const VerifyUserOtp = async ({
   }
 
   const validOtp = verifyOTP(otp, otpData.otpHash);
-  console.log("otp data", otpData);
+  // console.log("otp data", otpData);
   if (!validOtp) {
-    if (otpData?.attempts >= 3) {
-      await prisma.otp.delete({
-        where: {
-          userId: id,
-        },
-      });
-      // console.log("otpData", otpData);
-      return "Invalid otp";
-    } else {
-      await prisma.otp.update({
-        where: {
-          userId: id,
-        },
-        data: {
-          attempts: otpData?.attempts + 1,
-          // attempts: { increment: 1 },
-        },
-      });
-      // console.log("otpData", otpData);
-      return "Invalid otp";
-    }
+    await prisma.otp.update({
+      where: {
+        userId: id,
+      },
+      data: {
+        attempts: otpData?.attempts + 1,
+        // attempts: { increment: 1 },
+      },
+    });
+    // console.log("otpData", otpData);
+    return "Invalid otp";
+  }
+  if (otpData?.attempts >= 3) {
+    await prisma.otp.delete({
+      where: {
+        userId: id,
+      },
+    });
+    // console.log("otpData", otpData);
+    return "Invalid otp";
   }
   await prisma.otp.delete({
     where: {

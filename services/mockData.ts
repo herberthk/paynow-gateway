@@ -232,11 +232,11 @@ export const successRateData = [
 ];
 
 export const categoryData = [
-  { name: "Transport", value: 400, color: "#4F46E5" },
+  { name: "Bus booking", value: 400, color: "#4F46E5" },
   { name: "Rent/Housing", value: 300, color: "#10B981" },
-  { name: "Utilities", value: 300, color: "#F59E0B" },
-  { name: "Entertainment", value: 200, color: "#EF4444" },
-  { name: "Groceries", value: 150, color: "#8B5CF6" },
+  { name: "Advertisements", value: 300, color: "#F59E0B" },
+  { name: "Donations", value: 200, color: "#EF4444" },
+  { name: "Savings", value: 150, color: "#8B5CF6" },
 ];
 
 // New Data: Hourly Traffic Analysis for Heatmap/Bar
