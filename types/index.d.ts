@@ -143,6 +143,16 @@ declare global {
     isOpen: boolean;
     type: "deposit" | "withdraw";
   }
+
+  interface StatCardProps {
+    title: string;
+    value: string;
+    subValue?: string;
+    icon: LucideIcon;
+    trend?: "up" | "down";
+    trendValue?: string;
+    color?: string;
+  }
 }
 
 // This export is needed to make the file a module
