@@ -32,7 +32,6 @@ export const login = async (email: string, password: string) => {
       return "Wrong email or password";
       // throw Error("User not found");
     }
-    // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
     const isPasswordValid = await bcrypt.compare(password, user?.password!);
     if (!isPasswordValid) {
       return "Wrong email or password";
