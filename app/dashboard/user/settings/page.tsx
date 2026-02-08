@@ -1,9 +1,13 @@
-import KYCModule from "@/components/KYCModule";
+import Settings from "@/components/settings/Settings";
 import { getUserSession } from "@/lib";
 
-const Settings = async () => {
+const SettingsPage = async () => {
   const user = await getUserSession();
-  return <KYCModule user={user as User} />;
+  if (!user) {
+    return;
+  }
+
+  return <Settings user={user as User} />;
 };
 
-export default Settings;
+export default SettingsPage;

@@ -5,6 +5,7 @@ import { useAppStore, useNotificationStore } from "@/store";
 import { logout } from "@/lib";
 import Link from "next/link";
 import { menuItems } from "@/constants";
+import { usePathname } from "next/navigation";
 
 type UserProps = {
   user: User;
@@ -13,15 +14,13 @@ const Sidebar: React.FC<UserProps> = ({ user }) => {
   const notify = useNotificationStore((state) => state.notify);
   const isOpen = useAppStore((state) => state.isSidebarOpen);
   const setIsOpen = useAppStore((state) => state.setIsSidebarOpen);
-  const activeTab = useAppStore((state) => state.activeTab);
-  const setActiveTab = useAppStore((state) => state.setActiveTab);
   const handleLogout = async () => {
     await logout();
     notify("info", "You have been logged out.");
   };
-  // const pathname = usePathname();
+  const pathname = usePathname();
   const items = menuItems(user.privilege);
-  // console.log("pathname", pathname);
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -54,18 +53,18 @@ const Sidebar: React.FC<UserProps> = ({ user }) => {
               key={item.id}
               href={item.href}
               onClick={() => {
-                setActiveTab(item.id);
+                // setActiveTab(item.id);
                 setIsOpen(false);
               }}
               className={`flex items-center w-full px-3 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
-                activeTab === item.id
+                pathname === item.href
                   ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-semibold"
                   : "text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800"
               }`}
             >
               <item.icon
                 size={20}
-                className={`mr-3 ${activeTab === item.id ? "text-indigo-600 dark:text-indigo-400" : "text-gray-400 dark:text-slate-500"}`}
+                className={`mr-3 ${pathname === item.href ? "text-indigo-600 dark:text-indigo-400" : "text-gray-400 dark:text-slate-500"}`}
               />
               <span className="text-sm">{item.label}</span>
             </Link>

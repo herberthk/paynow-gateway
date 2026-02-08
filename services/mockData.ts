@@ -117,7 +117,8 @@ const generateMockTransactions = (count: number): Transaction[] => {
   return Array.from({ length: count }).map((_, i) => ({
     id: `tx_gen_${i}`,
     date: new Date(
-      Date.now() - Math.floor(random() * 60) * 24 * 60 * 60 * 1000,
+      new Date("2024-01-01").getTime() -
+        Math.floor(random() * 60) * 24 * 60 * 60 * 1000,
     ).toISOString(),
     amount: Math.floor(random() * 200000) + 5000,
     currency: random() > 0.9 ? "USD" : "UGX",

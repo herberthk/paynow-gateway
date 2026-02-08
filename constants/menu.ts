@@ -7,50 +7,49 @@ import {
   PieChart,
   Users,
   AlertCircle,
-  Code2,
   Banknote,
 } from "lucide-react";
 export const menuItems = (userRole: Privilege) =>
   userRole === "super_admin"
     ? [
         {
-          id: "admin-dashboard",
+          id: "/dashboard/admin",
           label: "Overview",
           icon: LayoutDashboard,
           href: "/dashboard/admin",
         },
         {
-          id: "admin-transaction",
+          id: "/dashboard/admin/transactions",
           label: "Transactions",
           icon: Banknote,
           href: "/dashboard/admin/transactions",
         },
         {
-          id: "admin-analytics",
+          id: "/dashboard/admin/analytics",
           label: "Revenue & Analytics",
           icon: PieChart,
           href: "/dashboard/admin/analytics",
         },
         {
-          id: "admin-disputes",
+          id: "/dashboard/admin/disputes",
           label: "Disputes & Refunds",
           icon: AlertCircle,
           href: "/dashboard/admin/disputes",
         },
         {
-          id: "admin-kyc",
+          id: "/dashboard/admin/kyc",
           label: "KYC & Users",
           icon: Users,
           href: "/dashboard/admin/kyc",
         },
         {
-          id: "admin-logs",
+          id: "/dashboard/admin/logs",
           label: "Audit Logs",
           icon: ShieldCheck,
           href: "/dashboard/admin/logs",
         },
         {
-          id: "admin-settings",
+          id: "/dashboard/admin/settings",
           label: "Fee Management",
           icon: Settings,
           href: "/dashboard/admin/settings",
@@ -58,37 +57,37 @@ export const menuItems = (userRole: Privilege) =>
       ]
     : [
         {
-          id: "dashboard",
+          id: "/dashboard/user",
           label: "Dashboard",
           icon: LayoutDashboard,
           href: "/dashboard/user",
         },
         {
-          id: "wallet",
+          id: "/dashboard/user/wallet",
           label: "My Wallet",
           icon: Wallet,
           href: "/dashboard/user/wallet",
         },
         {
-          id: "analytics",
+          id: "/dashboard/user/analytics",
           label: "Analytics",
           icon: PieChart,
           href: "/dashboard/user/analytics",
         },
         {
-          id: "transactions",
+          id: "/dashboard/user/transactions",
           label: "Transactions",
           icon: History,
           href: "/dashboard/user/transactions",
         },
         {
-          id: "developers",
-          label: "Developers",
-          icon: Code2,
-          href: "/dashboard/user/developers",
+          id: "/dashboard/activity-logs",
+          label: "Activity Logs",
+          icon: ShieldCheck,
+          href: "/dashboard/activity-logs",
         },
         {
-          id: "settings",
+          id: "/dashboard/user/settings",
           label: "Settings",
           icon: Settings,
           href: "/dashboard/user/settings",

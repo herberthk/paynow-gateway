@@ -21,6 +21,7 @@ import {
   Smartphone,
   Loader2,
 } from "lucide-react";
+import Link from "next/link";
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -32,7 +33,6 @@ interface TransactionTableProps {
 const TransactionTable: React.FC<TransactionTableProps> = ({
   transactions,
   limit,
-  onViewAll,
   title = "Recent Transactions",
 }) => {
   const [filter, setFilter] = useState("");
@@ -364,9 +364,15 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                       {tx.category}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-gray-500 dark:text-gray-400">
+                  <td
+                    className="px-6 py-4 text-gray-500 dark:text-gray-400"
+                    suppressHydrationWarning
+                  >
                     {new Date(tx.date).toLocaleDateString()}
-                    <div className="text-xs text-gray-400 dark:text-gray-500">
+                    <div
+                      className="text-xs text-gray-400 dark:text-gray-500"
+                      suppressHydrationWarning
+                    >
                       {new Date(tx.date).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
@@ -552,12 +558,12 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
       <div className="bg-gray-50 dark:bg-slate-700/30 px-6 py-4 border-t border-gray-200 dark:border-slate-700">
         {limit ? (
-          <button
-            onClick={onViewAll}
+          <Link
+            href="/dashboard/user/transactions"
             className="w-full text-indigo-600 dark:text-indigo-400 text-sm font-medium hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors text-center block"
           >
             View All Transactions
-          </button>
+          </Link>
         ) : (
           <div className="flex items-center justify-between">
             <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">

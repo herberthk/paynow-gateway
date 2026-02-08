@@ -181,37 +181,71 @@ const UserAnalytics: React.FC = () => {
             </h3>
           </div>
 
-          <div className="h-64 relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={categoryData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
+          <div className="min-h-64 grid grid-cols-1 lg:grid-cols-2 gap-2">
+            <div className="flex-1 relative">
+              <ResponsiveContainer width="100%" minHeight={200}>
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.color}
+                        strokeWidth={0}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  {/* <Legend /> */}
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+                <span className="block text-xl font-bold text-gray-900 dark:text-white">
+                  {Math.round(
+                    categoryData.reduce((acc, curr) => acc + curr.value, 0) /
+                      categoryData.length,
+                  )}
+                </span>
+                <span className="block text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                  Avg Score
+                </span>
+              </div>
+            </div>
+            <div className="mt-4 space-y-2">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                Top spending categories
+              </p>
+              {categoryData.slice(0, 5).map((category, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between text-sm"
                 >
-                  {categoryData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={entry.color}
-                      strokeWidth={0}
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: category.color }}
                     />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-              <span className="block text-2xl font-bold text-gray-900 dark:text-white">
-                5
-              </span>
-              <span className="block text-xs text-gray-500 dark:text-gray-400">
-                Categories
-              </span>
+                    <span className="text-gray-600 dark:text-gray-300">
+                      {category.name}
+                    </span>
+                  </div>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {Math.round(
+                      (category.value /
+                        categoryData.reduce((a, b) => a + b.value, 0)) *
+                        100,
+                    )}
+                    %
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
