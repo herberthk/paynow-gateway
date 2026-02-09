@@ -34,7 +34,7 @@ export const updatePassword = async ({
     if (!isPasswordValid) {
       return {
         type: "error",
-        message: "Wrong email or password",
+        message: "Wrong current password",
       };
     }
 

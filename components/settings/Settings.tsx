@@ -1,13 +1,14 @@
 "use client";
-import { useState } from "react";
 
 import Profile from "./Profile";
 import Security from "./Security";
+import { useAppStore } from "@/store";
 type UserProps = {
   user: User;
 };
 const Settings = ({ user }: UserProps) => {
-  const [activeTab, setActiveTab] = useState<"profile" | "security">("profile");
+  const activeTab = useAppStore((state) => state.activeSecurityTab);
+  const setActiveTab = useAppStore((state) => state.setActiveSecurityTab);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
