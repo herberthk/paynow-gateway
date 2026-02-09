@@ -6,3 +6,5 @@ const prisma = new PrismaClient({
 }).$extends(withAccelerate());
 
 export default prisma;
+
+// bunx prisma migrate resolve --applied 0_init

@@ -2,9 +2,11 @@
 import { Lock, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { useNotificationStore } from "@/store";
+import { updatePassword } from "@/lib";
 
 const Security = () => {
   const notify = useNotificationStore((state) => state.notify);
+  const [isSaving, setIsSaving] = useState(false);
   // Security State
   const [passwords, setPasswords] = useState({
     current: "",
@@ -12,14 +14,34 @@ const Security = () => {
     confirm: "",
   });
 
-  const handlePasswordUpdate = (e: React.FormEvent) => {
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwords.new !== passwords.confirm) {
-      notify("error", "New passwords do not match.");
+    if (passwords.new.length < 8 || passwords.current.length < 8) {
+      notify("info", "Password must be at least 8 characters long.");
       return;
     }
-    notify("success", "Password updated successfully.");
-    setPasswords({ current: "", new: "", confirm: "" });
+    if (passwords.new !== passwords.confirm) {
+      notify("info", "Passwords do not match");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const res = await updatePassword({
+        currentPassword: passwords.current,
+        newPassword: passwords.new,
+      });
+      if (res.type === "error") {
+        notify("error", res.message);
+      } else {
+        notify("success", res.message);
+        setPasswords({ current: "", new: "", confirm: "" });
+      }
+      setIsSaving(false);
+    } catch (e) {
+      console.log(e);
+      notify("error", "Something went wrong");
+      setIsSaving(false);
+    }
   };
 
   // CRUD: Delete Account (Simulation)
@@ -81,9 +103,10 @@ const Security = () => {
           </div>
           <button
             type="submit"
+            disabled={isSaving}
             className="bg-gray-900 hover:bg-black dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-white font-medium py-2 px-6 rounded-lg transition-colors"
           >
-            Update Password
+            {isSaving ? "Saving..." : "Update Password"}
           </button>
         </form>
       </div>

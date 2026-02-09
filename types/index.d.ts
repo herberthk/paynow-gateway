@@ -153,6 +153,7 @@ declare global {
     trendValue?: string;
     color?: string;
   }
+  type SecurityTab = "profile" | "security";
 }
 
 // This export is needed to make the file a module

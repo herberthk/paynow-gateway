@@ -23,6 +23,18 @@ CREATE TYPE "TransactionType" AS ENUM ('DEPOSIT', 'WITHDRAWAL', 'TRANSFER', 'PAY
 CREATE TYPE "TransactionStatus" AS ENUM ('COMPLETED', 'PENDING', 'FAILED', 'DISPUTED');
 
 -- CreateTable
+CREATE TABLE "Payment_otp" (
+    "id" TEXT NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "otpHash" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "attempts" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "Payment_otp_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "payment_wallets" (
     "id" TEXT NOT NULL,
     "userId" INTEGER NOT NULL,
@@ -121,25 +133,28 @@ CREATE TABLE "payment_system_notifications" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Payment_otp_userId_key" ON "Payment_otp"("userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "payment_wallets_userId_key" ON "payment_wallets"("userId");
 
--- AddForeignKey
-ALTER TABLE "payment_wallets" ADD CONSTRAINT "payment_wallets_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "payment_methods_userId_key" ON "payment_methods"("userId");
 
--- AddForeignKey
-ALTER TABLE "payment_methods" ADD CONSTRAINT "payment_methods_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "payment_transactions_userId_key" ON "payment_transactions"("userId");
 
--- AddForeignKey
-ALTER TABLE "payment_transactions" ADD CONSTRAINT "payment_transactions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateIndex
+CREATE UNIQUE INDEX "payment_disputes_transactionId_key" ON "payment_disputes"("transactionId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "payment_disputes_userId_key" ON "payment_disputes"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "payment_audit_logs_adminId_key" ON "payment_audit_logs"("adminId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "payment_system_notifications_userId_key" ON "payment_system_notifications"("userId");
 
 -- AddForeignKey
 ALTER TABLE "payment_disputes" ADD CONSTRAINT "payment_disputes_transactionId_fkey" FOREIGN KEY ("transactionId") REFERENCES "payment_transactions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "payment_disputes" ADD CONSTRAINT "payment_disputes_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "payment_audit_logs" ADD CONSTRAINT "payment_audit_logs_adminId_fkey" FOREIGN KEY ("adminId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "payment_system_notifications" ADD CONSTRAINT "payment_system_notifications_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

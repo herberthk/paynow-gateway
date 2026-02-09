@@ -7,8 +7,8 @@ type State = {
   isAuthenticated: boolean;
   isSidebarOpen: boolean;
   setIsSidebarOpen: (isOpen: boolean) => void;
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  activeSecurityTab: SecurityTab;
+  setActiveSecurityTab: (tab: SecurityTab) => void;
   paymentModal: PaymentModalProps;
   setPaymentModal: (modal: PaymentModalProps) => void;
   closePaymentModal: () => void;
@@ -20,7 +20,7 @@ export const useAppStore = create<State>((set) => ({
   currentUser: null,
   isAuthenticated: false,
   isSidebarOpen: false,
-  activeTab: "dashboard",
+  activeSecurityTab: "profile",
   setCurrentUser: (user: User) =>
     set(() => ({
       currentUser: user,
@@ -28,7 +28,8 @@ export const useAppStore = create<State>((set) => ({
     })),
   logout: () => set(() => ({ currentUser: null, isAuthenticated: false })),
   setIsSidebarOpen: (isOpen: boolean) => set(() => ({ isSidebarOpen: isOpen })),
-  setActiveTab: (tab: string) => set(() => ({ activeTab: tab })),
+  setActiveSecurityTab: (tab: SecurityTab) =>
+    set(() => ({ activeSecurityTab: tab })),
   paymentModal: { isOpen: false, type: "deposit" },
   setPaymentModal: (modal: PaymentModalProps) =>
     set(() => ({ paymentModal: modal })),

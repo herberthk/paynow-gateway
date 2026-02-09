@@ -7,6 +7,7 @@ type ProfileProps = {
   user: User;
 };
 const Profile = ({ user }: ProfileProps) => {
+  console.log(user);
   const notify = useNotificationStore((state) => state.notify);
   const [isSaving, setIsSaving] = useState(false);
   const updateUser = useAppStore((state) => state.handleUpdateUser);
