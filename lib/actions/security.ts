@@ -1,8 +1,9 @@
 "use server";
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { getUserSession } from "../session";
+import { createSession, getUserSession } from "../session";
 import bcrypt from "bcrypt";
+import { revalidatePath } from "next/cache";
 
 export const updatePassword = async ({
   currentPassword,
@@ -51,6 +52,70 @@ export const updatePassword = async ({
     return {
       type: "success",
       message: "Password reset successfully",
+    };
+  } catch (e) {
+    console.log(e);
+    return {
+      type: "error",
+      message: "Something went wrong",
+    };
+  }
+};
+
+export const updateUserInfo = async ({
+  name,
+  email,
+  tel,
+  address,
+}: {
+  name: string;
+  email: string;
+  tel: string;
+  address: string;
+}) => {
+  console.log(name, email, tel, address);
+  try {
+    const authenticated = await getUserSession();
+    if (!authenticated) {
+      return redirect("/login");
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: authenticated.id,
+      },
+      select: {
+        id: true,
+      },
+    });
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: user?.id,
+      },
+      data: {
+        name,
+        // email, Email update will be done later
+        tel,
+        address,
+      },
+      select: {
+        name: true,
+        tel: true,
+        address: true,
+      },
+    });
+
+    await createSession({
+      ...authenticated,
+      name: updatedUser.name!,
+      address: updatedUser.address!,
+      tel: updatedUser.tel!,
+    });
+    // console.log("updatedUser", updatedUser);
+    revalidatePath("/dashboard/user/settings");
+    return {
+      type: "success",
+      message: "User information updated successfully",
     };
   } catch (e) {
     console.log(e);

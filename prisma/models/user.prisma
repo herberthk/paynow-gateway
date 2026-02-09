@@ -6,7 +6,7 @@ model User {
   password          String?         @db.VarChar(255)
   profile           String?         @db.VarChar(255)
   status            Boolean         @default(true)
-  address           String?         @db.VarChar(255)
+  address           String?
   ispaid            Boolean         @default(false)
   email_verified_at DateTime?       @db.Timestamptz(6)
   push_token        String?         @db.VarChar(255)
