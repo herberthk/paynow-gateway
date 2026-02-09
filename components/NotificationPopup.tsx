@@ -16,17 +16,22 @@ interface NotificationPopupProps {
   onMarkAllRead: () => void;
   onClear: () => void;
   onClose: () => void;
-  // onViewAll: () => void;
+  unreadCount: number;
   isOpen: boolean;
+  isLoading: boolean;
 }
+
+import { Loader2 } from "lucide-react";
+import { formatTime } from "@/lib";
 
 const NotificationPopup: React.FC<NotificationPopupProps> = ({
   notifications,
   onMarkAllRead,
   onClear,
   onClose,
-  // onViewAll,
+  unreadCount,
   isOpen,
+  isLoading,
 }) => {
   if (!isOpen) return null;
 
@@ -36,20 +41,22 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({
         <h3 className="font-bold text-gray-900 dark:text-white flex items-center gap-2">
           Notifications
           <span className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs px-2 py-0.5 rounded-full">
-            {notifications.filter((n) => !n.read).length} new
+            {unreadCount} new
           </span>
         </h3>
         <div className="flex items-center gap-1">
           <button
             onClick={onMarkAllRead}
-            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
+            disabled={isLoading}
+            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-50"
             title="Mark all as read"
           >
             <Check size={16} />
           </button>
           <button
             onClick={onClear}
-            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700"
+            disabled={isLoading}
+            className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-50"
             title="Clear all"
           >
             <Trash2 size={16} />
@@ -64,71 +71,88 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({
         </div>
       </div>
 
-      <div className="max-h-[400px] overflow-y-auto">
-        {notifications.length === 0 ? (
-          <div className="p-8 text-center text-gray-500 dark:text-gray-400 flex flex-col items-center">
-            <Bell size={32} className="text-gray-300 dark:text-gray-600 mb-2" />
-            <p className="text-sm">No notifications yet</p>
+      <div className="max-h-[400px] overflow-y-auto relative min-h-[100px]">
+        {isLoading ? (
+          <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 flex items-center justify-center z-10">
+            <Loader2 className="animate-spin text-indigo-500" size={24} />
           </div>
         ) : (
-          <div className="divide-y divide-gray-50 dark:divide-slate-700">
-            {notifications.slice(0, 5).map((notification) => (
-              <div
-                key={notification.id}
-                className={`p-4 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors ${!notification.read ? "bg-indigo-50/30 dark:bg-indigo-900/10" : ""}`}
-              >
-                <div className="flex gap-3">
-                  <div
-                    className={`mt-1 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                      notification.type === "ALERT"
-                        ? "bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400"
-                        : notification.type === "SUCCESS"
-                          ? "bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400"
-                          : "bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
-                    }`}
-                  >
-                    {notification.type === "ALERT" && <AlertCircle size={14} />}
-                    {notification.type === "SUCCESS" && (
-                      <CheckCircle size={14} />
-                    )}
-                    {notification.type === "INFO" && <Info size={14} />}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start mb-1">
-                      <h4
-                        className={`text-sm font-semibold ${!notification.read ? "text-gray-900 dark:text-white" : "text-gray-600 dark:text-gray-400"}`}
-                      >
-                        {notification.title}
-                      </h4>
-                      <span className="text-[10px] text-gray-400 dark:text-gray-500">
-                        {notification.time}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2">
-                      {notification.message}
-                    </p>
-                  </div>
-                  {!notification.read && (
-                    <div className="mt-2 w-2 h-2 bg-indigo-500 rounded-full flex-shrink-0"></div>
-                  )}
-                </div>
+          <>
+            {notifications.length === 0 ? (
+              <div className="p-8 text-center text-gray-500 dark:text-gray-400 flex flex-col items-center">
+                <Bell
+                  size={32}
+                  className="text-gray-300 dark:text-gray-600 mb-2"
+                />
+                <p className="text-sm">No notifications yet</p>
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="divide-y divide-gray-50 dark:divide-slate-700">
+                {notifications.slice(0, 5).map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`p-4 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors ${!notification.read ? "bg-indigo-50/30 dark:bg-indigo-900/10" : ""}`}
+                  >
+                    <Link href={notification.path}>
+                      <div className="flex gap-3">
+                        <div
+                          className={`mt-1 shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                            notification.type === "ALERT"
+                              ? "bg-orange-100 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400"
+                              : notification.type === "SUCCESS"
+                                ? "bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400"
+                                : "bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400"
+                          }`}
+                        >
+                          {notification.type === "ALERT" && (
+                            <AlertCircle size={14} />
+                          )}
+                          {notification.type === "SUCCESS" && (
+                            <CheckCircle size={14} />
+                          )}
+                          {notification.type === "INFO" && <Info size={14} />}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start mb-1">
+                            <h4
+                              className={`text-sm font-semibold ${!notification.read ? "text-gray-900 dark:text-white" : "text-gray-600 dark:text-gray-400"}`}
+                            >
+                              {notification.title}
+                            </h4>
+                            <span className="text-[10px] text-gray-400 dark:text-gray-500">
+                              {formatTime(notification.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2">
+                            {notification.message}
+                          </p>
+                        </div>
+                        {!notification.read && (
+                          <div className="mt-2 w-2 h-2 bg-indigo-500 rounded-full shrink-0"></div>
+                        )}
+                      </div>
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
-      <div className="p-3 border-t border-gray-100 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-700/50 text-center">
-        <Link
-          href={"/dashboard/activity-logs"}
-          onClick={() => {
-            onClose();
-          }}
-          className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
-        >
-          View All Activity
-        </Link>
-      </div>
+      {unreadCount > 4 && (
+        <div className="p-3 border-t border-gray-100 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-700/50 text-center">
+          <Link
+            href={"/dashboard/activity-logs"}
+            onClick={() => {
+              onClose();
+            }}
+            className="text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
+          >
+            View All Activity
+          </Link>
+        </div>
+      )}
     </div>
   );
 };

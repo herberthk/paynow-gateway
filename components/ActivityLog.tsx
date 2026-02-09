@@ -1,6 +1,5 @@
 "use client";
-import React, { useState } from "react";
-import { mockSystemNotifications } from "../services/mockData";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   AlertCircle,
   CheckCircle,
@@ -9,7 +8,17 @@ import {
   ChevronRight,
   Clock,
   Bell,
+  Trash2,
+  Check,
+  Loader2,
 } from "lucide-react";
+import {
+  getNotifications,
+  markNotificationAsRead,
+  deleteNotification,
+} from "../lib/actions/notifications";
+import { getUserSession } from "@/lib/session";
+import Link from "next/link";
 
 const notificationFilters: NotificationFilter[] = [
   "ALL",
@@ -17,23 +26,72 @@ const notificationFilters: NotificationFilter[] = [
   "INFO",
   "SUCCESS",
 ];
+
+// Define SystemNotification interface based on prisma model if not available globally
+// interface SystemNotification {
+//   id: string;
+//   userId: number;
+//   title: string;
+//   message: string;
+//   type: NotificationType;
+//   read: boolean;
+//   createdAt: Date;
+// }
+
 const ActivityLog: React.FC = () => {
-  const [notifications] = useState<SystemNotification[]>(
-    mockSystemNotifications,
-  );
+  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
   const [filter, setFilter] = useState<NotificationFilter>("ALL");
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState<number | null>(null);
+
   const itemsPerPage = 8;
 
-  const filteredNotifications = notifications.filter(
-    (n) => filter === "ALL" || n.type === filter,
-  );
+  useEffect(() => {
+    const fetchUser = async () => {
+      const session = await getUserSession();
+      if (session && session.id) {
+        setUserId(session.id);
+      }
+    };
+    fetchUser();
+  }, []);
 
-  const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
-  const paginatedNotifications = filteredNotifications.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage,
-  );
+  const fetchNotifications = useCallback(async () => {
+    if (!userId) return;
+    setIsLoading(true);
+    try {
+      const { notifications, totalPages } = await getNotifications({
+        userId,
+        page: currentPage,
+        limit: itemsPerPage,
+        type: filter,
+      });
+      setNotifications(notifications as SystemNotification[]); // Casting might be needed if types don't perfectly align
+      setTotalPages(totalPages);
+    } catch (error) {
+      console.error("Failed to fetch notifications", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [userId, currentPage, filter]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  const handleMarkAsRead = async (id: string) => {
+    await markNotificationAsRead({ id });
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+    );
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteNotification({ id });
+    fetchNotifications(); // Re-fetch to update list and pagination
+  };
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -65,6 +123,13 @@ const ActivityLog: React.FC = () => {
       default:
         return "bg-blue-100 dark:bg-blue-900/20";
     }
+  };
+
+  const formatDate = (date: Date) => {
+    return new Date(date).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   return (
@@ -101,16 +166,22 @@ const ActivityLog: React.FC = () => {
       </div>
 
       <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden flex flex-col min-h-[600px] transition-colors">
-        <div className="flex-1">
-          {paginatedNotifications.length > 0 ? (
+        <div className="flex-1 relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 flex items-center justify-center z-10">
+              <Loader2 className="animate-spin text-indigo-500" size={32} />
+            </div>
+          )}
+          {notifications.length > 0 ? (
             <div className="divide-y divide-gray-100 dark:divide-slate-700">
-              {paginatedNotifications.map((notification) => (
-                <div
+              {notifications.map((notification) => (
+                <Link
                   key={notification.id}
+                  href={notification.path}
                   className="p-5 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors flex gap-4 items-start group"
                 >
                   <div
-                    className={`mt-1 flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${getBgColor(notification.type)}`}
+                    className={`mt-1 shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${getBgColor(notification.type)}`}
                   >
                     {getIcon(notification.type)}
                   </div>
@@ -125,34 +196,47 @@ const ActivityLog: React.FC = () => {
                         )}
                       </h3>
                       <span className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
-                        <Clock size={12} /> {notification.time}
+                        <Clock size={12} /> {formatDate(notification.createdAt)}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-2">
                       {notification.message}
                     </p>
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {!notification.read && (
+                        <button
+                          onClick={() => handleMarkAsRead(notification.id)}
+                          className="text-xs flex items-center gap-1 text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
+                        >
+                          <Check size={14} /> Mark as read
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(notification.id)}
+                        className="text-xs flex items-center gap-1 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                      >
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full py-20 text-gray-400 dark:text-gray-500">
-              <Bell size={48} className="mb-4 opacity-50" />
-              <p>No activity found for this category.</p>
-            </div>
+            !isLoading && (
+              <div className="flex flex-col items-center justify-center h-full py-20 text-gray-400 dark:text-gray-500">
+                <Bell size={48} className="mb-4 opacity-50" />
+                <p>No activity found for this category.</p>
+              </div>
+            )
           )}
         </div>
 
         {/* Pagination Footer */}
-        {filteredNotifications.length > 0 && (
+        {totalPages > 0 && (
           <div className="bg-gray-50 dark:bg-slate-700/30 border-t border-gray-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
             <span className="text-xs text-gray-500 dark:text-gray-400">
-              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-              {Math.min(
-                currentPage * itemsPerPage,
-                filteredNotifications.length,
-              )}{" "}
-              of {filteredNotifications.length} items
+              Page {currentPage} of {totalPages}
             </span>
             <div className="flex gap-2">
               <button

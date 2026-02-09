@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   Menu,
   Bell,
@@ -11,15 +11,21 @@ import {
   Wallet,
   Shield,
 } from "lucide-react";
-import { mockSystemNotifications } from "@/services/mockData";
 import NotificationPopup from "./NotificationPopup";
 import { useThemeStore } from "@/store";
 import { useAppStore, useNotificationStore } from "@/store";
 import { logout } from "@/lib";
+import {
+  getNotifications,
+  getUnreadNotificationsCount,
+  markAllNotificationsAsRead,
+  deleteAllNotifications,
+} from "@/lib/actions/notifications";
 
 type UserProps = {
   user: User;
 };
+
 const Header: React.FC<UserProps> = ({ user }) => {
   // const logout = useAppStore((state) => state.logout);
   const setIsOpen = useAppStore((state) => state.setIsSidebarOpen);
@@ -28,22 +34,55 @@ const Header: React.FC<UserProps> = ({ user }) => {
   const notify = useNotificationStore((state) => state.notify);
   const theme = useThemeStore((state) => state.theme);
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
-  const [notifications, setNotifications] = useState<SystemNotification[]>(
-    mockSystemNotifications,
-  );
+  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  // const [initialLoad, setInitialLoad] = useState(true);
+
   const notificationRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const fetchData = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const [{ notifications }, count] = await Promise.all([
+        getNotifications({ userId: user.id, limit: 4 }),
+        getUnreadNotificationsCount({ userId: user.id }),
+      ]);
+      setNotifications(notifications as SystemNotification[]);
+      setUnreadCount(count);
+    } catch (error) {
+      console.error("Failed to fetch notifications", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id]);
 
-  const handleMarkAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  useEffect(() => {
+    fetchData();
+    // Optional: Poll for new notifications
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
+  const handleMarkAllRead = async () => {
+    if (!user?.id) return;
+    setIsLoading(true);
+    await markAllNotificationsAsRead({ userId: user.id });
+    await fetchData(); // Refresh to ensure state sync, or optimistically update
+    setIsLoading(false);
+    notify("success", "All notifications marked as read");
   };
 
-  const handleClear = () => {
-    setNotifications([]);
+  const handleClear = async () => {
+    if (!user?.id) return;
+    setIsLoading(true);
+    await deleteAllNotifications({ userId: user.id });
+    await fetchData();
+    setIsLoading(false);
+    notify("success", "Notifications cleared");
   };
 
   // Close popup when clicking outside
@@ -80,6 +119,12 @@ const Header: React.FC<UserProps> = ({ user }) => {
     await logout();
     notify("info", "You have been logged out.");
   };
+  // useEffect(() => {
+  //   if (isNotificationsOpen) {
+  //     fetchData();
+  //   }
+  // }, [isNotificationsOpen]);
+  // console.log("is loading", isLoading);
   return (
     <header className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 h-16 flex items-center justify-between px-4 lg:px-8 sticky top-0 z-10 transition-colors duration-200">
       <div className="flex items-center gap-4">
@@ -132,7 +177,9 @@ const Header: React.FC<UserProps> = ({ user }) => {
           >
             <Bell size={20} />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-800 animate-pulse"></span>
+              <span className="absolute -top-0.5 -right-2 flex p-1 items-center text-center justify-center rounded-full bg-red-500 text-[11px] font-medium text-white ring-2 ring-white dark:ring-slate-800 animate-pulse">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
             )}
           </button>
 
@@ -142,6 +189,8 @@ const Header: React.FC<UserProps> = ({ user }) => {
             onMarkAllRead={handleMarkAllRead}
             onClear={handleClear}
             onClose={() => setIsNotificationsOpen(false)}
+            unreadCount={unreadCount}
+            isLoading={isLoading}
           />
         </div>
 

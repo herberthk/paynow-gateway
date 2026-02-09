@@ -1,2175 +1,2175 @@
-generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
-}
-
-datasource db {
-  provider = "postgresql"
-}
-
-model account_history {
-  id                BigInt    @id(map: "idx_30914_primary") @default(autoincrement())
-  account_id        BigInt
-  account_ledger_id BigInt
-  balance_before    Decimal   @db.Decimal(14, 2)
-  balance_after     Decimal   @db.Decimal(14, 2)
-  narrative         String    @db.VarChar(150)
-  type              String    @db.VarChar(15)
-  created_at        DateTime? @db.Timestamptz(6)
-  updated_at        DateTime? @db.Timestamptz(6)
-}
-
-model account_ledgers {
-  id          BigInt      @id(map: "account_ledger_pkey") @default(autoincrement())
-  account_id  BigInt
-  amount      Decimal     @default(0.00) @db.Decimal(12, 2)
-  currency    String      @default("UGX") @db.VarChar(255)
-  type        ledger_type
-  description String?     @db.VarChar(255)
-  payment_ref String?     @db.VarChar(255)
-  status      Int         @default(0) @db.SmallInt
-  is_charge   Int?
-  created_at  DateTime?   @db.Timestamptz(6)
-  updated_at  DateTime?   @db.Timestamptz(6)
-  deleted_at  DateTime?   @db.Timestamptz(6)
-}
-
-model account_withdraw_requests {
-  id                BigInt    @id(map: "idx_30929_primary") @default(autoincrement())
-  user_id           BigInt
-  account_ledger_id BigInt
-  recipient_number  String    @db.VarChar(255)
-  otp               String    @db.VarChar(255)
-  otp_expiry        DateTime? @db.Timestamptz(6)
-  status            Int       @default(0) @db.SmallInt
-  checks            Int       @default(0)
-  account_type      String?   @db.VarChar(50)
-  created_at        DateTime? @db.Timestamptz(6)
-  updated_at        DateTime? @db.Timestamptz(6)
-  deleted_at        DateTime? @db.Timestamptz(6)
-}
-
-model accounts {
-  id                       BigInt    @id(map: "idx_30938_primary") @default(autoincrement())
-  user_id                  BigInt
-  account_type             String?   @default("DEFAULT") @db.VarChar(40)
-  account_number           String?   @db.VarChar(20)
-  catid                    BigInt?
-  bizid                    BigInt?
-  balance                  Decimal   @default(0.00) @db.Decimal(12, 2)
-  currency                 String    @default("UGX") @db.VarChar(255)
-  withdraw_pin             String?   @db.VarChar(100)
-  start_date               DateTime? @db.Date
-  maturity_date            DateTime? @db.Date
-  duration_months          Int?
-  early_withdrawal_allowed Int?      @default(0) @db.SmallInt
-  created_at               DateTime? @db.Timestamptz(6)
-  updated_at               DateTime? @db.Timestamptz(6)
-  deleted_at               DateTime? @db.Timestamptz(6)
-}
-
-model accounts_offered {
-  id           Int      @id(map: "idx_30881_primary")
-  bizid        Int
-  category_id  Int
-  name         String?  @db.VarChar(255)
-  about        String?
-  features     String?
-  benefits     String?
-  qualify      String?
-  requirements String?
-  percentage   String?  @db.VarChar(255)
-  createdon    DateTime @default(now()) @db.Timestamptz(6)
-  status       Int      @default(1)
-}
-
-model activity_logs {
-  id          BigInt    @id(map: "idx_30947_primary") @default(autoincrement())
-  user_id     BigInt?
-  ip_address  String?   @db.VarChar(255)
-  action      String?   @db.VarChar(255)
-  method      String?   @db.VarChar(255)
-  path        String?   @db.VarChar(255)
-  description String?
-  platform    String?   @db.VarChar(255)
-  status      Boolean   @default(true)
-  created_at  DateTime? @db.Timestamptz(6)
-  updated_at  DateTime? @db.Timestamptz(6)
-  deleted_at  DateTime? @db.Timestamptz(6)
-
-  @@index([created_at])
-  @@index([user_id, created_at], map: "activity_logs_user_created_at_idx")
-  @@index([user_id], map: "idx_30947_activity_logs_user_id_index")
-}
-
-model add_items_cat1 {
-  id           Int       @id(map: "idx_30954_primary")
-  categoryid   Int
-  bizid        Int
-  ownerid      String?   @db.VarChar(255)
-  price        String    @db.VarChar(255)
-  size         String?   @db.VarChar(255)
-  colors       String    @db.VarChar(255)
-  brand        String?   @db.VarChar(255)
-  instock      String    @db.VarChar(255)
-  description  String
-  image_url    String?   @db.VarChar(255)
-  date_created DateTime? @default(now()) @db.Timestamptz(6)
-  status       String?   @db.VarChar(255)
-}
-
-model add_items_cat2 {
-  id           Int      @id(map: "idx_30960_primary")
-  categoryid   Int
-  bizid        Int
-  ownerid      String   @db.VarChar(255)
-  price        String   @db.VarChar(255)
-  brand        String   @db.VarChar(255)
-  ram          String   @db.VarChar(255)
-  memory       String   @db.VarChar(255)
-  camera       String   @db.VarChar(255)
-  color        String   @db.VarChar(255)
-  instock      String   @db.VarChar(255)
-  description  String
-  image_url    String?  @db.VarChar(255)
-  date_created DateTime @default(now()) @db.Timestamptz(6)
-  status       String?  @db.VarChar(255)
-}
-
-model add_items_cat3 {
-  id                Int      @id(map: "idx_30966_primary")
-  categoryid        Int
-  bizid             Int
-  ownerid           String   @db.VarChar(255)
-  price             String   @db.VarChar(255)
-  brand             String   @db.VarChar(255)
-  year              String   @db.VarChar(255)
-  transmission_type String?  @db.VarChar(255)
-  m_condition       String?  @db.VarChar(255)
-  no_of_cylinders   String   @db.VarChar(255)
-  colors            String   @db.VarChar(255)
-  instock           String   @db.VarChar(255)
-  horse_power       String   @db.VarChar(255)
-  description       String
-  image_url         String?  @db.VarChar(255)
-  date_created      DateTime @default(now()) @db.Timestamptz(6)
-  status            String?  @db.VarChar(255)
-}
-
-model add_items_cat4 {
-  id           Int      @id(map: "idx_30972_primary") @default(autoincrement())
-  categoryid   Int
-  bizid        Int
-  ownerid      String   @db.VarChar(255)
-  currency     String   @db.VarChar(255)
-  buying       String   @db.VarChar(255)
-  selling      String   @db.VarChar(255)
-  date_created DateTime @default(now()) @db.Timestamptz(6)
-  status       String?  @db.VarChar(255)
-}
-
-model add_items_cat5 {
-  id            Int      @id(map: "idx_30978_primary")
-  categoryid    Int
-  bizid         Int
-  ownerid       String   @db.VarChar(255)
-  product_name  String   @db.VarChar(255)
-  product_price String   @db.VarChar(255)
-  date_created  DateTime @default(now()) @db.Timestamptz(6)
-  status        String?  @db.VarChar(255)
-}
-
-model add_items_cat6 {
-  id           Int      @id(map: "idx_30984_primary")
-  categoryid   Int
-  bizid        Int
-  ownerid      String   @db.VarChar(255)
-  price        String   @db.VarChar(255)
-  location     String   @db.VarChar(255)
-  no_of_rooms  String   @db.VarChar(255)
-  posted_on    DateTime @db.Date
-  description  String
-  image_url    String?  @db.VarChar(255)
-  date_created DateTime @default(now()) @db.Timestamptz(6)
-  status       Int?
-}
-
-model add_items_cat7 {
-  id           Int      @id(map: "idx_30990_primary")
-  categoryid   Int
-  bizid        Int
-  ownerid      String   @db.VarChar(255)
-  location     String   @db.VarChar(255)
-  price        String   @db.VarChar(255)
-  length       String   @db.VarChar(255)
-  width        String   @db.VarChar(255)
-  posted_on    DateTime @db.Date
-  description  String
-  image_url    String?  @db.VarChar(255)
-  date_created DateTime @default(now()) @db.Timestamptz(6)
-  status       Int?
-}
-
-model advert_clicks {
-  id         BigInt    @id(map: "idx_30997_primary") @default(autoincrement())
-  user_id    BigInt
-  advert_id  BigInt
-  product_id BigInt?
-  catid      String?   @db.VarChar(255)
-  bizid      String?   @db.VarChar(255)
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-}
-
-model advert_prices {
-  id          BigInt    @id(map: "idx_31004_primary") @default(autoincrement())
-  ad_type     String    @db.VarChar(255)
-  duration    Int
-  price       Decimal   @db.Decimal(17, 2)
-  description String
-  created_at  DateTime? @db.Timestamptz(6)
-  updated_at  DateTime? @db.Timestamptz(6)
-  deleted_at  DateTime? @db.Timestamptz(6)
-}
-
-model advert_views {
-  id         BigInt    @id(map: "idx_31011_primary") @default(autoincrement())
-  user_id    BigInt
-  advert_id  BigInt
-  product_id BigInt?
-  catid      String?   @db.VarChar(255)
-  bizid      String?   @db.VarChar(255)
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-}
-
-model adverts {
-  id           Int       @id(map: "idx_31017_primary") @default(autoincrement())
-  payment_id   BigInt?
-  payment_ref  String?   @db.VarChar(255)
-  businessname String    @db.VarChar(255)
-  categoryid   Int
-  bizid        Int
-  address      String    @db.VarChar(255)
-  image        String    @db.VarChar(255)
-  country      String    @default("UG") @db.VarChar(255)
-  status       Int       @default(1)
-  latitude     String    @default("0") @db.VarChar(255)
-  longitude    String    @default("0") @db.VarChar(255)
-  ad_type      String?   @db.VarChar(255)
-  price        Decimal?  @db.Decimal(17, 2)
-  end_date     DateTime? @db.Timestamptz(6)
-  created_at   DateTime? @db.Timestamptz(6)
-  updated_at   DateTime? @db.Timestamptz(6)
-  deleted_at   DateTime? @db.Timestamptz(6)
-}
-
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-model bank {
-  id                  Int      @id(map: "idx_31026_primary")
-  category_id         String?  @db.VarChar(255)
-  bank_name           String?  @db.VarChar(255)
-  profile_image       String?  @db.VarChar(255)
-  products            String?  @db.VarChar(255)
-  loan_packages       String?  @db.VarChar(255)
-  loan_interest_rates String?  @db.VarChar(255)
-  special_offers      String?  @db.VarChar(255)
-  location_coverage   String?  @db.VarChar(255)
-  latitude            String   @default("0") @db.VarChar(255)
-  longitude           String   @default("0") @db.VarChar(255)
-  user_id             String   @db.VarChar(255)
-  contacts            String?  @db.VarChar(255)
-  emails              String?  @db.VarChar(255)
-  country             String?  @default("UG") @db.VarChar(255)
-  website             String?  @db.VarChar(255)
-  open_account_link   String?  @db.VarChar(255)
-  status              Int      @default(0)
-  verified            Boolean  @default(false)
-  date_created        DateTime @default(now()) @db.Timestamptz(6)
-
-  @@index([contacts(ops: raw("gin_trgm_ops"))], map: "idx_bank_contacts_trgm", type: Gin)
-  @@index([location_coverage(ops: raw("gin_trgm_ops"))], map: "idx_bank_cov_trgm", type: Gin)
-  @@index([id, bank_name, profile_image, verified], map: "idx_bank_covering")
-  @@index([emails(ops: raw("gin_trgm_ops"))], map: "idx_bank_emails_trgm", type: Gin)
-  @@index([id], map: "idx_bank_id")
-  @@index([bank_name(ops: raw("gin_trgm_ops"))], map: "idx_bank_name_trgm", type: Gin)
-}
-
-model bank_branch_photos {
-  id             BigInt    @id(map: "idx_31038_primary") @default(autoincrement())
-  bank_branch_id BigInt
-  image          String    @db.VarChar(255)
-  created_at     DateTime? @db.Timestamptz(6)
-  updated_at     DateTime? @db.Timestamptz(6)
-  deleted_at     DateTime? @db.Timestamptz(6)
-}
-
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-model bank_branches {
-  id            Int                      @id(map: "idx_30888_primary")
-  bizid         Int
-  catid         Int
-  name          String                   @db.VarChar(255)
-  latitude      Float                    @default(0)
-  longitude     Float                    @default(0)
-  officeline    String                   @db.VarChar(255)
-  mon_fri_from  DateTime                 @db.Time(6)
-  mon_fri_to    DateTime                 @db.Time(6)
-  sat_from      DateTime                 @db.Time(6)
-  sat_to        DateTime                 @db.Time(6)
-  email         String                   @db.VarChar(255)
-  status        Int                      @default(1)
-  createdon     DateTime                 @default(now()) @db.Timestamptz(6)
-  search_vector Unsupported("tsvector")?
-
-  @@index([bizid, status], map: "idx_bank_branches_bizid_status")
-  @@index([search_vector], map: "idx_bank_branches_search", type: Gin)
-  @@index([status], map: "idx_bank_branches_status")
-}
-
-model best_performers {
-  id          BigInt    @id(map: "idx_31043_primary") @default(autoincrement())
-  bizid       BigInt
-  name        String    @db.VarChar(255)
-  image       String    @db.VarChar(255)
-  combination String?   @db.VarChar(255)
-  level       String    @db.VarChar(255)
-  aggregate   Int
-  year        Int
-  created_at  DateTime? @db.Timestamptz(6)
-  updated_at  DateTime? @db.Timestamptz(6)
-  deleted_at  DateTime? @db.Timestamptz(6)
-}
-
-model blocked_blog_comments {
-  id              BigInt    @id(map: "idx_31050_primary") @default(autoincrement())
-  blocker_id      BigInt
-  blog_comment_id BigInt
-  created_at      DateTime? @db.Timestamptz(6)
-  updated_at      DateTime? @db.Timestamptz(6)
-}
-
-model blocked_blog_posts {
-  id           BigInt    @id(map: "idx_31055_primary") @default(autoincrement())
-  blog_post_id BigInt
-  blocker_id   BigInt
-  created_at   DateTime? @db.Timestamptz(6)
-  updated_at   DateTime? @db.Timestamptz(6)
-
-  @@index([blocker_id, blog_post_id], map: "idx_blocked_blog_posts_blocker_blog")
-}
-
-model blocked_comments {
-  id         BigInt    @id(map: "idx_31060_primary") @default(autoincrement())
-  blocker_id BigInt
-  comment_id BigInt
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-}
-
-model blog_comments {
-  id           BigInt    @id(map: "idx_31065_primary") @default(autoincrement())
-  user_id      BigInt
-  blog_post_id BigInt
-  parent_id    BigInt?
-  comment      String
-  status       Int       @default(1)
-  created_at   DateTime? @db.Timestamptz(6)
-  updated_at   DateTime? @db.Timestamptz(6)
-
-  @@index([blog_post_id, status], map: "idx_blog_comments_post_status")
-}
-
-model blog_images {
-  id              BigInt    @id(map: "idx_31073_primary") @default(autoincrement())
-  blog_post_id    BigInt?
-  image           String?   @db.VarChar(255)
-  blog_comment_id Int?
-  image_url       String?   @db.VarChar(255)
-  created_at      DateTime? @db.Timestamptz(6)
-  updated_at      DateTime? @db.Timestamptz(6)
-  // image_hash      String?   @default(dbgenerated("md5((image)::text)"))
-  image_hash      String?   @db.Text
-
-  @@index([image], map: "idx_blog_images_image")
-  @@index([image_hash], map: "idx_blog_images_image_hash")
-  @@index([blog_post_id], map: "idx_images_blog_post_id")
-}
-
-model blog_likes {
-  id           BigInt    @id(map: "idx_31080_primary") @default(autoincrement())
-  user_id      BigInt
-  blog_post_id BigInt?
-  comment_id   BigInt?
-  status       Boolean
-  created_at   DateTime? @db.Timestamptz(6)
-  updated_at   DateTime? @db.Timestamptz(6)
-
-  @@index([blog_post_id, status], map: "idx_blog_likes_post_status")
-}
-
-model blog_posts {
-  id          BigInt                    @id(map: "idx_31085_primary") @default(autoincrement())
-  user_id     BigInt
-  body        String
-  bizid       String                    @db.VarChar(255)
-  catid       String                    @db.VarChar(255)
-  public      Boolean                   @default(true)
-  latitude    Float                     @default(0.0)
-  longitude   Float                     @default(0.0)
-  status      Int                       @default(1)
-  forex_items String?
-  created_at  DateTime?                 @db.Timestamptz(6)
-  updated_at  DateTime?                 @db.Timestamptz(6)
-  deleted_at  DateTime?                 @db.Timestamptz(6)
-  location    Unsupported("geography")?
-
-  @@index([location], map: "idx_blog_posts_location", type: Gist)
-  @@index([bizid], map: "idx_blogposts_bizid")
-  @@index([catid], map: "idx_blogposts_catid")
-  @@index([created_at(sort: Desc)], map: "idx_blogposts_created_at")
-  @@index([user_id, status], map: "idx_blogposts_userid_status")
-}
-
-model blog_shares {
-  id           BigInt    @id(map: "idx_31096_primary") @default(autoincrement())
-  user_id      BigInt
-  blog_post_id BigInt
-  status       Int       @default(1) @db.SmallInt
-  created_at   DateTime? @db.Timestamptz(6)
-  updated_at   DateTime? @db.Timestamptz(6)
-
-  @@index([blog_post_id, status], map: "idx_blog_shares_post_status")
-}
-
-model blog_videos {
-  id           BigInt    @id(map: "idx_31102_primary") @default(autoincrement())
-  blog_post_id BigInt
-  video        String    @db.VarChar(255)
-  bizid        String?   @db.VarChar(255)
-  catid        String?   @db.VarChar(255)
-  created_at   DateTime? @db.Timestamptz(6)
-  updated_at   DateTime? @db.Timestamptz(6)
-
-  @@index([blog_post_id], map: "idx_videos_blog_post_id")
-}
-
-model blog_views {
-  id           BigInt    @id(map: "idx_31109_primary") @default(autoincrement())
-  user_id      BigInt
-  blog_post_id BigInt
-  created_at   DateTime? @db.Timestamptz(6)
-  updated_at   DateTime? @db.Timestamptz(6)
-
-  @@index([blog_post_id], map: "idx_views_blog_post_id")
-}
-
-model boda_accidents {
-  id                  BigInt    @id(map: "idx_31114_primary") @default(autoincrement())
-  boda_id             BigInt
-  boda_association_id BigInt
-  accident_cause      String    @db.VarChar(255)
-  accident_severity   String    @db.VarChar(255)
-  injuries            Int       @default(0)
-  details             String?
-  created_at          DateTime? @db.Timestamptz(6)
-  updated_at          DateTime? @db.Timestamptz(6)
-
-  @@index([boda_association_id], map: "idx_31114_boda_accidents_boda_association_id_index")
-  @@index([boda_id], map: "idx_31114_boda_accidents_boda_id_index")
-}
-
-model boda_associations {
-  id                 BigInt               @id(map: "idx_31122_primary") @default(autoincrement())
-  logo               String?              @db.VarChar(255)
-  name               String               @db.VarChar(255)
-  email              String               @unique(map: "idx_31122_boda_associations_email_unique") @db.VarChar(255)
-  district           String               @db.VarChar(255)
-  address            String               @db.VarChar(255)
-  contact1           String               @db.VarChar(255)
-  contact2           String               @db.VarChar(255)
-  latitude           String?              @db.VarChar(255)
-  longitude          String?              @db.VarChar(255)
-  country            String               @default("UG") @db.VarChar(255)
-  created_at         DateTime?            @db.Timestamptz(6)
-  updated_at         DateTime?            @db.Timestamptz(6)
-  boda_stage_leaders boda_stage_leaders[]
-}
-
-model boda_external_members {
-  id                  BigInt    @id(map: "idx_31130_primary") @default(autoincrement())
-  user_id             BigInt
-  boda_association_id BigInt
-  profile             String    @db.VarChar(255)
-  first_name          String    @db.VarChar(100)
-  last_name           String    @db.VarChar(100)
-  pay_number          String    @db.VarChar(15)
-  phone_number        String    @db.VarChar(100)
-  alt_phone_number    String?   @db.VarChar(100)
-  district            String    @db.VarChar(100)
-  sub_county          String?   @db.VarChar(100)
-  parish              String?   @db.VarChar(100)
-  village             String?   @db.VarChar(100)
-  created_at          DateTime? @db.Timestamptz(6)
-  updated_at          DateTime? @db.Timestamptz(6)
-  deleted_at          DateTime? @db.Timestamptz(6)
-}
-
-model boda_interactions {
-  id               BigInt    @id(map: "idx_31137_primary") @default(autoincrement())
-  user_id          BigInt
-  boda_id          BigInt
-  interaction_type String    @db.VarChar(255)
-  created_at       DateTime? @db.Timestamptz(6)
-  updated_at       DateTime? @db.Timestamptz(6)
-
-  @@index([boda_id], map: "idx_31137_boda_interactions_boda_id_index")
-  @@index([user_id], map: "idx_31137_boda_interactions_user_id_index")
-}
-
-model boda_stage_leaders {
-  id                  BigInt            @id(map: "idx_31142_primary") @default(autoincrement())
-  boda_association_id BigInt
-  image               String            @db.VarChar(255)
-  name                String            @db.VarChar(255)
-  district            String            @db.VarChar(255)
-  stage               String            @db.VarChar(255)
-  created_at          DateTime?         @db.Timestamptz(6)
-  updated_at          DateTime?         @db.Timestamptz(6)
-  boda_associations   boda_associations @relation(fields: [boda_association_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "boda_stage_leaders_boda_association_id_foreign")
-
-  @@index([boda_association_id], map: "idx_31142_boda_stage_leaders_boda_association_id_foreign")
-}
-
-model boda_thefts {
-  id                  BigInt    @id(map: "idx_31149_primary") @default(autoincrement())
-  boda_id             BigInt
-  boda_association_id BigInt
-  mode_of_theft       String    @db.VarChar(255)
-  details             String?
-  created_at          DateTime? @db.Timestamptz(6)
-  updated_at          DateTime? @db.Timestamptz(6)
-
-  @@index([boda_association_id], map: "idx_31149_boda_thefts_boda_association_id_index")
-  @@index([boda_id], map: "idx_31149_boda_thefts_boda_id_index")
-}
-
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-model bodaboda {
-  id                   Int       @id(map: "idx_31155_primary")
-  category_id          Int?
-  town_of_service      String?   @db.VarChar(255)
-  stage_center         String?   @db.VarChar(255)
-  names                String?   @db.VarChar(255)
-  mot_no               String?   @db.VarChar(255)
-  tel                  String?   @db.VarChar(255)
-  email                String?   @db.VarChar(255)
-  image_of_driver      String?   @db.VarChar(255)
-  sex                  String?   @db.VarChar(10)
-  created_on           DateTime  @default(now()) @db.Timestamptz(6)
-  district             String?   @db.VarChar(255)
-  sub_county           String?   @db.VarChar(255)
-  village              String?   @db.VarChar(255)
-  national_id          String?   @db.VarChar(255)
-  country              String    @default("UG") @db.VarChar(255)
-  status               Int       @default(1)
-  verified             Boolean   @default(false)
-  owner_id             String    @db.VarChar(255)
-  pay_number           String?   @db.VarChar(255)
-  merchant_code        String?   @db.VarChar(255)
-  user_id              BigInt?
-  boda_association_id  BigInt?
-  boda_stage_leader_id BigInt?
-  boda_number          String?   @db.VarChar(50)
-  next_of_kin_name     String?   @db.VarChar(100)
-  next_of_kin_contact  String?   @db.VarChar(100)
-  membership_fee       Decimal?  @db.Decimal(10, 2)
-  membership_expiry    DateTime? @db.Date
-  has_expired          Boolean   @default(true)
-  details              String?
-  latitude             Float
-  longitude            Float
-  available            Boolean   @default(true)
-
-  @@index([boda_association_id], map: "idx_31155_bodaboda_boda_association_id_index")
-  @@index([boda_number], map: "idx_31155_bodaboda_boda_number_index")
-  @@index([boda_stage_leader_id], map: "idx_31155_bodaboda_boda_stage_leader_id_index")
-  @@index([user_id], map: "idx_31155_bodaboda_user_id_index")
-  @@index([id, names, image_of_driver, verified], map: "idx_bodaboda_covering")
-  @@index([status, available], map: "idx_bodaboda_status_available")
-}
-
-model booking {
-  id                 Int      @id(map: "idx_31168_primary") @default(autoincrement())
-  user_id            BigInt?
-  payment_id         BigInt?
-  payment_ref        String?  @db.VarChar(255)
-  payment_no         String?  @db.VarChar(255)
-  customer_id        String?  @db.VarChar(255)
-  amount             String?  @db.VarChar(255)
-  route_id           String?  @db.VarChar(255)
-  bus_id             BigInt?
-  seatnumber         Int?
-  status             Int      @default(0)
-  user_verified      Boolean  @default(false)
-  date_on_creation   DateTime @default(now()) @db.Timestamptz(6)
-  tdate              DateTime @db.Date
-  depature           String?  @db.VarChar(255)
-  weight             String?  @db.VarChar(11)
-  external_reference String?  @db.VarChar(255)
-
-  @@index([route_id, tdate, seatnumber], map: "idx_bookings_route_date_seat")
-}
-
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-model bus {
-  id               Int                      @id(map: "idx_31176_primary")
-  company_name     String                   @db.VarChar(255)
-  category_id      String                   @db.VarChar(255)
-  contact_numbers  String                   @db.VarChar(255)
-  email            String                   @unique(map: "idx_31176_email") @db.VarChar(255)
-  address          String                   @db.VarChar(255)
-  latitude         String?                  @default("0") @db.VarChar(255)
-  longitude        String?                  @default("0") @db.VarChar(255)
-  profile_image    String?                  @db.VarChar(255)
-  about_bus        String?
-  country          String                   @default("UG") @db.VarChar(255)
-  status           Int                      @default(0)
-  verified         Boolean                  @default(false)
-  date_on_creation DateTime                 @default(now()) @db.Timestamptz(6)
-  search_vector    Unsupported("tsvector")?
-
-  @@index([search_vector], map: "bus_search_idx", type: Gin)
-  @@index([about_bus(ops: raw("gin_trgm_ops"))], map: "idx_bus_about_trgm", type: Gin)
-  @@index([address(ops: raw("gin_trgm_ops"))], map: "idx_bus_address_trgm", type: Gin)
-  @@index([company_name(ops: raw("gin_trgm_ops"))], map: "idx_bus_company_trgm", type: Gin)
-  @@index([contact_numbers(ops: raw("gin_trgm_ops"))], map: "idx_bus_contact_trgm", type: Gin)
-  @@index([id, company_name, profile_image, verified], map: "idx_bus_covering")
-  @@index([id], map: "idx_bus_id")
-  @@index([status], map: "idx_bus_status")
-}
-
-model bus_stops {
-  id         BigInt    @id(map: "idx_31188_primary") @default(autoincrement())
-  bus_id     BigInt
-  route_id   BigInt
-  bus_stop   String    @db.VarChar(255)
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-}
-
-model cache {
-  key        String @id @db.VarChar(255)
-  value      String
-  expiration Int
-}
-
-model cache_locks {
-  key        String @id @db.VarChar(255)
-  owner      String @db.VarChar(255)
-  expiration Int
-}
-
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-model car_hire {
-  id              Int      @id(map: "idx_31192_primary")
-  categorie_id    Int?
-  town_of_service String?  @db.VarChar(255)
-  stage_center    String?  @db.VarChar(255)
-  driver_names    String?  @db.VarChar(255)
-  vehicle_no      String?  @db.VarChar(255)
-  sex             String?  @db.VarChar(255)
-  images          String?
-  district        String?  @db.VarChar(255)
-  sub_county      String?  @db.VarChar(255)
-  village         String?  @db.VarChar(255)
-  national_id     String?  @db.VarChar(255)
-  created_on      DateTime @default(now()) @db.Timestamptz(6)
-  telephone       String?  @db.VarChar(255)
-  email           String?  @db.VarChar(255)
-  owner_id        String   @db.VarChar(255)
-  country         String   @default("UG") @db.VarChar(255)
-  status          Int      @default(1)
-  verified        Boolean  @default(false)
-  subcat          String   @default("Cars") @db.VarChar(255)
-  pay_number      String?  @db.VarChar(255)
-  merchant_code   String?  @db.VarChar(255)
-  details         String?
-  latitude        Float
-  longitude       Float
-  available       Boolean  @default(true)
-
-  @@index([id, driver_names, images, verified], map: "idx_car_hire_covering")
-  @@index([id], map: "idx_car_hire_id")
-  @@index([status, subcat, available], map: "idx_car_hire_status_subcat_availailable")
-}
-
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-model casual_labor {
-  id              Int                  @id(map: "idx_31205_primary")
-  user_id         BigInt
-  categorie_id    Int
-  home_town       String               @db.VarChar(255)
-  names           String               @db.VarChar(255)
-  sex             String               @db.VarChar(255)
-  age             Int?
-  birth_date      DateTime?            @db.Date
-  pictures        String?
-  education_level String               @db.VarChar(255)
-  village         String               @db.VarChar(255)
-  parish          String               @db.VarChar(255)
-  sub_county      String               @db.VarChar(255)
-  national_id     String               @db.VarChar(255)
-  country         String               @default("UG") @db.VarChar(255)
-  profession      String?              @db.VarChar(255)
-  latitude        Float                @default(0)
-  longitude       Float                @default(0)
-  status          Int                  @default(1)
-  verified        Boolean              @default(false)
-  created_on      DateTime             @default(now()) @db.Timestamptz(6)
-  tel             String               @db.VarChar(255)
-  created_at      DateTime?            @db.Timestamptz(6)
-  updated_at      DateTime?            @db.Timestamptz(6)
-  deleted_at      DateTime?            @db.Timestamptz(6)
-  category        labor_category_enum?
-
-  @@index([user_id], map: "idx_31205_casual_labor_user_id_index")
-  @@index([category, status], map: "idx_casual_labor_category_status")
-  @@index([id, names, pictures, verified], map: "idx_casual_labor_covering")
-  @@index([id], map: "idx_casual_labor_id")
-}
-
-model categories {
-  id          Int       @id(map: "idx_31216_primary")
-  name        String?   @db.VarChar(255)
-  french      String?   @db.VarChar(255)
-  position    Int       @default(1)
-  url         String?   @db.VarChar(255)
-  description String?
-  dcfa        Int       @default(8370)
-  created_on  DateTime  @default(now()) @db.Timestamptz(6)
-  modified_on DateTime? @default(now()) @db.Timestamptz(6)
-  posted_by   String?   @db.VarChar(255)
-  modified_by String?   @db.VarChar(255)
-  status      Int?
-}
-
-model chatid {
-  id    Int @id(map: "idx_31225_primary")
-  state Int
-}
-
-model classroom_photos {
-  id           BigInt     @id(map: "idx_31229_primary") @default(autoincrement())
-  classroom_id BigInt
-  photo        String     @db.VarChar(255)
-  created_at   DateTime?  @db.Timestamptz(6)
-  updated_at   DateTime?  @db.Timestamptz(6)
-  deleted_at   DateTime?  @db.Timestamptz(6)
-  classrooms   classrooms @relation(fields: [classroom_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "classroom_photos_classroom_id_foreign")
-
-  @@index([classroom_id], map: "idx_31229_classroom_photos_classroom_id_foreign")
-}
-
-model classrooms {
-  id               BigInt             @id(map: "idx_31234_primary") @default(autoincrement())
-  bizid            BigInt
-  classrooms       Int
-  created_at       DateTime?          @db.Timestamptz(6)
-  updated_at       DateTime?          @db.Timestamptz(6)
-  deleted_at       DateTime?          @db.Timestamptz(6)
-  classroom_photos classroom_photos[]
-}
-
-model comment_images {
-  id         BigInt    @id(map: "idx_31239_primary") @default(autoincrement())
-  comment_id BigInt
-  image      String    @db.VarChar(255)
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-}
-
-model comment_likes {
-  id         BigInt    @id(map: "idx_31244_primary") @default(autoincrement())
-  user_id    BigInt
-  comment_id BigInt
-  status     Boolean   @default(true)
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-}
-
-model comments {
-  id          BigInt   @id(map: "idx_30898_primary") @default(autoincrement())
-  ownerid     String   @db.VarChar(255)
-  category_id Int
-  bizid       Int
-  parent_id   Int?
-  comment     String
-  createdon   DateTime @default(now()) @db.Timestamptz(6)
-  status      Int      @default(1)
-}
-
-model failed_jobs {
-  id         BigInt   @id(map: "idx_31250_primary") @default(autoincrement())
-  uuid       String   @unique(map: "idx_31250_failed_jobs_uuid_unique") @db.VarChar(255)
-  connection String
-  queue      String
-  payload    String
-  exception  String
-  failed_at  DateTime @default(now()) @db.Timestamptz(6)
-}
-
-model favorites {
-  id         BigInt    @id(map: "idx_31258_primary") @default(autoincrement())
-  owner_id   BigInt
-  catid      Int?
-  bizid      Int?
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-
-  @@index([owner_id], map: "idx_favorite_owner_id")
-}
-
-model fees_structures {
-  id         BigInt    @id(map: "idx_31263_primary") @default(autoincrement())
-  bizid      BigInt
-  class      String    @db.VarChar(255)
-  admission  Decimal?  @db.Decimal(18, 2)
-  day        Decimal?  @db.Decimal(18, 2)
-  boarding   Decimal?  @db.Decimal(18, 2)
-  currency   String    @default("UGX") @db.VarChar(255)
-  fees       String?   @default("0.00") @db.VarChar(255)
-  other      String?   @default("0.00") @db.VarChar(255)
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-  deleted_at DateTime? @db.Timestamptz(6)
-}
-
-model followers {
-  id          BigInt    @id(map: "idx_31273_primary") @default(autoincrement())
-  user_id     BigInt
-  follower_id BigInt?
-  catid       Int?
-  bizid       Int?
-  status      Int       @default(1) @db.SmallInt
-  hidden      Int       @default(0) @db.SmallInt
-  created_at  DateTime? @db.Timestamptz(6)
-  updated_at  DateTime? @db.Timestamptz(6)
-
-  @@index([catid, bizid, status, hidden], map: "idx_follower")
-  @@index([user_id, follower_id], map: "idx_followers_user_follower")
-}
-
-model galarry {
-  id           Int      @id(map: "idx_31278_primary")
-  image        String   @db.VarChar(255)
-  bizid        String   @db.VarChar(255)
-  catid        String   @db.VarChar(255)
-  item_id      Int?
-  product_id   BigInt?
-  date_created DateTime @default(now()) @db.Timestamptz(6)
-  status       Int      @default(0)
-}
-
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-model general_business {
-  id               Int      @id(map: "idx_31285_primary") @default(autoincrement())
-  categorie_id     Int?
-  owner_id         String?  @db.VarChar(255)
-  company_name     String?  @db.VarChar(255)
-  district         String?  @db.VarChar(255)
-  physical_address String?
-  latitude         Float?
-  longitude        Float?
-  imageurl         String?  @db.VarChar(255)
-  details          String?
-  tel              String?  @db.VarChar(255)
-  email            String?  @db.VarChar(255)
-  country          String   @default("UG") @db.VarChar(255)
-  website          String?  @db.VarChar(255)
-  status           Int      @default(1)
-  verified         Int      @default(0) @db.SmallInt
-  created_on       DateTime @default(now()) @db.Timestamptz(6)
-  subcat           String?  @db.VarChar(255)
-
-  @@index([categorie_id, subcat, status], map: "idx_category_id_subcat_status")
-  @@index([company_name(ops: raw("gin_trgm_ops")), district(ops: raw("gin_trgm_ops")), physical_address(ops: raw("gin_trgm_ops"))], map: "idx_gb_search_trgm", type: Gin)
-  @@index([id, company_name, imageurl, status], map: "idx_general_business_covering")
-  @@index([id], map: "idx_general_business_id")
-}
-
-model gest_users {
-  id            Int       @id @default(autoincrement())
-  username      String    @db.VarChar(50)
-  email         String    @db.VarChar(100)
-  first_name    String?   @db.VarChar(50)
-  last_name     String?   @db.VarChar(50)
-  password_hash String?   @db.VarChar(255)
-  date_of_birth DateTime? @db.Date
-  phone         String?   @db.VarChar(20)
-  address       String?
-  city          String?   @db.VarChar(50)
-  country       String?   @db.VarChar(50)
-  is_active     Boolean?  @default(true)
-  created_at    DateTime? @default(now()) @db.Timestamp(6)
-  updated_at    DateTime? @default(now()) @db.Timestamp(6)
-}
-
-model gov_leaders {
-  id             Int      @id(map: "idx_31296_primary")
-  categoryid     Int
-  name           String   @db.VarChar(255)
-  img_url        String   @db.VarChar(255)
-  post           String   @db.VarChar(255)
-  year_from      String   @db.VarChar(255)
-  year_to        String   @db.VarChar(255)
-  p_party        String   @db.VarChar(255)
-  district       String   @db.VarChar(255)
-  proffession    String   @db.VarChar(255)
-  marital_status String   @db.VarChar(255)
-  religion       String   @db.VarChar(255)
-  dob            DateTime @db.Date
-  contact        String   @db.VarChar(255)
-  biography      String
-  status         Int?     @default(1)
-  verified       Boolean  @default(false)
-  subcat         String?  @db.VarChar(255)
-  date_created   DateTime @default(now()) @db.Timestamptz(6)
-  country        String   @default("UG") @db.VarChar(255)
-
-  @@index([contact(ops: raw("gin_trgm_ops"))], map: "idx_leader_contact_trgm", type: Gin)
-  @@index([district(ops: raw("gin_trgm_ops"))], map: "idx_leader_district_trgm", type: Gin)
-  @@index([name(ops: raw("gin_trgm_ops"))], map: "idx_leader_name_trgm", type: Gin)
-  @@index([post(ops: raw("gin_trgm_ops"))], map: "idx_leader_post_trgm", type: Gin)
-  @@index([proffession(ops: raw("gin_trgm_ops"))], map: "idx_leader_prof_trgm", type: Gin)
-}
-
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-model graduate {
-  id            Int                      @id(map: "idx_31305_primary")
-  categorie_id  Int
-  names         String                   @db.VarChar(255)
-  profile_pic   String                   @db.VarChar(255)
-  sex           String                   @db.VarChar(255)
-  home_town     String                   @db.VarChar(255)
-  proffession   String                   @db.VarChar(255)
-  details       String
-  tel           String                   @db.VarChar(255)
-  email         String                   @db.VarChar(255)
-  latitude      Float?
-  longitude     Float?
-  status        Int                      @default(1)
-  verified      Boolean                  @default(false)
-  created_on    DateTime                 @default(now()) @db.Timestamptz(6)
-  owner_id      String                   @db.VarChar(255)
-  subcat        String                   @default("Accounting & Finance") @db.VarChar(255)
-  country       String                   @default("UG") @db.VarChar(255)
-  search_vector Unsupported("tsvector")? @default(dbgenerated("(((setweight(to_tsvector('english'::regconfig, (COALESCE(names, ''::character varying))::text), 'A'::\"char\") || setweight(to_tsvector('english'::regconfig, (COALESCE(proffession, ''::character varying))::text), 'B'::\"char\")) || setweight(to_tsvector('english'::regconfig, COALESCE(details, ''::text)), 'C'::\"char\")) || setweight(to_tsvector('english'::regconfig, (COALESCE(tel, ''::character varying))::text), 'D'::\"char\"))"))
-
-  @@index([details(ops: raw("gin_trgm_ops"))], map: "idx_grad_details_trgm", type: Gin)
-  @@index([names(ops: raw("gin_trgm_ops"))], map: "idx_grad_names_trgm", type: Gin)
-  @@index([proffession(ops: raw("gin_trgm_ops"))], map: "idx_grad_prof_trgm", type: Gin)
-  @@index([tel(ops: raw("gin_trgm_ops"))], map: "idx_grad_tel_trgm", type: Gin)
-  @@index([id, names, profile_pic, verified], map: "idx_graduate_covering")
-  @@index([id], map: "idx_graduate_id")
-  @@index([subcat], map: "idx_graduate_subcat")
-  @@index([search_vector], map: "idx_graduates_search_vector", type: Gin)
-  @@index([subcat, status], map: "idx_subcat_status")
-}
-
-model hotel_bookings {
-  id         BigInt    @id(map: "idx_31318_primary") @default(autoincrement())
-  user_id    String    @db.VarChar(255)
-  room_id    BigInt
-  catid      BigInt
-  bizid      BigInt
-  name       String    @db.VarChar(255)
-  arrival    DateTime  @db.Date
-  address    String    @db.VarChar(255)
-  room_price Decimal   @db.Decimal(17, 2)
-  duration   Int
-  phone      String    @db.VarChar(255)
-  email      String    @db.VarChar(255)
-  children   Int       @default(0)
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-  deleted_at DateTime? @db.Timestamptz(6)
-}
-
-model hotel_room_images {
-  id            BigInt      @id(map: "idx_31326_primary") @default(autoincrement())
-  hotel_room_id BigInt
-  image         String      @db.VarChar(255)
-  created_at    DateTime?   @db.Timestamptz(6)
-  updated_at    DateTime?   @db.Timestamptz(6)
-  hotel_rooms   hotel_rooms @relation(fields: [hotel_room_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "hotel_room_images_hotel_room_id_foreign")
-
-  @@index([hotel_room_id], map: "idx_31326_hotel_room_images_hotel_room_id_foreign")
-}
-
-model hotel_rooms {
-  id                BigInt              @id(map: "idx_31331_primary") @default(autoincrement())
-  catid             BigInt
-  bizid             BigInt
-  room_type         String              @db.VarChar(255)
-  price             Decimal             @db.Decimal(17, 2)
-  created_at        DateTime?           @db.Timestamptz(6)
-  updated_at        DateTime?           @db.Timestamptz(6)
-  deleted_at        DateTime?           @db.Timestamptz(6)
-  hotel_room_images hotel_room_images[]
-}
-
-model investment_maintenance {
-  id                 BigInt           @id @default(autoincrement())
-  investment_id      BigInt
-  investment_unit_id BigInt
-  renter_id          BigInt
-  owner_id           BigInt
-  title              String           @db.VarChar(200)
-  description        String
-  status             String?          @default("Pending") @db.VarChar(20)
-  reported_date      DateTime         @db.Date
-  acknowledged_date  DateTime?        @db.Date
-  started_date       DateTime?        @db.Date
-  completed_date     DateTime?        @db.Date
-  estimated_cost     Decimal?         @db.Decimal(13, 2)
-  actual_cost        Decimal?         @db.Decimal(13, 2)
-  before_images      Json?
-  after_images       Json?
-  updates            Json?
-  owner_notes        String?
-  completion_notes   String?
-  renter_rating      Int?
-  renter_feedback    String?
-  created_at         DateTime?        @default(now()) @db.Timestamp(6)
-  updated_at         DateTime?        @default(now()) @db.Timestamp(6)
-  deleted_at         DateTime?        @db.Timestamp(6)
-  investments        investments      @relation(fields: [investment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  investment_units   investment_units @relation(fields: [investment_unit_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-model investment_payments {
-  id                   BigInt             @id @default(autoincrement())
-  payment_id           BigInt
-  investment_id        BigInt
-  investment_unit_id   BigInt
-  investment_renter_id BigInt
-  user_id              BigInt
-  amount               Decimal            @db.Decimal(10, 2)
-  payment_date         DateTime           @db.Date
-  interval_period      Int                @db.SmallInt
-  interval_start_date  DateTime           @db.Date
-  interval_end_date    DateTime           @db.Date
-  status               String?            @default("Pending") @db.VarChar(20)
-  notes                String?
-  created_at           DateTime?          @default(now()) @db.Timestamp(6)
-  updated_at           DateTime?          @default(now()) @db.Timestamp(6)
-  deleted_at           DateTime?          @db.Timestamp(6)
-  investments          investments        @relation(fields: [investment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  investment_renters   investment_renters @relation(fields: [investment_renter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  investment_units     investment_units   @relation(fields: [investment_unit_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-model investment_renters {
-  id                  BigInt                @id @default(autoincrement())
-  investment_id       BigInt
-  investment_unit_id  BigInt
-  user_id             BigInt
-  next_of_kin_name    String?               @db.VarChar(100)
-  next_of_kin_phone   String?               @db.VarChar(15)
-  nationality         String?               @db.VarChar(50)
-  address             String?               @db.VarChar(100)
-  start_date          DateTime              @db.Date
-  end_date            DateTime?             @db.Date
-  rent_due_date       DateTime?             @db.Date
-  status              String?               @default("Active") @db.VarChar(20)
-  created_at          DateTime?             @default(now()) @db.Timestamp(6)
-  updated_at          DateTime?             @default(now()) @db.Timestamp(6)
-  deleted_at          DateTime?             @db.Timestamp(6)
-  investment_payments investment_payments[]
-  investments         investments           @relation(fields: [investment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  investment_units    investment_units      @relation(fields: [investment_unit_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-model investment_units {
-  id                     BigInt                   @id @default(autoincrement())
-  investment_id          BigInt
-  unit_name              String?                  @db.VarChar(255)
-  rent_amount            Decimal                  @db.Decimal(15, 2)
-  status                 String?                  @default("Available") @db.VarChar(20)
-  created_at             DateTime?                @default(now()) @db.Timestamp(6)
-  updated_at             DateTime?                @default(now()) @db.Timestamp(6)
-  deleted_at             DateTime?                @db.Timestamp(6)
-  investment_maintenance investment_maintenance[]
-  investment_payments    investment_payments[]
-  investment_renters     investment_renters[]
-  investments            investments              @relation(fields: [investment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-}
-
-model investments {
-  id                     BigInt                   @id @default(autoincrement())
-  user_id                BigInt
-  type                   String                   @db.VarChar(255)
-  name                   String                   @db.VarChar(255)
-  description            String?
-  image_url              String?                  @db.VarChar(255)
-  payment_interval       String?                  @default("Monthly") @db.VarChar(50)
-  location               String?                  @db.VarChar(255)
-  number_of_units        Int?                     @default(1)
-  make_model             String?                  @db.VarChar(255)
-  registration_number    String?                  @db.VarChar(100)
-  color                  String?                  @db.VarChar(50)
-  created_at             DateTime?                @default(now()) @db.Timestamp(6)
-  updated_at             DateTime?                @default(now()) @db.Timestamp(6)
-  deleted_at             DateTime?                @db.Timestamp(6)
-  investment_maintenance investment_maintenance[]
-  investment_payments    investment_payments[]
-  investment_renters     investment_renters[]
-  investment_units       investment_units[]
-}
-
-model job_adverts {
-  id                   BigInt      @id(map: "idx_31336_primary") @default(autoincrement())
-  user_id              BigInt
-  image                String      @db.VarChar(255)
-  poster_name          String      @db.VarChar(255)
-  job_title            String      @db.VarChar(255)
-  pay                  Decimal     @db.Decimal(15, 2)
-  currency             String      @db.VarChar(255)
-  pay_interval         String      @db.VarChar(255)
-  workplace            String      @db.VarChar(255)
-  deadline             DateTime    @db.Date
-  job_brief            String
-  job_responsibilities String
-  job_requirements     String
-  employment_type      String      @db.VarChar(255)
-  created_at           DateTime?   @db.Timestamptz(6)
-  updated_at           DateTime?   @db.Timestamptz(6)
-  deleted_at           DateTime?   @db.Timestamptz(6)
-  status               job_status? @default(open)
-
-  @@index([deadline], map: "idx_job_adverts_deadline")
-  @@index([id(sort: Desc), deadline], map: "idx_job_adverts_id_deadline")
-  @@index([status, deadline], map: "idx_job_adverts_status_deadline")
-}
-
-model job_applications {
-  id               BigInt    @id(map: "idx_31344_primary") @default(autoincrement())
-  user_id          BigInt
-  job_advert_id    BigInt
-  full_name        String    @db.VarChar(255)
-  email            String    @db.VarChar(255)
-  home_location    String    @db.VarChar(255)
-  availability     String    @db.VarChar(255)
-  phone_number     String    @db.VarChar(255)
-  alt_phone_number String?   @db.VarChar(255)
-  about_applicant  String
-  created_at       DateTime? @db.Timestamptz(6)
-  updated_at       DateTime? @db.Timestamptz(6)
-  deleted_at       DateTime? @db.Timestamptz(6)
-
-  @@index([job_advert_id], map: "idx_applications_job_advert_id")
-}
-
-model job_education {
-  id                 BigInt    @id(map: "idx_31351_primary") @default(autoincrement())
-  job_application_id BigInt
-  institution_name   String    @db.VarChar(255)
-  qualification      String    @db.VarChar(255)
-  start_date         DateTime  @db.Date
-  end_date           DateTime? @db.Date
-  created_at         DateTime? @db.Timestamptz(6)
-  updated_at         DateTime? @db.Timestamptz(6)
-  deleted_at         DateTime? @db.Timestamptz(6)
-}
-
-model job_experiences {
-  id                 BigInt    @id(map: "idx_31358_primary") @default(autoincrement())
-  job_application_id BigInt
-  company_name       String    @db.VarChar(255)
-  job_title          String    @db.VarChar(255)
-  start_date         DateTime  @db.Date
-  end_date           DateTime? @db.Date
-  job_description    String
-  created_at         DateTime? @db.Timestamptz(6)
-  updated_at         DateTime? @db.Timestamptz(6)
-  deleted_at         DateTime? @db.Timestamptz(6)
-}
-
-model job_languages {
-  id                 BigInt    @id(map: "idx_31365_primary") @default(autoincrement())
-  job_application_id BigInt
-  language           String    @db.VarChar(255)
-  created_at         DateTime? @db.Timestamptz(6)
-  updated_at         DateTime? @db.Timestamptz(6)
-  deleted_at         DateTime? @db.Timestamptz(6)
-}
-
-model job_referees {
-  id                 BigInt    @id(map: "idx_31371_primary") @default(autoincrement())
-  job_application_id BigInt
-  full_name          String    @db.VarChar(255)
-  email              String?   @db.VarChar(255)
-  phone_number       String    @db.VarChar(255)
-  alt_phone_number   String?   @db.VarChar(255)
-  created_at         DateTime? @db.Timestamptz(6)
-  updated_at         DateTime? @db.Timestamptz(6)
-  deleted_at         DateTime? @db.Timestamptz(6)
-}
-
-model jobs {
-  id           BigInt  @id(map: "idx_31378_primary") @default(autoincrement())
-  queue        String  @db.VarChar(255)
-  payload      String
-  attempts     Int     @db.SmallInt
-  reserved_at  BigInt?
-  available_at BigInt
-  created_at   BigInt
-
-  @@index([queue], map: "idx_31378_jobs_queue_index")
-}
-
-model likes {
-  id          Int       @id(map: "idx_31384_primary") @default(autoincrement())
-  bizid       Int
-  userid      String    @db.VarChar(255)
-  catid       Int
-  status      Int       @default(1)
-  created_on  DateTime  @default(now()) @db.Timestamptz(6)
-  modified_on DateTime? @db.Date
-}
-
-model loan_product {
-  id               Int       @id(map: "idx_31389_primary")
-  category_id      Int
-  bizid            Int
-  loanproduct_name String    @db.VarChar(255)
-  about_loan       String
-  features         String
-  benefits         String
-  qualifications   String
-  requirements     String
-  status           Int?
-  date_created     DateTime? @default(now()) @db.Timestamptz(6)
-}
-
-model lost_item_images {
-  id           BigInt    @id(map: "idx_31396_primary") @default(autoincrement())
-  lost_item_id BigInt
-  image        String    @db.VarChar(255)
-  created_at   DateTime? @db.Timestamptz(6)
-  updated_at   DateTime? @db.Timestamptz(6)
-
-  @@index([lost_item_id], map: "idx_lost_item_id")
-}
-
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-model lost_items {
-  id               BigInt                   @id(map: "idx_31401_primary") @default(autoincrement())
-  user_id          BigInt
-  item_image       String                   @db.VarChar(255)
-  item_name        String                   @db.VarChar(255)
-  item_description String
-  location         String                   @db.VarChar(255)
-  contact_info     String                   @db.VarChar(255)
-  date_found       DateTime                 @db.Date
-  latitude         Float                    @default(0)
-  longitude        Float                    @default(0)
-  is_found         Boolean
-  created_at       DateTime?                @db.Timestamptz(6)
-  updated_at       DateTime?                @db.Timestamptz(6)
-  search_vector    Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, (((COALESCE(item_name, ''::character varying))::text || ' '::text) || COALESCE(item_description, ''::text)))"))
-
-  @@index([is_found], map: "idx_is_found")
-  @@index([user_id], map: "idx_lost_item_user_id")
-  @@index([search_vector], map: "idx_lost_items_search_vector", type: Gin)
-}
-
-model maid {
-  id              Int      @id(map: "idx_31410_primary")
-  categorie_id    Int
-  home_town       String   @db.VarChar(255)
-  names           String   @db.VarChar(255)
-  sex             String   @db.VarChar(255)
-  age             Int
-  mother_name     String   @db.VarChar(255)
-  father_name     String   @db.VarChar(255)
-  pictures        String
-  education_level String   @db.VarChar(255)
-  village         String   @db.VarChar(255)
-  parish          String   @db.VarChar(255)
-  sub_county      String   @db.VarChar(255)
-  national_id     String   @db.VarChar(255)
-  status          Int      @default(0)
-  created_on      DateTime @default(now()) @db.Timestamptz(6)
-  tel             String   @db.VarChar(255)
-  country         String   @default("UG") @db.VarChar(255)
-}
-
-model migrations {
-  id        BigInt @id(map: "idx_31419_primary") @default(autoincrement())
-  migration String @db.VarChar(255)
-  batch     Int
-}
-
-model notifications {
-  id          BigInt              @id(map: "idx_31424_primary") @default(autoincrement())
-  user_id     BigInt
-  action      String              @db.VarChar(255)
-  description String              @db.VarChar(255)
-  created_at  DateTime?           @db.Timestamptz(6)
-  updated_at  DateTime?           @db.Timestamptz(6)
-  status      notification_status @default(unread)
-}
-
-model other_fees_structures {
-  id         BigInt    @id(map: "idx_31432_primary") @default(autoincrement())
-  bizid      BigInt
-  fee_name   String    @db.VarChar(255)
-  amount     Decimal   @db.Decimal(18, 2)
-  currency   String    @default("UGX") @db.VarChar(255)
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-  deleted_at DateTime? @db.Timestamptz(6)
-}
-
-model password_resets {
-  email      String    @db.VarChar(255)
-  token      String    @db.VarChar(255)
-  created_at DateTime? @db.Timestamptz(6)
-  id         BigInt    @id
-
-  @@index([email], map: "idx_31439_password_resets_email_index")
-}
-
-model payments {
-  id                 BigInt         @id(map: "idx_31445_primary") @default(autoincrement())
-  user_id            BigInt
-  payment_ref        String         @db.VarChar(255)
-  amount             Decimal        @db.Decimal(17, 2)
-  currency           String         @db.VarChar(255)
-  country            String         @db.VarChar(255)
-  is_verified        Int            @default(0)
-  narrative          String
-  phone              String?        @db.VarChar(15)
-  table              String?        @db.VarChar(255)
-  ip_address         String         @db.VarChar(255)
-  created_at         DateTime?      @db.Timestamptz(6)
-  updated_at         DateTime?      @db.Timestamptz(6)
-  deleted_at         DateTime?      @db.Timestamptz(6)
-  status             payment_status @default(pending)
-  payment_method     String?        @default("mobile_money") @db.VarChar(20)
-  status_check_count Int?           @default(0) @db.SmallInt
-
-  @@index([is_verified, id])
-  @@index([status, created_at])
-}
-
-model permissions {
-  id          BigInt    @id(map: "idx_31454_primary") @default(autoincrement())
-  user_id     BigInt
-  catid       BigInt
-  bizid       BigInt
-  permission  String    @db.VarChar(255)
-  description String    @db.VarChar(255)
-  status      Boolean   @default(false)
-  created_at  DateTime? @db.Timestamptz(6)
-  updated_at  DateTime? @db.Timestamptz(6)
-  deleted_at  DateTime? @db.Timestamptz(6)
-}
-
-model personal_access_tokens {
-  id             BigInt    @id(map: "idx_31462_primary") @default(autoincrement())
-  tokenable_type String    @db.VarChar(255)
-  tokenable_id   BigInt
-  name           String    @db.VarChar(255)
-  token          String    @unique(map: "idx_31462_personal_access_tokens_token_unique") @db.VarChar(64)
-  abilities      String?
-  last_used_at   DateTime? @db.Timestamptz(6)
-  expires_at     DateTime? @db.Timestamptz(6)
-  created_at     DateTime? @db.Timestamptz(6)
-  updated_at     DateTime? @db.Timestamptz(6)
-
-  @@index([tokenable_type, tokenable_id], map: "idx_31462_personal_access_tokens_tokenable_type_tokenable_id_in")
-}
-
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-model pro_drivers {
-  id               BigInt    @id(map: "idx_31469_primary") @default(autoincrement())
-  category_id      BigInt    @default(84)
-  user_id          BigInt
-  name             String    @db.VarChar(255)
-  image            String    @db.VarChar(255)
-  dob              DateTime  @db.Date
-  dl_class         String    @db.VarChar(255)
-  years_in_driving String    @db.VarChar(255)
-  home_town        String    @db.VarChar(255)
-  village          String    @db.VarChar(255)
-  education        String    @db.VarChar(255)
-  contact          String    @db.VarChar(255)
-  pay_number       String?   @db.VarChar(255)
-  merchant_code    String?   @db.VarChar(255)
-  details          String?
-  country          String    @db.VarChar(255)
-  latitude         Float
-  longitude        Float
-  available        Boolean   @default(true)
-  status           Boolean   @default(true)
-  verified         Boolean   @default(false)
-  created_at       DateTime? @db.Timestamptz(6)
-  updated_at       DateTime? @db.Timestamptz(6)
-  deleted_at       DateTime? @db.Timestamptz(6)
-
-  @@index([status, available], map: "idx_driver_status_availailable")
-  @@index([id, name, image, verified], map: "idx_pro_drivers_covering")
-  @@index([id], map: "idx_pro_drivers_id")
-}
-
-model product_adverts {
-  id          BigInt    @id(map: "idx_31482_primary") @default(autoincrement())
-  user_id     BigInt
-  product_id  BigInt
-  payment_id  BigInt?
-  payment_ref String?   @db.VarChar(255)
-  catid       Int
-  status      Boolean
-  ad_type     String    @db.VarChar(255)
-  price       Decimal   @db.Decimal(17, 2)
-  end_date    DateTime  @db.Timestamptz(6)
-  created_at  DateTime? @db.Timestamptz(6)
-  updated_at  DateTime? @db.Timestamptz(6)
-  deleted_at  DateTime? @db.Timestamptz(6)
-}
-
-model product_cart {
-  id         BigInt    @id(map: "idx_31489_primary") @default(autoincrement())
-  user_id    BigInt
-  product_id BigInt
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-}
-
-model product_orders {
-  id           BigInt       @id(map: "idx_31494_primary") @default(autoincrement())
-  user_id      BigInt
-  product_id   BigInt
-  catid        BigInt
-  bizid        BigInt
-  price        Decimal      @db.Decimal(17, 2)
-  quantity     Int
-  name         String       @db.VarChar(255)
-  address      String       @db.VarChar(255)
-  email        String?      @db.VarChar(255)
-  contact      String       @db.VarChar(255)
-  delivered_by String?      @db.VarChar(255)
-  created_at   DateTime?    @db.Timestamptz(6)
-  updated_at   DateTime?    @db.Timestamptz(6)
-  deleted_at   DateTime?    @db.Timestamptz(6)
-  status       order_status @default(pending)
-}
-
-model product_review_images {
-  id                BigInt    @id(map: "idx_31502_primary") @default(autoincrement())
-  product_review_id BigInt
-  image             String    @db.VarChar(255)
-  created_at        DateTime? @db.Timestamptz(6)
-  updated_at        DateTime? @db.Timestamptz(6)
-}
-
-model product_review_likes {
-  id                BigInt    @id(map: "idx_31507_primary") @default(autoincrement())
-  user_id           BigInt
-  product_review_id BigInt
-  status            Boolean   @default(true)
-  created_at        DateTime? @db.Timestamptz(6)
-  updated_at        DateTime? @db.Timestamptz(6)
-}
-
-model product_reviews {
-  id         BigInt    @id(map: "idx_31513_primary") @default(autoincrement())
-  user_id    BigInt
-  product_id BigInt
-  parent_id  BigInt?
-  comment    String
-  status     Boolean   @default(true)
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-}
-
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-model products {
-  id          BigInt         @id(map: "idx_31521_primary") @default(autoincrement())
-  catid       BigInt
-  bizid       BigInt
-  image       String         @db.VarChar(255)
-  name        String         @db.VarChar(255)
-  price       Decimal        @db.Decimal(17, 2)
-  discount    Decimal        @default(0.00) @db.Decimal(5, 2)
-  currency    String         @default("UGX") @db.VarChar(255)
-  description String
-  subcat      String?        @db.VarChar(255)
-  size        String?        @db.VarChar(255)
-  latitude    String         @default("0") @db.VarChar(255)
-  longitude   String         @default("0") @db.VarChar(255)
-  created_at  DateTime?      @db.Timestamptz(6)
-  updated_at  DateTime?      @db.Timestamptz(6)
-  deleted_at  DateTime?      @db.Timestamptz(6)
-  line_type   line_type_enum @default(first_line)
-
-  @@index([description(ops: raw("gin_trgm_ops"))], map: "idx_prod_desc_trgm", type: Gin)
-  @@index([name(ops: raw("gin_trgm_ops"))], map: "idx_prod_name_trgm", type: Gin)
-  @@index([subcat(ops: raw("gin_trgm_ops"))], map: "idx_prod_subcat_trgm", type: Gin)
-}
-
-model push_notifications {
-  id             BigInt    @id(map: "idx_31533_primary") @default(autoincrement())
-  from_id        BigInt
-  to_id          BigInt
-  title          String    @db.VarChar(255)
-  body           String
-  image          String?   @db.VarChar(255)
-  url            String?   @db.VarChar(255)
-  status         Boolean   @default(false)
-  clicked        Boolean   @default(false)
-  dismissed      Boolean   @default(false)
-  clicked_in_app Boolean   @default(false)
-  bell_view      Boolean   @default(false)
-  silent         Boolean   @default(false)
-  created_at     DateTime? @db.Timestamptz(6)
-  updated_at     DateTime? @db.Timestamptz(6)
-}
-
-model r_e_houses {
-  id                 BigInt    @id(map: "idx_31546_primary") @default(autoincrement())
-  property_id        BigInt
-  bedrooms           Int
-  bathrooms          Int
-  square_footage     Decimal   @default(0.00) @db.Decimal(10, 2)
-  furnished          Boolean   @default(false)
-  utilities_included Boolean   @default(false)
-  parking            Boolean   @default(false)
-  created_at         DateTime? @db.Timestamptz(6)
-  updated_at         DateTime? @db.Timestamptz(6)
-  deleted_at         DateTime? @db.Timestamptz(6)
-}
-
-model r_e_land {
-  id          BigInt    @id(map: "idx_31555_primary") @default(autoincrement())
-  property_id BigInt
-  size        String    @db.VarChar(255)
-  created_at  DateTime? @db.Timestamptz(6)
-  updated_at  DateTime? @db.Timestamptz(6)
-  deleted_at  DateTime? @db.Timestamptz(6)
-}
-
-model r_e_properties {
-  id          BigInt    @id(map: "idx_31561_primary") @default(autoincrement())
-  bizid       BigInt
-  image       String    @db.VarChar(255)
-  location    String    @db.VarChar(255)
-  description String
-  price       Decimal   @db.Decimal(15, 2)
-  status      Boolean   @default(true)
-  latitude    String?   @db.VarChar(255)
-  longitude   String?   @db.VarChar(255)
-  created_at  DateTime? @db.Timestamptz(6)
-  updated_at  DateTime? @db.Timestamptz(6)
-  deleted_at  DateTime? @db.Timestamptz(6)
-}
-
-model r_e_property_images {
-  id          BigInt    @id(map: "idx_31569_primary") @default(autoincrement())
-  property_id BigInt
-  image       String    @db.VarChar(255)
-  created_at  DateTime? @db.Timestamptz(6)
-  updated_at  DateTime? @db.Timestamptz(6)
-  deleted_at  DateTime? @db.Timestamptz(6)
-}
-
-model ratings {
-  id         BigInt    @id(map: "idx_31574_primary") @default(autoincrement())
-  user_id    BigInt
-  bizid      Int
-  catid      String    @db.VarChar(255)
-  rating     Decimal   @db.Decimal(1, 0)
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-
-  @@index([bizid], map: "idx_bizid")
-}
-
-model report_appeals {
-  id                   BigInt    @id(map: "idx_31581_primary") @default(autoincrement())
-  report_submission_id BigInt
-  context              String
-  created_at           DateTime? @db.Timestamptz(6)
-  updated_at           DateTime? @db.Timestamptz(6)
-  deleted_at           DateTime? @db.Timestamptz(6)
-}
-
-model report_submissions {
-  id               BigInt        @id(map: "idx_31589_primary") @default(autoincrement())
-  reporter_id      BigInt
-  reported_user_id BigInt?
-  report_type_id   BigInt
-  table            String        @db.VarChar(255)
-  content_id       String        @db.VarChar(255)
-  other_reasons    String?
-  created_at       DateTime?     @db.Timestamptz(6)
-  updated_at       DateTime?     @db.Timestamptz(6)
-  deleted_at       DateTime?     @db.Timestamptz(6)
-  status           report_status @default(pending)
-}
-
-model report_types {
-  id          BigInt    @id(map: "idx_31597_primary") @default(autoincrement())
-  type        String    @db.VarChar(255)
-  description String
-  created_at  DateTime? @db.Timestamptz(6)
-  updated_at  DateTime? @db.Timestamptz(6)
-}
-
-model resolve_items {
-  id            Int      @id(map: "idx_31603_primary") @default(autoincrement())
-  itemid        Int
-  catid         Int
-  bizid         Int?
-  table_name    String   @db.VarChar(255)
-  ownerid       String   @db.VarChar(255)
-  status        String   @default("1") @db.VarChar(100)
-  creation_date DateTime @default(now()) @db.Timestamptz(6)
-}
-
-model resolver {
-  id           Int      @id(map: "idx_31610_primary") @default(autoincrement())
-  bizid        Int
-  category     Int
-  table1       String   @db.VarChar(255)
-  owner_id     String   @db.VarChar(255)
-  date_created DateTime @default(now()) @db.Timestamptz(6)
-  status       Int      @default(0)
-
-  @@index([owner_id], map: "idx_owner_id")
-  @@index([category])
-  @@index([date_created])
-  @@index([owner_id])
-}
-
-model routes {
-  id               Int      @id(map: "idx_31617_primary")
-  from             String   @db.VarChar(255)
-  to               String   @db.VarChar(255)
-  via              String?  @db.VarChar(255)
-  price            Int
-  commission       Decimal  @default(0.00) @db.Decimal(8, 2)
-  depature         String   @db.VarChar(255)
-  arrival          String   @db.VarChar(255)
-  company_id       Int
-  status           Int      @default(0)
-  date_on_creation DateTime @default(now()) @db.Timestamptz(6)
-}
-
-model sample {
-  id           Int     @id(map: "idx_31625_primary")
-  amount       String? @db.VarChar(255)
-  narrative    String? @db.VarChar(255)
-  external_ref String? @db.VarChar(255)
-  network_ref  String? @db.VarChar(255)
-  date_time    String? @db.VarChar(255)
-  msisdn       String? @db.VarChar(255)
-}
-
-model school_performances {
-  id             BigInt    @id(map: "idx_31631_primary") @default(autoincrement())
-  bizid          BigInt
-  year           BigInt
-  candidates     BigInt
-  division_one   BigInt
-  division_two   BigInt
-  division_three BigInt
-  division_four  BigInt
-  created_at     DateTime? @db.Timestamptz(6)
-  updated_at     DateTime? @db.Timestamptz(6)
-  deleted_at     DateTime? @db.Timestamptz(6)
-}
-
-model sessions {
-  id            String  @id @db.VarChar(255)
-  user_id       BigInt?
-  ip_address    String? @db.VarChar(45)
-  user_agent    String?
-  payload       String
-  last_activity Int
-
-  @@index([last_activity], map: "sessions_last_activity_index")
-  @@index([user_id], map: "sessions_user_id_index")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model spatial_ref_sys {
-  srid      Int     @id
-  auth_name String? @db.VarChar(256)
-  auth_srid Int?
-  srtext    String? @db.VarChar(2048)
-  proj4text String? @db.VarChar(2048)
-}
-
-model special_offers {
-  id           Int      @id(map: "idx_30906_primary")
-  bizid        Int
-  name         String   @db.VarChar(255)
-  about        String?
-  features     String
-  benefits     String
-  qualify      String
-  requirements String
-  percentage   String
-  status       Int      @default(1)
-  createdon    DateTime @default(now()) @db.Timestamptz(6)
-}
-
-model staff {
-  id         Int      @id(map: "idx_31635_primary")
-  email      String   @unique(map: "idx_31635_email") @db.VarChar(255)
-  name       String   @db.VarChar(255)
-  password   String   @db.VarChar(255)
-  status     Int      @default(1)
-  created_on DateTime @default(now()) @db.Timestamptz(6)
-}
-
-model stages {
-  id              Int      @id(map: "idx_31642_primary")
-  company_id      Int
-  stagename       String   @db.VarChar(255)
-  contacts        String   @db.VarChar(255)
-  status          Int      @default(0)
-  date_created_on DateTime @default(now()) @db.Timestamptz(6)
-}
-
-model student_enrolment {
-  id         BigInt    @id(map: "idx_31650_primary") @default(autoincrement())
-  bizid      BigInt
-  year       Int
-  boys       Int
-  girls      Int
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-  deleted_at DateTime? @db.Timestamptz(6)
-}
-
-model subscribers {
-  id         Int      @id(map: "idx_31654_primary")
-  name       String   @db.VarChar(255)
-  tel        String   @unique(map: "idx_31654_tel") @db.VarChar(255)
-  profile    String?  @db.VarChar(255)
-  device_id  String?  @db.VarChar(255)
-  pin        String   @db.VarChar(255)
-  sessionkey String?  @db.VarChar(255)
-  status     Int      @default(0)
-  ispaid     Int      @default(0)
-  createdon  DateTime @default(now()) @db.Timestamptz(6)
-}
-
-model subscription {
-  id       Int       @id(map: "idx_31662_primary")
-  sid      String?   @db.VarChar(255)
-  sdate    DateTime  @default(now()) @db.Timestamptz(6)
-  samount  Int?
-  edate    DateTime? @db.Date
-  status   Int       @default(1)
-  response String?   @db.VarChar(255)
-  stype    String?   @db.VarChar(255)
-}
-
-/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
-model sv_locations {
-  id                Int       @id(map: "idx_31669_primary")
-  categoryid        Int
-  office            String    @db.VarChar(255)
-  img_url           String    @db.VarChar(255)
-  district          String    @db.VarChar(255)
-  physical_location String    @db.VarChar(255)
-  email             String    @db.VarChar(255)
-  website           String
-  tel               String    @db.VarChar(255)
-  service_details   String
-  owner_id          String    @default("0") @db.VarChar(255)
-  latitude          String    @default("0") @db.VarChar(255)
-  longitude         String    @default("0") @db.VarChar(255)
-  status            Int?
-  verified          Boolean   @default(false)
-  date_created      DateTime  @default(now()) @db.Timestamptz(6)
-  country           String    @default("UG") @db.VarChar(255)
-  created_at        DateTime? @db.Timestamptz(6)
-  updated_at        DateTime? @db.Timestamptz(6)
-  deleted_at        DateTime? @db.Timestamptz(6)
-
-  @@index([service_details(ops: raw("gin_trgm_ops"))], map: "idx_loc_details_trgm", type: Gin)
-  @@index([district(ops: raw("gin_trgm_ops"))], map: "idx_loc_district_trgm", type: Gin)
-  @@index([office(ops: raw("gin_trgm_ops"))], map: "idx_loc_office_trgm", type: Gin)
-  @@index([physical_location(ops: raw("gin_trgm_ops"))], map: "idx_loc_phys_trgm", type: Gin)
-}
-
-model system_errors {
-  id          BigInt    @id(map: "idx_31681_primary") @default(autoincrement())
-  description String
-  created_at  DateTime? @db.Timestamptz(6)
-  updated_at  DateTime? @db.Timestamptz(6)
-}
-
-model teachers {
-  id         BigInt    @id(map: "idx_31688_primary") @default(autoincrement())
-  bizid      BigInt
-  male       Int
-  female     Int
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-  deleted_at DateTime? @db.Timestamptz(6)
-}
-
-model toilet_photos {
-  id         BigInt    @id(map: "idx_31693_primary") @default(autoincrement())
-  toilet_id  BigInt
-  photo      String    @db.VarChar(255)
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-  deleted_at DateTime? @db.Timestamptz(6)
-  toilets    toilets   @relation(fields: [toilet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "toilet_photos_toilet_id_foreign")
-
-  @@index([toilet_id], map: "idx_31693_toilet_photos_toilet_id_foreign")
-}
-
-model toilets {
-  id            BigInt          @id(map: "idx_31698_primary") @default(autoincrement())
-  bizid         BigInt
-  male          Int
-  female        Int
-  created_at    DateTime?       @db.Timestamptz(6)
-  updated_at    DateTime?       @db.Timestamptz(6)
-  deleted_at    DateTime?       @db.Timestamptz(6)
-  toilet_photos toilet_photos[]
-}
-
-model track_categories {
-  id         BigInt    @id(map: "idx_31703_primary") @default(autoincrement())
-  name       String    @db.VarChar(255)
-  image      String    @db.VarChar(255)
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-  deleted_at DateTime? @db.Timestamptz(6)
-}
-
-model tracks {
-  id                BigInt    @id(map: "idx_31710_primary") @default(autoincrement())
-  user_id           BigInt
-  track_category_id BigInt
-  sub_category      String    @db.VarChar(255)
-  name              String    @db.VarChar(255)
-  title             String
-  artist            String    @db.VarChar(255)
-  album             String?   @db.VarChar(255)
-  genre             String?   @db.VarChar(255)
-  description       String?
-  artwork           String    @db.VarChar(255)
-  duration          Int
-  created_at        DateTime? @db.Timestamptz(6)
-  updated_at        DateTime? @db.Timestamptz(6)
-  deleted_at        DateTime? @db.Timestamptz(6)
-}
-
-model university_courses {
-  id                   BigInt    @id(map: "idx_31717_primary") @default(autoincrement())
-  bizid                BigInt
-  faculty_id           BigInt?
-  course               String    @db.VarChar(255)
-  course_description   String?
-  years                Int
-  tuition              Decimal   @db.Decimal(17, 2)
-  tuition_currency     String    @default("UGX") @db.VarChar(255)
-  tuition_int          Decimal?  @db.Decimal(17, 2)
-  tuition_int_currency String    @default("USD") @db.VarChar(255)
-  other_fees           Decimal?  @db.Decimal(17, 2)
-  other_fees_int       Decimal?  @db.Decimal(17, 2)
-  created_at           DateTime? @db.Timestamptz(6)
-  updated_at           DateTime? @db.Timestamptz(6)
-  deleted_at           DateTime? @db.Timestamptz(6)
-}
-
-model university_faculties {
-  id         BigInt    @id(map: "idx_31726_primary") @default(autoincrement())
-  bizid      BigInt
-  faculty    String    @db.VarChar(255)
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-}
-
-model user_third_parties {
-  id         BigInt    @id(map: "idx_31731_primary") @default(autoincrement())
-  user_id    BigInt
-  added_by   BigInt
-  created_at DateTime? @db.Timestamptz(6)
-  updated_at DateTime? @db.Timestamptz(6)
-  deleted_at DateTime? @db.Timestamptz(6)
-}
-
-model User {
-  id                Int             @id(map: "idx_31735_primary") @default(autoincrement())
-  name              String?         @db.VarChar(255)
-  email             String?         @unique(map: "idx_31735_users_email_unique") @db.VarChar(255)
-  tel               String?         @unique(map: "idx_31735_tel") @db.VarChar(255)
-  password          String?         @db.VarChar(255)
-  profile           String?         @db.VarChar(255)
-  status            Boolean         @default(true)
-  address           String?         @db.VarChar(255)
-  ispaid            Boolean         @default(false)
-  email_verified_at DateTime?       @db.Timestamptz(6)
-  push_token        String?         @db.VarChar(255)
-  push_token_error  String?
-  app_version       String?         @db.VarChar(255)
-  os                String?         @db.VarChar(255)
-  device            String?         @db.VarChar(255)
-  remember_token    String?         @db.VarChar(100)
-  otp               String?         @db.VarChar(255)
-  otp_expiry        DateTime?       @db.Timestamptz(6)
-  apple_user        String?         @unique(map: "idx_31735_apple_user") @db.VarChar(100)
-  created_at        DateTime?       @db.Timestamptz(6)
-  updated_at        DateTime?       @db.Timestamptz(6)
-  deleted_at        DateTime?       @db.Timestamptz(6)
-  privilege         user_privilege? @default(none)
-  is_ghost_user     Boolean         @default(false)
-  wallet           Wallet?
-  paymentMethods   PaymentMethod[]
-  transactions     Transaction[]
-  disputes         Dispute[]
-  auditLogs        AuditLog[]
-  systemNotifications SystemNotification[]
-  paymentOtp             Otp?
-  @@index([privilege], map: "idx_user_preveledge")
-  @@index([id, name, profile], map: "idx_users_covering")
-  @@index([id], map: "idx_users_id")
-  @@index([name], map: "idx_users_name")
-  @@index([created_at])
-  @@index([name(ops: raw("gin_trgm_ops"))], map: "users_name_trgm_idx", type: Gin)
-  @@index([os, status])
-  @@index([status])
-  @@map("users")
-}
-
-model Otp{
-  id String @id @default(uuid())
-  userId Int @unique
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  otpHash String
-  expiresAt  DateTime
-  createdAt DateTime @default(now())
-  attempts Int @default(0)
-  @@map("Payment_otp")
-}
-
-model Wallet {
-  id        String   @id @default(uuid())
-  userId    Int   @unique
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  balance Decimal  @default(0) @db.Decimal(12, 2)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  @@map("payment_wallets")
-}
-
-model PaymentMethod {
-  id        String @id @default(uuid())
-  userId    Int @unique
-  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      PaymentMethodType
-  name      String
-  detail    String // e.g., "+256 772 *** 888" or "**** 4242"
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-  @@map("payment_methods")
-}
-
-model Transaction {
-  id        String            @id @default(uuid())
-  userId    Int @unique
-  user      User              @relation(fields: [userId], references: [id])
-  date      DateTime          @default(now())
-  amount    Decimal           @db.Decimal(12, 2)
-  currency  String            @default("UGX") // UGX or USD
-  type      TransactionType
-  status    TransactionStatus @default(PENDING)
-  recipient String
-  category  String // e.g., 'Transport', 'Rent', 'Utilities'
-  method    String // e.g., 'MTN Mobile Money', 'Visa **** 4242'
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-
-  disputes Dispute[]
-
-  @@map("payment_transactions")
-}
-
-model Dispute {
-  id            String        @id @default(uuid())
-  transactionId String @unique
-  transaction   Transaction   @relation(fields: [transactionId], references: [id])
-  userId        Int @unique
-  user          User          @relation(fields: [userId], references: [id])
-  amount        Decimal       @db.Decimal(12, 2)
-  currency      String        @default("UGX")
-  reason        String
-  status        DisputeStatus @default(OPEN)
-  evidence      String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-
-  @@map("payment_disputes")
-}
-
-model Fee {
-  id          String      @id @default(uuid())
-  name        String
-  type        FeeType
-  value       Decimal     @db.Decimal(12, 2)
-  currency    String?     @default("UGX")
-  category    FeeCategory
-  active      Boolean     @default(true)
-  lastUpdated DateTime    @updatedAt
-  createdAt   DateTime    @default(now())
-
-  @@map("payment_fees")
-}
-
-model AuditLog {
-  id        String   @id @default(uuid())
-  action    String
-  adminId   Int @unique
-  admin     User     @relation(fields: [adminId], references: [id])
-  timestamp DateTime @default(now())
-  details   String
-  ip        String?
-
-  @@map("payment_audit_logs")
-}
-
-model SystemNotification {
-  id        String   @id @default(uuid())
-  userId    Int @unique
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title     String
-  message   String
-  type      NotificationType
-  read      Boolean          @default(false)
-  createdAt DateTime         @default(now())
-
-  @@map("payment_system_notifications")
-}
-
-model views {
-  id            Int      @id(map: "idx_31743_primary")
-  bizid         Int
-  status        Int      @default(1)
-  catid         Int
-  creation_date DateTime @default(now()) @db.Timestamptz(6)
-  modified_on   DateTime @db.Date
-  ip_address    String   @db.VarChar(255)
-}
-
-enum job_status {
-  open
-  closed
-}
-
-enum labor_category_enum {
-  unspecialized
-  specialized
-  family_assistant
-}
-
-enum ledger_type {
-  credit
-  debit
-}
-
-enum line_type_enum {
-  first_line
-  second_line
-}
-
-enum notification_status {
-  unread
-  read
-}
-
-enum order_status {
-  pending
-  processing
-  received
-}
-
-enum payment_status {
-  pending
-  successful
-  failed
-}
-
-enum report_status {f
-  reviewed
-  pending
-}
-
-enum user_privilege {
-  none
-  admin
-  super_admin
-}
-
-enum PaymentProvider {
-  AIRTEL
-  MTN
-}
-
-enum PaymentMethodType {
-  CARD
-  MOBILE_MONEY
-  BANK
-}
-
-enum DisputeStatus {
-  OPEN
-  RESOLVED
-  REJECTED
-}
-
-enum FeeType {
-  PERCENTAGE
-  FIXED
-}
-
-enum FeeCategory {
-  DEPOSIT
-  WITHDRAWAL
-  TRANSFER
-  PAYMENT
-  API
-}
-
-enum NotificationType {
-  ALERT
-  INFO
-  SUCCESS
-}
-
-enum TransactionType {
-  DEPOSIT
-  WITHDRAWAL
-  TRANSFER
-  PAYMENT
-  SUBSCRIPTION
-}
-
-enum TransactionStatus {
-  COMPLETED
-  PENDING
-  FAILED
-  DISPUTED
-}
+// generator client {
+//   provider = "prisma-client"
+//   output   = "../lib/generated/prisma"
+// }
+
+// datasource db {
+//   provider = "postgresql"
+// }
+
+// model account_history {
+//   id                BigInt    @id(map: "idx_30914_primary") @default(autoincrement())
+//   account_id        BigInt
+//   account_ledger_id BigInt
+//   balance_before    Decimal   @db.Decimal(14, 2)
+//   balance_after     Decimal   @db.Decimal(14, 2)
+//   narrative         String    @db.VarChar(150)
+//   type              String    @db.VarChar(15)
+//   created_at        DateTime? @db.Timestamptz(6)
+//   updated_at        DateTime? @db.Timestamptz(6)
+// }
+
+// model account_ledgers {
+//   id          BigInt      @id(map: "account_ledger_pkey") @default(autoincrement())
+//   account_id  BigInt
+//   amount      Decimal     @default(0.00) @db.Decimal(12, 2)
+//   currency    String      @default("UGX") @db.VarChar(255)
+//   type        ledger_type
+//   description String?     @db.VarChar(255)
+//   payment_ref String?     @db.VarChar(255)
+//   status      Int         @default(0) @db.SmallInt
+//   is_charge   Int?
+//   created_at  DateTime?   @db.Timestamptz(6)
+//   updated_at  DateTime?   @db.Timestamptz(6)
+//   deleted_at  DateTime?   @db.Timestamptz(6)
+// }
+
+// model account_withdraw_requests {
+//   id                BigInt    @id(map: "idx_30929_primary") @default(autoincrement())
+//   user_id           BigInt
+//   account_ledger_id BigInt
+//   recipient_number  String    @db.VarChar(255)
+//   otp               String    @db.VarChar(255)
+//   otp_expiry        DateTime? @db.Timestamptz(6)
+//   status            Int       @default(0) @db.SmallInt
+//   checks            Int       @default(0)
+//   account_type      String?   @db.VarChar(50)
+//   created_at        DateTime? @db.Timestamptz(6)
+//   updated_at        DateTime? @db.Timestamptz(6)
+//   deleted_at        DateTime? @db.Timestamptz(6)
+// }
+
+// model accounts {
+//   id                       BigInt    @id(map: "idx_30938_primary") @default(autoincrement())
+//   user_id                  BigInt
+//   account_type             String?   @default("DEFAULT") @db.VarChar(40)
+//   account_number           String?   @db.VarChar(20)
+//   catid                    BigInt?
+//   bizid                    BigInt?
+//   balance                  Decimal   @default(0.00) @db.Decimal(12, 2)
+//   currency                 String    @default("UGX") @db.VarChar(255)
+//   withdraw_pin             String?   @db.VarChar(100)
+//   start_date               DateTime? @db.Date
+//   maturity_date            DateTime? @db.Date
+//   duration_months          Int?
+//   early_withdrawal_allowed Int?      @default(0) @db.SmallInt
+//   created_at               DateTime? @db.Timestamptz(6)
+//   updated_at               DateTime? @db.Timestamptz(6)
+//   deleted_at               DateTime? @db.Timestamptz(6)
+// }
+
+// model accounts_offered {
+//   id           Int      @id(map: "idx_30881_primary")
+//   bizid        Int
+//   category_id  Int
+//   name         String?  @db.VarChar(255)
+//   about        String?
+//   features     String?
+//   benefits     String?
+//   qualify      String?
+//   requirements String?
+//   percentage   String?  @db.VarChar(255)
+//   createdon    DateTime @default(now()) @db.Timestamptz(6)
+//   status       Int      @default(1)
+// }
+
+// model activity_logs {
+//   id          BigInt    @id(map: "idx_30947_primary") @default(autoincrement())
+//   user_id     BigInt?
+//   ip_address  String?   @db.VarChar(255)
+//   action      String?   @db.VarChar(255)
+//   method      String?   @db.VarChar(255)
+//   path        String?   @db.VarChar(255)
+//   description String?
+//   platform    String?   @db.VarChar(255)
+//   status      Boolean   @default(true)
+//   created_at  DateTime? @db.Timestamptz(6)
+//   updated_at  DateTime? @db.Timestamptz(6)
+//   deleted_at  DateTime? @db.Timestamptz(6)
+
+//   @@index([created_at])
+//   @@index([user_id, created_at], map: "activity_logs_user_created_at_idx")
+//   @@index([user_id], map: "idx_30947_activity_logs_user_id_index")
+// }
+
+// model add_items_cat1 {
+//   id           Int       @id(map: "idx_30954_primary")
+//   categoryid   Int
+//   bizid        Int
+//   ownerid      String?   @db.VarChar(255)
+//   price        String    @db.VarChar(255)
+//   size         String?   @db.VarChar(255)
+//   colors       String    @db.VarChar(255)
+//   brand        String?   @db.VarChar(255)
+//   instock      String    @db.VarChar(255)
+//   description  String
+//   image_url    String?   @db.VarChar(255)
+//   date_created DateTime? @default(now()) @db.Timestamptz(6)
+//   status       String?   @db.VarChar(255)
+// }
+
+// model add_items_cat2 {
+//   id           Int      @id(map: "idx_30960_primary")
+//   categoryid   Int
+//   bizid        Int
+//   ownerid      String   @db.VarChar(255)
+//   price        String   @db.VarChar(255)
+//   brand        String   @db.VarChar(255)
+//   ram          String   @db.VarChar(255)
+//   memory       String   @db.VarChar(255)
+//   camera       String   @db.VarChar(255)
+//   color        String   @db.VarChar(255)
+//   instock      String   @db.VarChar(255)
+//   description  String
+//   image_url    String?  @db.VarChar(255)
+//   date_created DateTime @default(now()) @db.Timestamptz(6)
+//   status       String?  @db.VarChar(255)
+// }
+
+// model add_items_cat3 {
+//   id                Int      @id(map: "idx_30966_primary")
+//   categoryid        Int
+//   bizid             Int
+//   ownerid           String   @db.VarChar(255)
+//   price             String   @db.VarChar(255)
+//   brand             String   @db.VarChar(255)
+//   year              String   @db.VarChar(255)
+//   transmission_type String?  @db.VarChar(255)
+//   m_condition       String?  @db.VarChar(255)
+//   no_of_cylinders   String   @db.VarChar(255)
+//   colors            String   @db.VarChar(255)
+//   instock           String   @db.VarChar(255)
+//   horse_power       String   @db.VarChar(255)
+//   description       String
+//   image_url         String?  @db.VarChar(255)
+//   date_created      DateTime @default(now()) @db.Timestamptz(6)
+//   status            String?  @db.VarChar(255)
+// }
+
+// model add_items_cat4 {
+//   id           Int      @id(map: "idx_30972_primary") @default(autoincrement())
+//   categoryid   Int
+//   bizid        Int
+//   ownerid      String   @db.VarChar(255)
+//   currency     String   @db.VarChar(255)
+//   buying       String   @db.VarChar(255)
+//   selling      String   @db.VarChar(255)
+//   date_created DateTime @default(now()) @db.Timestamptz(6)
+//   status       String?  @db.VarChar(255)
+// }
+
+// model add_items_cat5 {
+//   id            Int      @id(map: "idx_30978_primary")
+//   categoryid    Int
+//   bizid         Int
+//   ownerid       String   @db.VarChar(255)
+//   product_name  String   @db.VarChar(255)
+//   product_price String   @db.VarChar(255)
+//   date_created  DateTime @default(now()) @db.Timestamptz(6)
+//   status        String?  @db.VarChar(255)
+// }
+
+// model add_items_cat6 {
+//   id           Int      @id(map: "idx_30984_primary")
+//   categoryid   Int
+//   bizid        Int
+//   ownerid      String   @db.VarChar(255)
+//   price        String   @db.VarChar(255)
+//   location     String   @db.VarChar(255)
+//   no_of_rooms  String   @db.VarChar(255)
+//   posted_on    DateTime @db.Date
+//   description  String
+//   image_url    String?  @db.VarChar(255)
+//   date_created DateTime @default(now()) @db.Timestamptz(6)
+//   status       Int?
+// }
+
+// model add_items_cat7 {
+//   id           Int      @id(map: "idx_30990_primary")
+//   categoryid   Int
+//   bizid        Int
+//   ownerid      String   @db.VarChar(255)
+//   location     String   @db.VarChar(255)
+//   price        String   @db.VarChar(255)
+//   length       String   @db.VarChar(255)
+//   width        String   @db.VarChar(255)
+//   posted_on    DateTime @db.Date
+//   description  String
+//   image_url    String?  @db.VarChar(255)
+//   date_created DateTime @default(now()) @db.Timestamptz(6)
+//   status       Int?
+// }
+
+// model advert_clicks {
+//   id         BigInt    @id(map: "idx_30997_primary") @default(autoincrement())
+//   user_id    BigInt
+//   advert_id  BigInt
+//   product_id BigInt?
+//   catid      String?   @db.VarChar(255)
+//   bizid      String?   @db.VarChar(255)
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+// }
+
+// model advert_prices {
+//   id          BigInt    @id(map: "idx_31004_primary") @default(autoincrement())
+//   ad_type     String    @db.VarChar(255)
+//   duration    Int
+//   price       Decimal   @db.Decimal(17, 2)
+//   description String
+//   created_at  DateTime? @db.Timestamptz(6)
+//   updated_at  DateTime? @db.Timestamptz(6)
+//   deleted_at  DateTime? @db.Timestamptz(6)
+// }
+
+// model advert_views {
+//   id         BigInt    @id(map: "idx_31011_primary") @default(autoincrement())
+//   user_id    BigInt
+//   advert_id  BigInt
+//   product_id BigInt?
+//   catid      String?   @db.VarChar(255)
+//   bizid      String?   @db.VarChar(255)
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+// }
+
+// model adverts {
+//   id           Int       @id(map: "idx_31017_primary") @default(autoincrement())
+//   payment_id   BigInt?
+//   payment_ref  String?   @db.VarChar(255)
+//   businessname String    @db.VarChar(255)
+//   categoryid   Int
+//   bizid        Int
+//   address      String    @db.VarChar(255)
+//   image        String    @db.VarChar(255)
+//   country      String    @default("UG") @db.VarChar(255)
+//   status       Int       @default(1)
+//   latitude     String    @default("0") @db.VarChar(255)
+//   longitude    String    @default("0") @db.VarChar(255)
+//   ad_type      String?   @db.VarChar(255)
+//   price        Decimal?  @db.Decimal(17, 2)
+//   end_date     DateTime? @db.Timestamptz(6)
+//   created_at   DateTime? @db.Timestamptz(6)
+//   updated_at   DateTime? @db.Timestamptz(6)
+//   deleted_at   DateTime? @db.Timestamptz(6)
+// }
+
+// /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+// model bank {
+//   id                  Int      @id(map: "idx_31026_primary")
+//   category_id         String?  @db.VarChar(255)
+//   bank_name           String?  @db.VarChar(255)
+//   profile_image       String?  @db.VarChar(255)
+//   products            String?  @db.VarChar(255)
+//   loan_packages       String?  @db.VarChar(255)
+//   loan_interest_rates String?  @db.VarChar(255)
+//   special_offers      String?  @db.VarChar(255)
+//   location_coverage   String?  @db.VarChar(255)
+//   latitude            String   @default("0") @db.VarChar(255)
+//   longitude           String   @default("0") @db.VarChar(255)
+//   user_id             String   @db.VarChar(255)
+//   contacts            String?  @db.VarChar(255)
+//   emails              String?  @db.VarChar(255)
+//   country             String?  @default("UG") @db.VarChar(255)
+//   website             String?  @db.VarChar(255)
+//   open_account_link   String?  @db.VarChar(255)
+//   status              Int      @default(0)
+//   verified            Boolean  @default(false)
+//   date_created        DateTime @default(now()) @db.Timestamptz(6)
+
+//   @@index([contacts(ops: raw("gin_trgm_ops"))], map: "idx_bank_contacts_trgm", type: Gin)
+//   @@index([location_coverage(ops: raw("gin_trgm_ops"))], map: "idx_bank_cov_trgm", type: Gin)
+//   @@index([id, bank_name, profile_image, verified], map: "idx_bank_covering")
+//   @@index([emails(ops: raw("gin_trgm_ops"))], map: "idx_bank_emails_trgm", type: Gin)
+//   @@index([id], map: "idx_bank_id")
+//   @@index([bank_name(ops: raw("gin_trgm_ops"))], map: "idx_bank_name_trgm", type: Gin)
+// }
+
+// model bank_branch_photos {
+//   id             BigInt    @id(map: "idx_31038_primary") @default(autoincrement())
+//   bank_branch_id BigInt
+//   image          String    @db.VarChar(255)
+//   created_at     DateTime? @db.Timestamptz(6)
+//   updated_at     DateTime? @db.Timestamptz(6)
+//   deleted_at     DateTime? @db.Timestamptz(6)
+// }
+
+// /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+// model bank_branches {
+//   id            Int                      @id(map: "idx_30888_primary")
+//   bizid         Int
+//   catid         Int
+//   name          String                   @db.VarChar(255)
+//   latitude      Float                    @default(0)
+//   longitude     Float                    @default(0)
+//   officeline    String                   @db.VarChar(255)
+//   mon_fri_from  DateTime                 @db.Time(6)
+//   mon_fri_to    DateTime                 @db.Time(6)
+//   sat_from      DateTime                 @db.Time(6)
+//   sat_to        DateTime                 @db.Time(6)
+//   email         String                   @db.VarChar(255)
+//   status        Int                      @default(1)
+//   createdon     DateTime                 @default(now()) @db.Timestamptz(6)
+//   search_vector Unsupported("tsvector")?
+
+//   @@index([bizid, status], map: "idx_bank_branches_bizid_status")
+//   @@index([search_vector], map: "idx_bank_branches_search", type: Gin)
+//   @@index([status], map: "idx_bank_branches_status")
+// }
+
+// model best_performers {
+//   id          BigInt    @id(map: "idx_31043_primary") @default(autoincrement())
+//   bizid       BigInt
+//   name        String    @db.VarChar(255)
+//   image       String    @db.VarChar(255)
+//   combination String?   @db.VarChar(255)
+//   level       String    @db.VarChar(255)
+//   aggregate   Int
+//   year        Int
+//   created_at  DateTime? @db.Timestamptz(6)
+//   updated_at  DateTime? @db.Timestamptz(6)
+//   deleted_at  DateTime? @db.Timestamptz(6)
+// }
+
+// model blocked_blog_comments {
+//   id              BigInt    @id(map: "idx_31050_primary") @default(autoincrement())
+//   blocker_id      BigInt
+//   blog_comment_id BigInt
+//   created_at      DateTime? @db.Timestamptz(6)
+//   updated_at      DateTime? @db.Timestamptz(6)
+// }
+
+// model blocked_blog_posts {
+//   id           BigInt    @id(map: "idx_31055_primary") @default(autoincrement())
+//   blog_post_id BigInt
+//   blocker_id   BigInt
+//   created_at   DateTime? @db.Timestamptz(6)
+//   updated_at   DateTime? @db.Timestamptz(6)
+
+//   @@index([blocker_id, blog_post_id], map: "idx_blocked_blog_posts_blocker_blog")
+// }
+
+// model blocked_comments {
+//   id         BigInt    @id(map: "idx_31060_primary") @default(autoincrement())
+//   blocker_id BigInt
+//   comment_id BigInt
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+// }
+
+// model blog_comments {
+//   id           BigInt    @id(map: "idx_31065_primary") @default(autoincrement())
+//   user_id      BigInt
+//   blog_post_id BigInt
+//   parent_id    BigInt?
+//   comment      String
+//   status       Int       @default(1)
+//   created_at   DateTime? @db.Timestamptz(6)
+//   updated_at   DateTime? @db.Timestamptz(6)
+
+//   @@index([blog_post_id, status], map: "idx_blog_comments_post_status")
+// }
+
+// model blog_images {
+//   id              BigInt    @id(map: "idx_31073_primary") @default(autoincrement())
+//   blog_post_id    BigInt?
+//   image           String?   @db.VarChar(255)
+//   blog_comment_id Int?
+//   image_url       String?   @db.VarChar(255)
+//   created_at      DateTime? @db.Timestamptz(6)
+//   updated_at      DateTime? @db.Timestamptz(6)
+//   // image_hash      String?   @default(dbgenerated("md5((image)::text)"))
+//   image_hash      String?   @db.Text
+
+//   @@index([image], map: "idx_blog_images_image")
+//   @@index([image_hash], map: "idx_blog_images_image_hash")
+//   @@index([blog_post_id], map: "idx_images_blog_post_id")
+// }
+
+// model blog_likes {
+//   id           BigInt    @id(map: "idx_31080_primary") @default(autoincrement())
+//   user_id      BigInt
+//   blog_post_id BigInt?
+//   comment_id   BigInt?
+//   status       Boolean
+//   created_at   DateTime? @db.Timestamptz(6)
+//   updated_at   DateTime? @db.Timestamptz(6)
+
+//   @@index([blog_post_id, status], map: "idx_blog_likes_post_status")
+// }
+
+// model blog_posts {
+//   id          BigInt                    @id(map: "idx_31085_primary") @default(autoincrement())
+//   user_id     BigInt
+//   body        String
+//   bizid       String                    @db.VarChar(255)
+//   catid       String                    @db.VarChar(255)
+//   public      Boolean                   @default(true)
+//   latitude    Float                     @default(0.0)
+//   longitude   Float                     @default(0.0)
+//   status      Int                       @default(1)
+//   forex_items String?
+//   created_at  DateTime?                 @db.Timestamptz(6)
+//   updated_at  DateTime?                 @db.Timestamptz(6)
+//   deleted_at  DateTime?                 @db.Timestamptz(6)
+//   location    Unsupported("geography")?
+
+//   @@index([location], map: "idx_blog_posts_location", type: Gist)
+//   @@index([bizid], map: "idx_blogposts_bizid")
+//   @@index([catid], map: "idx_blogposts_catid")
+//   @@index([created_at(sort: Desc)], map: "idx_blogposts_created_at")
+//   @@index([user_id, status], map: "idx_blogposts_userid_status")
+// }
+
+// model blog_shares {
+//   id           BigInt    @id(map: "idx_31096_primary") @default(autoincrement())
+//   user_id      BigInt
+//   blog_post_id BigInt
+//   status       Int       @default(1) @db.SmallInt
+//   created_at   DateTime? @db.Timestamptz(6)
+//   updated_at   DateTime? @db.Timestamptz(6)
+
+//   @@index([blog_post_id, status], map: "idx_blog_shares_post_status")
+// }
+
+// model blog_videos {
+//   id           BigInt    @id(map: "idx_31102_primary") @default(autoincrement())
+//   blog_post_id BigInt
+//   video        String    @db.VarChar(255)
+//   bizid        String?   @db.VarChar(255)
+//   catid        String?   @db.VarChar(255)
+//   created_at   DateTime? @db.Timestamptz(6)
+//   updated_at   DateTime? @db.Timestamptz(6)
+
+//   @@index([blog_post_id], map: "idx_videos_blog_post_id")
+// }
+
+// model blog_views {
+//   id           BigInt    @id(map: "idx_31109_primary") @default(autoincrement())
+//   user_id      BigInt
+//   blog_post_id BigInt
+//   created_at   DateTime? @db.Timestamptz(6)
+//   updated_at   DateTime? @db.Timestamptz(6)
+
+//   @@index([blog_post_id], map: "idx_views_blog_post_id")
+// }
+
+// model boda_accidents {
+//   id                  BigInt    @id(map: "idx_31114_primary") @default(autoincrement())
+//   boda_id             BigInt
+//   boda_association_id BigInt
+//   accident_cause      String    @db.VarChar(255)
+//   accident_severity   String    @db.VarChar(255)
+//   injuries            Int       @default(0)
+//   details             String?
+//   created_at          DateTime? @db.Timestamptz(6)
+//   updated_at          DateTime? @db.Timestamptz(6)
+
+//   @@index([boda_association_id], map: "idx_31114_boda_accidents_boda_association_id_index")
+//   @@index([boda_id], map: "idx_31114_boda_accidents_boda_id_index")
+// }
+
+// model boda_associations {
+//   id                 BigInt               @id(map: "idx_31122_primary") @default(autoincrement())
+//   logo               String?              @db.VarChar(255)
+//   name               String               @db.VarChar(255)
+//   email              String               @unique(map: "idx_31122_boda_associations_email_unique") @db.VarChar(255)
+//   district           String               @db.VarChar(255)
+//   address            String               @db.VarChar(255)
+//   contact1           String               @db.VarChar(255)
+//   contact2           String               @db.VarChar(255)
+//   latitude           String?              @db.VarChar(255)
+//   longitude          String?              @db.VarChar(255)
+//   country            String               @default("UG") @db.VarChar(255)
+//   created_at         DateTime?            @db.Timestamptz(6)
+//   updated_at         DateTime?            @db.Timestamptz(6)
+//   boda_stage_leaders boda_stage_leaders[]
+// }
+
+// model boda_external_members {
+//   id                  BigInt    @id(map: "idx_31130_primary") @default(autoincrement())
+//   user_id             BigInt
+//   boda_association_id BigInt
+//   profile             String    @db.VarChar(255)
+//   first_name          String    @db.VarChar(100)
+//   last_name           String    @db.VarChar(100)
+//   pay_number          String    @db.VarChar(15)
+//   phone_number        String    @db.VarChar(100)
+//   alt_phone_number    String?   @db.VarChar(100)
+//   district            String    @db.VarChar(100)
+//   sub_county          String?   @db.VarChar(100)
+//   parish              String?   @db.VarChar(100)
+//   village             String?   @db.VarChar(100)
+//   created_at          DateTime? @db.Timestamptz(6)
+//   updated_at          DateTime? @db.Timestamptz(6)
+//   deleted_at          DateTime? @db.Timestamptz(6)
+// }
+
+// model boda_interactions {
+//   id               BigInt    @id(map: "idx_31137_primary") @default(autoincrement())
+//   user_id          BigInt
+//   boda_id          BigInt
+//   interaction_type String    @db.VarChar(255)
+//   created_at       DateTime? @db.Timestamptz(6)
+//   updated_at       DateTime? @db.Timestamptz(6)
+
+//   @@index([boda_id], map: "idx_31137_boda_interactions_boda_id_index")
+//   @@index([user_id], map: "idx_31137_boda_interactions_user_id_index")
+// }
+
+// model boda_stage_leaders {
+//   id                  BigInt            @id(map: "idx_31142_primary") @default(autoincrement())
+//   boda_association_id BigInt
+//   image               String            @db.VarChar(255)
+//   name                String            @db.VarChar(255)
+//   district            String            @db.VarChar(255)
+//   stage               String            @db.VarChar(255)
+//   created_at          DateTime?         @db.Timestamptz(6)
+//   updated_at          DateTime?         @db.Timestamptz(6)
+//   boda_associations   boda_associations @relation(fields: [boda_association_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "boda_stage_leaders_boda_association_id_foreign")
+
+//   @@index([boda_association_id], map: "idx_31142_boda_stage_leaders_boda_association_id_foreign")
+// }
+
+// model boda_thefts {
+//   id                  BigInt    @id(map: "idx_31149_primary") @default(autoincrement())
+//   boda_id             BigInt
+//   boda_association_id BigInt
+//   mode_of_theft       String    @db.VarChar(255)
+//   details             String?
+//   created_at          DateTime? @db.Timestamptz(6)
+//   updated_at          DateTime? @db.Timestamptz(6)
+
+//   @@index([boda_association_id], map: "idx_31149_boda_thefts_boda_association_id_index")
+//   @@index([boda_id], map: "idx_31149_boda_thefts_boda_id_index")
+// }
+
+// /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+// model bodaboda {
+//   id                   Int       @id(map: "idx_31155_primary")
+//   category_id          Int?
+//   town_of_service      String?   @db.VarChar(255)
+//   stage_center         String?   @db.VarChar(255)
+//   names                String?   @db.VarChar(255)
+//   mot_no               String?   @db.VarChar(255)
+//   tel                  String?   @db.VarChar(255)
+//   email                String?   @db.VarChar(255)
+//   image_of_driver      String?   @db.VarChar(255)
+//   sex                  String?   @db.VarChar(10)
+//   created_on           DateTime  @default(now()) @db.Timestamptz(6)
+//   district             String?   @db.VarChar(255)
+//   sub_county           String?   @db.VarChar(255)
+//   village              String?   @db.VarChar(255)
+//   national_id          String?   @db.VarChar(255)
+//   country              String    @default("UG") @db.VarChar(255)
+//   status               Int       @default(1)
+//   verified             Boolean   @default(false)
+//   owner_id             String    @db.VarChar(255)
+//   pay_number           String?   @db.VarChar(255)
+//   merchant_code        String?   @db.VarChar(255)
+//   user_id              BigInt?
+//   boda_association_id  BigInt?
+//   boda_stage_leader_id BigInt?
+//   boda_number          String?   @db.VarChar(50)
+//   next_of_kin_name     String?   @db.VarChar(100)
+//   next_of_kin_contact  String?   @db.VarChar(100)
+//   membership_fee       Decimal?  @db.Decimal(10, 2)
+//   membership_expiry    DateTime? @db.Date
+//   has_expired          Boolean   @default(true)
+//   details              String?
+//   latitude             Float
+//   longitude            Float
+//   available            Boolean   @default(true)
+
+//   @@index([boda_association_id], map: "idx_31155_bodaboda_boda_association_id_index")
+//   @@index([boda_number], map: "idx_31155_bodaboda_boda_number_index")
+//   @@index([boda_stage_leader_id], map: "idx_31155_bodaboda_boda_stage_leader_id_index")
+//   @@index([user_id], map: "idx_31155_bodaboda_user_id_index")
+//   @@index([id, names, image_of_driver, verified], map: "idx_bodaboda_covering")
+//   @@index([status, available], map: "idx_bodaboda_status_available")
+// }
+
+// model booking {
+//   id                 Int      @id(map: "idx_31168_primary") @default(autoincrement())
+//   user_id            BigInt?
+//   payment_id         BigInt?
+//   payment_ref        String?  @db.VarChar(255)
+//   payment_no         String?  @db.VarChar(255)
+//   customer_id        String?  @db.VarChar(255)
+//   amount             String?  @db.VarChar(255)
+//   route_id           String?  @db.VarChar(255)
+//   bus_id             BigInt?
+//   seatnumber         Int?
+//   status             Int      @default(0)
+//   user_verified      Boolean  @default(false)
+//   date_on_creation   DateTime @default(now()) @db.Timestamptz(6)
+//   tdate              DateTime @db.Date
+//   depature           String?  @db.VarChar(255)
+//   weight             String?  @db.VarChar(11)
+//   external_reference String?  @db.VarChar(255)
+
+//   @@index([route_id, tdate, seatnumber], map: "idx_bookings_route_date_seat")
+// }
+
+// /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+// model bus {
+//   id               Int                      @id(map: "idx_31176_primary")
+//   company_name     String                   @db.VarChar(255)
+//   category_id      String                   @db.VarChar(255)
+//   contact_numbers  String                   @db.VarChar(255)
+//   email            String                   @unique(map: "idx_31176_email") @db.VarChar(255)
+//   address          String                   @db.VarChar(255)
+//   latitude         String?                  @default("0") @db.VarChar(255)
+//   longitude        String?                  @default("0") @db.VarChar(255)
+//   profile_image    String?                  @db.VarChar(255)
+//   about_bus        String?
+//   country          String                   @default("UG") @db.VarChar(255)
+//   status           Int                      @default(0)
+//   verified         Boolean                  @default(false)
+//   date_on_creation DateTime                 @default(now()) @db.Timestamptz(6)
+//   search_vector    Unsupported("tsvector")?
+
+//   @@index([search_vector], map: "bus_search_idx", type: Gin)
+//   @@index([about_bus(ops: raw("gin_trgm_ops"))], map: "idx_bus_about_trgm", type: Gin)
+//   @@index([address(ops: raw("gin_trgm_ops"))], map: "idx_bus_address_trgm", type: Gin)
+//   @@index([company_name(ops: raw("gin_trgm_ops"))], map: "idx_bus_company_trgm", type: Gin)
+//   @@index([contact_numbers(ops: raw("gin_trgm_ops"))], map: "idx_bus_contact_trgm", type: Gin)
+//   @@index([id, company_name, profile_image, verified], map: "idx_bus_covering")
+//   @@index([id], map: "idx_bus_id")
+//   @@index([status], map: "idx_bus_status")
+// }
+
+// model bus_stops {
+//   id         BigInt    @id(map: "idx_31188_primary") @default(autoincrement())
+//   bus_id     BigInt
+//   route_id   BigInt
+//   bus_stop   String    @db.VarChar(255)
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+// }
+
+// model cache {
+//   key        String @id @db.VarChar(255)
+//   value      String
+//   expiration Int
+// }
+
+// model cache_locks {
+//   key        String @id @db.VarChar(255)
+//   owner      String @db.VarChar(255)
+//   expiration Int
+// }
+
+// /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+// model car_hire {
+//   id              Int      @id(map: "idx_31192_primary")
+//   categorie_id    Int?
+//   town_of_service String?  @db.VarChar(255)
+//   stage_center    String?  @db.VarChar(255)
+//   driver_names    String?  @db.VarChar(255)
+//   vehicle_no      String?  @db.VarChar(255)
+//   sex             String?  @db.VarChar(255)
+//   images          String?
+//   district        String?  @db.VarChar(255)
+//   sub_county      String?  @db.VarChar(255)
+//   village         String?  @db.VarChar(255)
+//   national_id     String?  @db.VarChar(255)
+//   created_on      DateTime @default(now()) @db.Timestamptz(6)
+//   telephone       String?  @db.VarChar(255)
+//   email           String?  @db.VarChar(255)
+//   owner_id        String   @db.VarChar(255)
+//   country         String   @default("UG") @db.VarChar(255)
+//   status          Int      @default(1)
+//   verified        Boolean  @default(false)
+//   subcat          String   @default("Cars") @db.VarChar(255)
+//   pay_number      String?  @db.VarChar(255)
+//   merchant_code   String?  @db.VarChar(255)
+//   details         String?
+//   latitude        Float
+//   longitude       Float
+//   available       Boolean  @default(true)
+
+//   @@index([id, driver_names, images, verified], map: "idx_car_hire_covering")
+//   @@index([id], map: "idx_car_hire_id")
+//   @@index([status, subcat, available], map: "idx_car_hire_status_subcat_availailable")
+// }
+
+// /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+// model casual_labor {
+//   id              Int                  @id(map: "idx_31205_primary")
+//   user_id         BigInt
+//   categorie_id    Int
+//   home_town       String               @db.VarChar(255)
+//   names           String               @db.VarChar(255)
+//   sex             String               @db.VarChar(255)
+//   age             Int?
+//   birth_date      DateTime?            @db.Date
+//   pictures        String?
+//   education_level String               @db.VarChar(255)
+//   village         String               @db.VarChar(255)
+//   parish          String               @db.VarChar(255)
+//   sub_county      String               @db.VarChar(255)
+//   national_id     String               @db.VarChar(255)
+//   country         String               @default("UG") @db.VarChar(255)
+//   profession      String?              @db.VarChar(255)
+//   latitude        Float                @default(0)
+//   longitude       Float                @default(0)
+//   status          Int                  @default(1)
+//   verified        Boolean              @default(false)
+//   created_on      DateTime             @default(now()) @db.Timestamptz(6)
+//   tel             String               @db.VarChar(255)
+//   created_at      DateTime?            @db.Timestamptz(6)
+//   updated_at      DateTime?            @db.Timestamptz(6)
+//   deleted_at      DateTime?            @db.Timestamptz(6)
+//   category        labor_category_enum?
+
+//   @@index([user_id], map: "idx_31205_casual_labor_user_id_index")
+//   @@index([category, status], map: "idx_casual_labor_category_status")
+//   @@index([id, names, pictures, verified], map: "idx_casual_labor_covering")
+//   @@index([id], map: "idx_casual_labor_id")
+// }
+
+// model categories {
+//   id          Int       @id(map: "idx_31216_primary")
+//   name        String?   @db.VarChar(255)
+//   french      String?   @db.VarChar(255)
+//   position    Int       @default(1)
+//   url         String?   @db.VarChar(255)
+//   description String?
+//   dcfa        Int       @default(8370)
+//   created_on  DateTime  @default(now()) @db.Timestamptz(6)
+//   modified_on DateTime? @default(now()) @db.Timestamptz(6)
+//   posted_by   String?   @db.VarChar(255)
+//   modified_by String?   @db.VarChar(255)
+//   status      Int?
+// }
+
+// model chatid {
+//   id    Int @id(map: "idx_31225_primary")
+//   state Int
+// }
+
+// model classroom_photos {
+//   id           BigInt     @id(map: "idx_31229_primary") @default(autoincrement())
+//   classroom_id BigInt
+//   photo        String     @db.VarChar(255)
+//   created_at   DateTime?  @db.Timestamptz(6)
+//   updated_at   DateTime?  @db.Timestamptz(6)
+//   deleted_at   DateTime?  @db.Timestamptz(6)
+//   classrooms   classrooms @relation(fields: [classroom_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "classroom_photos_classroom_id_foreign")
+
+//   @@index([classroom_id], map: "idx_31229_classroom_photos_classroom_id_foreign")
+// }
+
+// model classrooms {
+//   id               BigInt             @id(map: "idx_31234_primary") @default(autoincrement())
+//   bizid            BigInt
+//   classrooms       Int
+//   created_at       DateTime?          @db.Timestamptz(6)
+//   updated_at       DateTime?          @db.Timestamptz(6)
+//   deleted_at       DateTime?          @db.Timestamptz(6)
+//   classroom_photos classroom_photos[]
+// }
+
+// model comment_images {
+//   id         BigInt    @id(map: "idx_31239_primary") @default(autoincrement())
+//   comment_id BigInt
+//   image      String    @db.VarChar(255)
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+// }
+
+// model comment_likes {
+//   id         BigInt    @id(map: "idx_31244_primary") @default(autoincrement())
+//   user_id    BigInt
+//   comment_id BigInt
+//   status     Boolean   @default(true)
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+// }
+
+// model comments {
+//   id          BigInt   @id(map: "idx_30898_primary") @default(autoincrement())
+//   ownerid     String   @db.VarChar(255)
+//   category_id Int
+//   bizid       Int
+//   parent_id   Int?
+//   comment     String
+//   createdon   DateTime @default(now()) @db.Timestamptz(6)
+//   status      Int      @default(1)
+// }
+
+// model failed_jobs {
+//   id         BigInt   @id(map: "idx_31250_primary") @default(autoincrement())
+//   uuid       String   @unique(map: "idx_31250_failed_jobs_uuid_unique") @db.VarChar(255)
+//   connection String
+//   queue      String
+//   payload    String
+//   exception  String
+//   failed_at  DateTime @default(now()) @db.Timestamptz(6)
+// }
+
+// model favorites {
+//   id         BigInt    @id(map: "idx_31258_primary") @default(autoincrement())
+//   owner_id   BigInt
+//   catid      Int?
+//   bizid      Int?
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+
+//   @@index([owner_id], map: "idx_favorite_owner_id")
+// }
+
+// model fees_structures {
+//   id         BigInt    @id(map: "idx_31263_primary") @default(autoincrement())
+//   bizid      BigInt
+//   class      String    @db.VarChar(255)
+//   admission  Decimal?  @db.Decimal(18, 2)
+//   day        Decimal?  @db.Decimal(18, 2)
+//   boarding   Decimal?  @db.Decimal(18, 2)
+//   currency   String    @default("UGX") @db.VarChar(255)
+//   fees       String?   @default("0.00") @db.VarChar(255)
+//   other      String?   @default("0.00") @db.VarChar(255)
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+//   deleted_at DateTime? @db.Timestamptz(6)
+// }
+
+// model followers {
+//   id          BigInt    @id(map: "idx_31273_primary") @default(autoincrement())
+//   user_id     BigInt
+//   follower_id BigInt?
+//   catid       Int?
+//   bizid       Int?
+//   status      Int       @default(1) @db.SmallInt
+//   hidden      Int       @default(0) @db.SmallInt
+//   created_at  DateTime? @db.Timestamptz(6)
+//   updated_at  DateTime? @db.Timestamptz(6)
+
+//   @@index([catid, bizid, status, hidden], map: "idx_follower")
+//   @@index([user_id, follower_id], map: "idx_followers_user_follower")
+// }
+
+// model galarry {
+//   id           Int      @id(map: "idx_31278_primary")
+//   image        String   @db.VarChar(255)
+//   bizid        String   @db.VarChar(255)
+//   catid        String   @db.VarChar(255)
+//   item_id      Int?
+//   product_id   BigInt?
+//   date_created DateTime @default(now()) @db.Timestamptz(6)
+//   status       Int      @default(0)
+// }
+
+// /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+// model general_business {
+//   id               Int      @id(map: "idx_31285_primary") @default(autoincrement())
+//   categorie_id     Int?
+//   owner_id         String?  @db.VarChar(255)
+//   company_name     String?  @db.VarChar(255)
+//   district         String?  @db.VarChar(255)
+//   physical_address String?
+//   latitude         Float?
+//   longitude        Float?
+//   imageurl         String?  @db.VarChar(255)
+//   details          String?
+//   tel              String?  @db.VarChar(255)
+//   email            String?  @db.VarChar(255)
+//   country          String   @default("UG") @db.VarChar(255)
+//   website          String?  @db.VarChar(255)
+//   status           Int      @default(1)
+//   verified         Int      @default(0) @db.SmallInt
+//   created_on       DateTime @default(now()) @db.Timestamptz(6)
+//   subcat           String?  @db.VarChar(255)
+
+//   @@index([categorie_id, subcat, status], map: "idx_category_id_subcat_status")
+//   @@index([company_name(ops: raw("gin_trgm_ops")), district(ops: raw("gin_trgm_ops")), physical_address(ops: raw("gin_trgm_ops"))], map: "idx_gb_search_trgm", type: Gin)
+//   @@index([id, company_name, imageurl, status], map: "idx_general_business_covering")
+//   @@index([id], map: "idx_general_business_id")
+// }
+
+// model gest_users {
+//   id            Int       @id @default(autoincrement())
+//   username      String    @db.VarChar(50)
+//   email         String    @db.VarChar(100)
+//   first_name    String?   @db.VarChar(50)
+//   last_name     String?   @db.VarChar(50)
+//   password_hash String?   @db.VarChar(255)
+//   date_of_birth DateTime? @db.Date
+//   phone         String?   @db.VarChar(20)
+//   address       String?
+//   city          String?   @db.VarChar(50)
+//   country       String?   @db.VarChar(50)
+//   is_active     Boolean?  @default(true)
+//   created_at    DateTime? @default(now()) @db.Timestamp(6)
+//   updated_at    DateTime? @default(now()) @db.Timestamp(6)
+// }
+
+// model gov_leaders {
+//   id             Int      @id(map: "idx_31296_primary")
+//   categoryid     Int
+//   name           String   @db.VarChar(255)
+//   img_url        String   @db.VarChar(255)
+//   post           String   @db.VarChar(255)
+//   year_from      String   @db.VarChar(255)
+//   year_to        String   @db.VarChar(255)
+//   p_party        String   @db.VarChar(255)
+//   district       String   @db.VarChar(255)
+//   proffession    String   @db.VarChar(255)
+//   marital_status String   @db.VarChar(255)
+//   religion       String   @db.VarChar(255)
+//   dob            DateTime @db.Date
+//   contact        String   @db.VarChar(255)
+//   biography      String
+//   status         Int?     @default(1)
+//   verified       Boolean  @default(false)
+//   subcat         String?  @db.VarChar(255)
+//   date_created   DateTime @default(now()) @db.Timestamptz(6)
+//   country        String   @default("UG") @db.VarChar(255)
+
+//   @@index([contact(ops: raw("gin_trgm_ops"))], map: "idx_leader_contact_trgm", type: Gin)
+//   @@index([district(ops: raw("gin_trgm_ops"))], map: "idx_leader_district_trgm", type: Gin)
+//   @@index([name(ops: raw("gin_trgm_ops"))], map: "idx_leader_name_trgm", type: Gin)
+//   @@index([post(ops: raw("gin_trgm_ops"))], map: "idx_leader_post_trgm", type: Gin)
+//   @@index([proffession(ops: raw("gin_trgm_ops"))], map: "idx_leader_prof_trgm", type: Gin)
+// }
+
+// /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+// model graduate {
+//   id            Int                      @id(map: "idx_31305_primary")
+//   categorie_id  Int
+//   names         String                   @db.VarChar(255)
+//   profile_pic   String                   @db.VarChar(255)
+//   sex           String                   @db.VarChar(255)
+//   home_town     String                   @db.VarChar(255)
+//   proffession   String                   @db.VarChar(255)
+//   details       String
+//   tel           String                   @db.VarChar(255)
+//   email         String                   @db.VarChar(255)
+//   latitude      Float?
+//   longitude     Float?
+//   status        Int                      @default(1)
+//   verified      Boolean                  @default(false)
+//   created_on    DateTime                 @default(now()) @db.Timestamptz(6)
+//   owner_id      String                   @db.VarChar(255)
+//   subcat        String                   @default("Accounting & Finance") @db.VarChar(255)
+//   country       String                   @default("UG") @db.VarChar(255)
+//   search_vector Unsupported("tsvector")? @default(dbgenerated("(((setweight(to_tsvector('english'::regconfig, (COALESCE(names, ''::character varying))::text), 'A'::\"char\") || setweight(to_tsvector('english'::regconfig, (COALESCE(proffession, ''::character varying))::text), 'B'::\"char\")) || setweight(to_tsvector('english'::regconfig, COALESCE(details, ''::text)), 'C'::\"char\")) || setweight(to_tsvector('english'::regconfig, (COALESCE(tel, ''::character varying))::text), 'D'::\"char\"))"))
+
+//   @@index([details(ops: raw("gin_trgm_ops"))], map: "idx_grad_details_trgm", type: Gin)
+//   @@index([names(ops: raw("gin_trgm_ops"))], map: "idx_grad_names_trgm", type: Gin)
+//   @@index([proffession(ops: raw("gin_trgm_ops"))], map: "idx_grad_prof_trgm", type: Gin)
+//   @@index([tel(ops: raw("gin_trgm_ops"))], map: "idx_grad_tel_trgm", type: Gin)
+//   @@index([id, names, profile_pic, verified], map: "idx_graduate_covering")
+//   @@index([id], map: "idx_graduate_id")
+//   @@index([subcat], map: "idx_graduate_subcat")
+//   @@index([search_vector], map: "idx_graduates_search_vector", type: Gin)
+//   @@index([subcat, status], map: "idx_subcat_status")
+// }
+
+// model hotel_bookings {
+//   id         BigInt    @id(map: "idx_31318_primary") @default(autoincrement())
+//   user_id    String    @db.VarChar(255)
+//   room_id    BigInt
+//   catid      BigInt
+//   bizid      BigInt
+//   name       String    @db.VarChar(255)
+//   arrival    DateTime  @db.Date
+//   address    String    @db.VarChar(255)
+//   room_price Decimal   @db.Decimal(17, 2)
+//   duration   Int
+//   phone      String    @db.VarChar(255)
+//   email      String    @db.VarChar(255)
+//   children   Int       @default(0)
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+//   deleted_at DateTime? @db.Timestamptz(6)
+// }
+
+// model hotel_room_images {
+//   id            BigInt      @id(map: "idx_31326_primary") @default(autoincrement())
+//   hotel_room_id BigInt
+//   image         String      @db.VarChar(255)
+//   created_at    DateTime?   @db.Timestamptz(6)
+//   updated_at    DateTime?   @db.Timestamptz(6)
+//   hotel_rooms   hotel_rooms @relation(fields: [hotel_room_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "hotel_room_images_hotel_room_id_foreign")
+
+//   @@index([hotel_room_id], map: "idx_31326_hotel_room_images_hotel_room_id_foreign")
+// }
+
+// model hotel_rooms {
+//   id                BigInt              @id(map: "idx_31331_primary") @default(autoincrement())
+//   catid             BigInt
+//   bizid             BigInt
+//   room_type         String              @db.VarChar(255)
+//   price             Decimal             @db.Decimal(17, 2)
+//   created_at        DateTime?           @db.Timestamptz(6)
+//   updated_at        DateTime?           @db.Timestamptz(6)
+//   deleted_at        DateTime?           @db.Timestamptz(6)
+//   hotel_room_images hotel_room_images[]
+// }
+
+// model investment_maintenance {
+//   id                 BigInt           @id @default(autoincrement())
+//   investment_id      BigInt
+//   investment_unit_id BigInt
+//   renter_id          BigInt
+//   owner_id           BigInt
+//   title              String           @db.VarChar(200)
+//   description        String
+//   status             String?          @default("Pending") @db.VarChar(20)
+//   reported_date      DateTime         @db.Date
+//   acknowledged_date  DateTime?        @db.Date
+//   started_date       DateTime?        @db.Date
+//   completed_date     DateTime?        @db.Date
+//   estimated_cost     Decimal?         @db.Decimal(13, 2)
+//   actual_cost        Decimal?         @db.Decimal(13, 2)
+//   before_images      Json?
+//   after_images       Json?
+//   updates            Json?
+//   owner_notes        String?
+//   completion_notes   String?
+//   renter_rating      Int?
+//   renter_feedback    String?
+//   created_at         DateTime?        @default(now()) @db.Timestamp(6)
+//   updated_at         DateTime?        @default(now()) @db.Timestamp(6)
+//   deleted_at         DateTime?        @db.Timestamp(6)
+//   investments        investments      @relation(fields: [investment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+//   investment_units   investment_units @relation(fields: [investment_unit_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+// }
+
+// model investment_payments {
+//   id                   BigInt             @id @default(autoincrement())
+//   payment_id           BigInt
+//   investment_id        BigInt
+//   investment_unit_id   BigInt
+//   investment_renter_id BigInt
+//   user_id              BigInt
+//   amount               Decimal            @db.Decimal(10, 2)
+//   payment_date         DateTime           @db.Date
+//   interval_period      Int                @db.SmallInt
+//   interval_start_date  DateTime           @db.Date
+//   interval_end_date    DateTime           @db.Date
+//   status               String?            @default("Pending") @db.VarChar(20)
+//   notes                String?
+//   created_at           DateTime?          @default(now()) @db.Timestamp(6)
+//   updated_at           DateTime?          @default(now()) @db.Timestamp(6)
+//   deleted_at           DateTime?          @db.Timestamp(6)
+//   investments          investments        @relation(fields: [investment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+//   investment_renters   investment_renters @relation(fields: [investment_renter_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+//   investment_units     investment_units   @relation(fields: [investment_unit_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+// }
+
+// model investment_renters {
+//   id                  BigInt                @id @default(autoincrement())
+//   investment_id       BigInt
+//   investment_unit_id  BigInt
+//   user_id             BigInt
+//   next_of_kin_name    String?               @db.VarChar(100)
+//   next_of_kin_phone   String?               @db.VarChar(15)
+//   nationality         String?               @db.VarChar(50)
+//   address             String?               @db.VarChar(100)
+//   start_date          DateTime              @db.Date
+//   end_date            DateTime?             @db.Date
+//   rent_due_date       DateTime?             @db.Date
+//   status              String?               @default("Active") @db.VarChar(20)
+//   created_at          DateTime?             @default(now()) @db.Timestamp(6)
+//   updated_at          DateTime?             @default(now()) @db.Timestamp(6)
+//   deleted_at          DateTime?             @db.Timestamp(6)
+//   investment_payments investment_payments[]
+//   investments         investments           @relation(fields: [investment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+//   investment_units    investment_units      @relation(fields: [investment_unit_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+// }
+
+// model investment_units {
+//   id                     BigInt                   @id @default(autoincrement())
+//   investment_id          BigInt
+//   unit_name              String?                  @db.VarChar(255)
+//   rent_amount            Decimal                  @db.Decimal(15, 2)
+//   status                 String?                  @default("Available") @db.VarChar(20)
+//   created_at             DateTime?                @default(now()) @db.Timestamp(6)
+//   updated_at             DateTime?                @default(now()) @db.Timestamp(6)
+//   deleted_at             DateTime?                @db.Timestamp(6)
+//   investment_maintenance investment_maintenance[]
+//   investment_payments    investment_payments[]
+//   investment_renters     investment_renters[]
+//   investments            investments              @relation(fields: [investment_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+// }
+
+// model investments {
+//   id                     BigInt                   @id @default(autoincrement())
+//   user_id                BigInt
+//   type                   String                   @db.VarChar(255)
+//   name                   String                   @db.VarChar(255)
+//   description            String?
+//   image_url              String?                  @db.VarChar(255)
+//   payment_interval       String?                  @default("Monthly") @db.VarChar(50)
+//   location               String?                  @db.VarChar(255)
+//   number_of_units        Int?                     @default(1)
+//   make_model             String?                  @db.VarChar(255)
+//   registration_number    String?                  @db.VarChar(100)
+//   color                  String?                  @db.VarChar(50)
+//   created_at             DateTime?                @default(now()) @db.Timestamp(6)
+//   updated_at             DateTime?                @default(now()) @db.Timestamp(6)
+//   deleted_at             DateTime?                @db.Timestamp(6)
+//   investment_maintenance investment_maintenance[]
+//   investment_payments    investment_payments[]
+//   investment_renters     investment_renters[]
+//   investment_units       investment_units[]
+// }
+
+// model job_adverts {
+//   id                   BigInt      @id(map: "idx_31336_primary") @default(autoincrement())
+//   user_id              BigInt
+//   image                String      @db.VarChar(255)
+//   poster_name          String      @db.VarChar(255)
+//   job_title            String      @db.VarChar(255)
+//   pay                  Decimal     @db.Decimal(15, 2)
+//   currency             String      @db.VarChar(255)
+//   pay_interval         String      @db.VarChar(255)
+//   workplace            String      @db.VarChar(255)
+//   deadline             DateTime    @db.Date
+//   job_brief            String
+//   job_responsibilities String
+//   job_requirements     String
+//   employment_type      String      @db.VarChar(255)
+//   created_at           DateTime?   @db.Timestamptz(6)
+//   updated_at           DateTime?   @db.Timestamptz(6)
+//   deleted_at           DateTime?   @db.Timestamptz(6)
+//   status               job_status? @default(open)
+
+//   @@index([deadline], map: "idx_job_adverts_deadline")
+//   @@index([id(sort: Desc), deadline], map: "idx_job_adverts_id_deadline")
+//   @@index([status, deadline], map: "idx_job_adverts_status_deadline")
+// }
+
+// model job_applications {
+//   id               BigInt    @id(map: "idx_31344_primary") @default(autoincrement())
+//   user_id          BigInt
+//   job_advert_id    BigInt
+//   full_name        String    @db.VarChar(255)
+//   email            String    @db.VarChar(255)
+//   home_location    String    @db.VarChar(255)
+//   availability     String    @db.VarChar(255)
+//   phone_number     String    @db.VarChar(255)
+//   alt_phone_number String?   @db.VarChar(255)
+//   about_applicant  String
+//   created_at       DateTime? @db.Timestamptz(6)
+//   updated_at       DateTime? @db.Timestamptz(6)
+//   deleted_at       DateTime? @db.Timestamptz(6)
+
+//   @@index([job_advert_id], map: "idx_applications_job_advert_id")
+// }
+
+// model job_education {
+//   id                 BigInt    @id(map: "idx_31351_primary") @default(autoincrement())
+//   job_application_id BigInt
+//   institution_name   String    @db.VarChar(255)
+//   qualification      String    @db.VarChar(255)
+//   start_date         DateTime  @db.Date
+//   end_date           DateTime? @db.Date
+//   created_at         DateTime? @db.Timestamptz(6)
+//   updated_at         DateTime? @db.Timestamptz(6)
+//   deleted_at         DateTime? @db.Timestamptz(6)
+// }
+
+// model job_experiences {
+//   id                 BigInt    @id(map: "idx_31358_primary") @default(autoincrement())
+//   job_application_id BigInt
+//   company_name       String    @db.VarChar(255)
+//   job_title          String    @db.VarChar(255)
+//   start_date         DateTime  @db.Date
+//   end_date           DateTime? @db.Date
+//   job_description    String
+//   created_at         DateTime? @db.Timestamptz(6)
+//   updated_at         DateTime? @db.Timestamptz(6)
+//   deleted_at         DateTime? @db.Timestamptz(6)
+// }
+
+// model job_languages {
+//   id                 BigInt    @id(map: "idx_31365_primary") @default(autoincrement())
+//   job_application_id BigInt
+//   language           String    @db.VarChar(255)
+//   created_at         DateTime? @db.Timestamptz(6)
+//   updated_at         DateTime? @db.Timestamptz(6)
+//   deleted_at         DateTime? @db.Timestamptz(6)
+// }
+
+// model job_referees {
+//   id                 BigInt    @id(map: "idx_31371_primary") @default(autoincrement())
+//   job_application_id BigInt
+//   full_name          String    @db.VarChar(255)
+//   email              String?   @db.VarChar(255)
+//   phone_number       String    @db.VarChar(255)
+//   alt_phone_number   String?   @db.VarChar(255)
+//   created_at         DateTime? @db.Timestamptz(6)
+//   updated_at         DateTime? @db.Timestamptz(6)
+//   deleted_at         DateTime? @db.Timestamptz(6)
+// }
+
+// model jobs {
+//   id           BigInt  @id(map: "idx_31378_primary") @default(autoincrement())
+//   queue        String  @db.VarChar(255)
+//   payload      String
+//   attempts     Int     @db.SmallInt
+//   reserved_at  BigInt?
+//   available_at BigInt
+//   created_at   BigInt
+
+//   @@index([queue], map: "idx_31378_jobs_queue_index")
+// }
+
+// model likes {
+//   id          Int       @id(map: "idx_31384_primary") @default(autoincrement())
+//   bizid       Int
+//   userid      String    @db.VarChar(255)
+//   catid       Int
+//   status      Int       @default(1)
+//   created_on  DateTime  @default(now()) @db.Timestamptz(6)
+//   modified_on DateTime? @db.Date
+// }
+
+// model loan_product {
+//   id               Int       @id(map: "idx_31389_primary")
+//   category_id      Int
+//   bizid            Int
+//   loanproduct_name String    @db.VarChar(255)
+//   about_loan       String
+//   features         String
+//   benefits         String
+//   qualifications   String
+//   requirements     String
+//   status           Int?
+//   date_created     DateTime? @default(now()) @db.Timestamptz(6)
+// }
+
+// model lost_item_images {
+//   id           BigInt    @id(map: "idx_31396_primary") @default(autoincrement())
+//   lost_item_id BigInt
+//   image        String    @db.VarChar(255)
+//   created_at   DateTime? @db.Timestamptz(6)
+//   updated_at   DateTime? @db.Timestamptz(6)
+
+//   @@index([lost_item_id], map: "idx_lost_item_id")
+// }
+
+// /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+// model lost_items {
+//   id               BigInt                   @id(map: "idx_31401_primary") @default(autoincrement())
+//   user_id          BigInt
+//   item_image       String                   @db.VarChar(255)
+//   item_name        String                   @db.VarChar(255)
+//   item_description String
+//   location         String                   @db.VarChar(255)
+//   contact_info     String                   @db.VarChar(255)
+//   date_found       DateTime                 @db.Date
+//   latitude         Float                    @default(0)
+//   longitude        Float                    @default(0)
+//   is_found         Boolean
+//   created_at       DateTime?                @db.Timestamptz(6)
+//   updated_at       DateTime?                @db.Timestamptz(6)
+//   search_vector    Unsupported("tsvector")? @default(dbgenerated("to_tsvector('english'::regconfig, (((COALESCE(item_name, ''::character varying))::text || ' '::text) || COALESCE(item_description, ''::text)))"))
+
+//   @@index([is_found], map: "idx_is_found")
+//   @@index([user_id], map: "idx_lost_item_user_id")
+//   @@index([search_vector], map: "idx_lost_items_search_vector", type: Gin)
+// }
+
+// model maid {
+//   id              Int      @id(map: "idx_31410_primary")
+//   categorie_id    Int
+//   home_town       String   @db.VarChar(255)
+//   names           String   @db.VarChar(255)
+//   sex             String   @db.VarChar(255)
+//   age             Int
+//   mother_name     String   @db.VarChar(255)
+//   father_name     String   @db.VarChar(255)
+//   pictures        String
+//   education_level String   @db.VarChar(255)
+//   village         String   @db.VarChar(255)
+//   parish          String   @db.VarChar(255)
+//   sub_county      String   @db.VarChar(255)
+//   national_id     String   @db.VarChar(255)
+//   status          Int      @default(0)
+//   created_on      DateTime @default(now()) @db.Timestamptz(6)
+//   tel             String   @db.VarChar(255)
+//   country         String   @default("UG") @db.VarChar(255)
+// }
+
+// model migrations {
+//   id        BigInt @id(map: "idx_31419_primary") @default(autoincrement())
+//   migration String @db.VarChar(255)
+//   batch     Int
+// }
+
+// model notifications {
+//   id          BigInt              @id(map: "idx_31424_primary") @default(autoincrement())
+//   user_id     BigInt
+//   action      String              @db.VarChar(255)
+//   description String              @db.VarChar(255)
+//   created_at  DateTime?           @db.Timestamptz(6)
+//   updated_at  DateTime?           @db.Timestamptz(6)
+//   status      notification_status @default(unread)
+// }
+
+// model other_fees_structures {
+//   id         BigInt    @id(map: "idx_31432_primary") @default(autoincrement())
+//   bizid      BigInt
+//   fee_name   String    @db.VarChar(255)
+//   amount     Decimal   @db.Decimal(18, 2)
+//   currency   String    @default("UGX") @db.VarChar(255)
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+//   deleted_at DateTime? @db.Timestamptz(6)
+// }
+
+// model password_resets {
+//   email      String    @db.VarChar(255)
+//   token      String    @db.VarChar(255)
+//   created_at DateTime? @db.Timestamptz(6)
+//   id         BigInt    @id
+
+//   @@index([email], map: "idx_31439_password_resets_email_index")
+// }
+
+// model payments {
+//   id                 BigInt         @id(map: "idx_31445_primary") @default(autoincrement())
+//   user_id            BigInt
+//   payment_ref        String         @db.VarChar(255)
+//   amount             Decimal        @db.Decimal(17, 2)
+//   currency           String         @db.VarChar(255)
+//   country            String         @db.VarChar(255)
+//   is_verified        Int            @default(0)
+//   narrative          String
+//   phone              String?        @db.VarChar(15)
+//   table              String?        @db.VarChar(255)
+//   ip_address         String         @db.VarChar(255)
+//   created_at         DateTime?      @db.Timestamptz(6)
+//   updated_at         DateTime?      @db.Timestamptz(6)
+//   deleted_at         DateTime?      @db.Timestamptz(6)
+//   status             payment_status @default(pending)
+//   payment_method     String?        @default("mobile_money") @db.VarChar(20)
+//   status_check_count Int?           @default(0) @db.SmallInt
+
+//   @@index([is_verified, id])
+//   @@index([status, created_at])
+// }
+
+// model permissions {
+//   id          BigInt    @id(map: "idx_31454_primary") @default(autoincrement())
+//   user_id     BigInt
+//   catid       BigInt
+//   bizid       BigInt
+//   permission  String    @db.VarChar(255)
+//   description String    @db.VarChar(255)
+//   status      Boolean   @default(false)
+//   created_at  DateTime? @db.Timestamptz(6)
+//   updated_at  DateTime? @db.Timestamptz(6)
+//   deleted_at  DateTime? @db.Timestamptz(6)
+// }
+
+// model personal_access_tokens {
+//   id             BigInt    @id(map: "idx_31462_primary") @default(autoincrement())
+//   tokenable_type String    @db.VarChar(255)
+//   tokenable_id   BigInt
+//   name           String    @db.VarChar(255)
+//   token          String    @unique(map: "idx_31462_personal_access_tokens_token_unique") @db.VarChar(64)
+//   abilities      String?
+//   last_used_at   DateTime? @db.Timestamptz(6)
+//   expires_at     DateTime? @db.Timestamptz(6)
+//   created_at     DateTime? @db.Timestamptz(6)
+//   updated_at     DateTime? @db.Timestamptz(6)
+
+//   @@index([tokenable_type, tokenable_id], map: "idx_31462_personal_access_tokens_tokenable_type_tokenable_id_in")
+// }
+
+// /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+// model pro_drivers {
+//   id               BigInt    @id(map: "idx_31469_primary") @default(autoincrement())
+//   category_id      BigInt    @default(84)
+//   user_id          BigInt
+//   name             String    @db.VarChar(255)
+//   image            String    @db.VarChar(255)
+//   dob              DateTime  @db.Date
+//   dl_class         String    @db.VarChar(255)
+//   years_in_driving String    @db.VarChar(255)
+//   home_town        String    @db.VarChar(255)
+//   village          String    @db.VarChar(255)
+//   education        String    @db.VarChar(255)
+//   contact          String    @db.VarChar(255)
+//   pay_number       String?   @db.VarChar(255)
+//   merchant_code    String?   @db.VarChar(255)
+//   details          String?
+//   country          String    @db.VarChar(255)
+//   latitude         Float
+//   longitude        Float
+//   available        Boolean   @default(true)
+//   status           Boolean   @default(true)
+//   verified         Boolean   @default(false)
+//   created_at       DateTime? @db.Timestamptz(6)
+//   updated_at       DateTime? @db.Timestamptz(6)
+//   deleted_at       DateTime? @db.Timestamptz(6)
+
+//   @@index([status, available], map: "idx_driver_status_availailable")
+//   @@index([id, name, image, verified], map: "idx_pro_drivers_covering")
+//   @@index([id], map: "idx_pro_drivers_id")
+// }
+
+// model product_adverts {
+//   id          BigInt    @id(map: "idx_31482_primary") @default(autoincrement())
+//   user_id     BigInt
+//   product_id  BigInt
+//   payment_id  BigInt?
+//   payment_ref String?   @db.VarChar(255)
+//   catid       Int
+//   status      Boolean
+//   ad_type     String    @db.VarChar(255)
+//   price       Decimal   @db.Decimal(17, 2)
+//   end_date    DateTime  @db.Timestamptz(6)
+//   created_at  DateTime? @db.Timestamptz(6)
+//   updated_at  DateTime? @db.Timestamptz(6)
+//   deleted_at  DateTime? @db.Timestamptz(6)
+// }
+
+// model product_cart {
+//   id         BigInt    @id(map: "idx_31489_primary") @default(autoincrement())
+//   user_id    BigInt
+//   product_id BigInt
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+// }
+
+// model product_orders {
+//   id           BigInt       @id(map: "idx_31494_primary") @default(autoincrement())
+//   user_id      BigInt
+//   product_id   BigInt
+//   catid        BigInt
+//   bizid        BigInt
+//   price        Decimal      @db.Decimal(17, 2)
+//   quantity     Int
+//   name         String       @db.VarChar(255)
+//   address      String       @db.VarChar(255)
+//   email        String?      @db.VarChar(255)
+//   contact      String       @db.VarChar(255)
+//   delivered_by String?      @db.VarChar(255)
+//   created_at   DateTime?    @db.Timestamptz(6)
+//   updated_at   DateTime?    @db.Timestamptz(6)
+//   deleted_at   DateTime?    @db.Timestamptz(6)
+//   status       order_status @default(pending)
+// }
+
+// model product_review_images {
+//   id                BigInt    @id(map: "idx_31502_primary") @default(autoincrement())
+//   product_review_id BigInt
+//   image             String    @db.VarChar(255)
+//   created_at        DateTime? @db.Timestamptz(6)
+//   updated_at        DateTime? @db.Timestamptz(6)
+// }
+
+// model product_review_likes {
+//   id                BigInt    @id(map: "idx_31507_primary") @default(autoincrement())
+//   user_id           BigInt
+//   product_review_id BigInt
+//   status            Boolean   @default(true)
+//   created_at        DateTime? @db.Timestamptz(6)
+//   updated_at        DateTime? @db.Timestamptz(6)
+// }
+
+// model product_reviews {
+//   id         BigInt    @id(map: "idx_31513_primary") @default(autoincrement())
+//   user_id    BigInt
+//   product_id BigInt
+//   parent_id  BigInt?
+//   comment    String
+//   status     Boolean   @default(true)
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+// }
+
+// /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+// model products {
+//   id          BigInt         @id(map: "idx_31521_primary") @default(autoincrement())
+//   catid       BigInt
+//   bizid       BigInt
+//   image       String         @db.VarChar(255)
+//   name        String         @db.VarChar(255)
+//   price       Decimal        @db.Decimal(17, 2)
+//   discount    Decimal        @default(0.00) @db.Decimal(5, 2)
+//   currency    String         @default("UGX") @db.VarChar(255)
+//   description String
+//   subcat      String?        @db.VarChar(255)
+//   size        String?        @db.VarChar(255)
+//   latitude    String         @default("0") @db.VarChar(255)
+//   longitude   String         @default("0") @db.VarChar(255)
+//   created_at  DateTime?      @db.Timestamptz(6)
+//   updated_at  DateTime?      @db.Timestamptz(6)
+//   deleted_at  DateTime?      @db.Timestamptz(6)
+//   line_type   line_type_enum @default(first_line)
+
+//   @@index([description(ops: raw("gin_trgm_ops"))], map: "idx_prod_desc_trgm", type: Gin)
+//   @@index([name(ops: raw("gin_trgm_ops"))], map: "idx_prod_name_trgm", type: Gin)
+//   @@index([subcat(ops: raw("gin_trgm_ops"))], map: "idx_prod_subcat_trgm", type: Gin)
+// }
+
+// model push_notifications {
+//   id             BigInt    @id(map: "idx_31533_primary") @default(autoincrement())
+//   from_id        BigInt
+//   to_id          BigInt
+//   title          String    @db.VarChar(255)
+//   body           String
+//   image          String?   @db.VarChar(255)
+//   url            String?   @db.VarChar(255)
+//   status         Boolean   @default(false)
+//   clicked        Boolean   @default(false)
+//   dismissed      Boolean   @default(false)
+//   clicked_in_app Boolean   @default(false)
+//   bell_view      Boolean   @default(false)
+//   silent         Boolean   @default(false)
+//   created_at     DateTime? @db.Timestamptz(6)
+//   updated_at     DateTime? @db.Timestamptz(6)
+// }
+
+// model r_e_houses {
+//   id                 BigInt    @id(map: "idx_31546_primary") @default(autoincrement())
+//   property_id        BigInt
+//   bedrooms           Int
+//   bathrooms          Int
+//   square_footage     Decimal   @default(0.00) @db.Decimal(10, 2)
+//   furnished          Boolean   @default(false)
+//   utilities_included Boolean   @default(false)
+//   parking            Boolean   @default(false)
+//   created_at         DateTime? @db.Timestamptz(6)
+//   updated_at         DateTime? @db.Timestamptz(6)
+//   deleted_at         DateTime? @db.Timestamptz(6)
+// }
+
+// model r_e_land {
+//   id          BigInt    @id(map: "idx_31555_primary") @default(autoincrement())
+//   property_id BigInt
+//   size        String    @db.VarChar(255)
+//   created_at  DateTime? @db.Timestamptz(6)
+//   updated_at  DateTime? @db.Timestamptz(6)
+//   deleted_at  DateTime? @db.Timestamptz(6)
+// }
+
+// model r_e_properties {
+//   id          BigInt    @id(map: "idx_31561_primary") @default(autoincrement())
+//   bizid       BigInt
+//   image       String    @db.VarChar(255)
+//   location    String    @db.VarChar(255)
+//   description String
+//   price       Decimal   @db.Decimal(15, 2)
+//   status      Boolean   @default(true)
+//   latitude    String?   @db.VarChar(255)
+//   longitude   String?   @db.VarChar(255)
+//   created_at  DateTime? @db.Timestamptz(6)
+//   updated_at  DateTime? @db.Timestamptz(6)
+//   deleted_at  DateTime? @db.Timestamptz(6)
+// }
+
+// model r_e_property_images {
+//   id          BigInt    @id(map: "idx_31569_primary") @default(autoincrement())
+//   property_id BigInt
+//   image       String    @db.VarChar(255)
+//   created_at  DateTime? @db.Timestamptz(6)
+//   updated_at  DateTime? @db.Timestamptz(6)
+//   deleted_at  DateTime? @db.Timestamptz(6)
+// }
+
+// model ratings {
+//   id         BigInt    @id(map: "idx_31574_primary") @default(autoincrement())
+//   user_id    BigInt
+//   bizid      Int
+//   catid      String    @db.VarChar(255)
+//   rating     Decimal   @db.Decimal(1, 0)
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+
+//   @@index([bizid], map: "idx_bizid")
+// }
+
+// model report_appeals {
+//   id                   BigInt    @id(map: "idx_31581_primary") @default(autoincrement())
+//   report_submission_id BigInt
+//   context              String
+//   created_at           DateTime? @db.Timestamptz(6)
+//   updated_at           DateTime? @db.Timestamptz(6)
+//   deleted_at           DateTime? @db.Timestamptz(6)
+// }
+
+// model report_submissions {
+//   id               BigInt        @id(map: "idx_31589_primary") @default(autoincrement())
+//   reporter_id      BigInt
+//   reported_user_id BigInt?
+//   report_type_id   BigInt
+//   table            String        @db.VarChar(255)
+//   content_id       String        @db.VarChar(255)
+//   other_reasons    String?
+//   created_at       DateTime?     @db.Timestamptz(6)
+//   updated_at       DateTime?     @db.Timestamptz(6)
+//   deleted_at       DateTime?     @db.Timestamptz(6)
+//   status           report_status @default(pending)
+// }
+
+// model report_types {
+//   id          BigInt    @id(map: "idx_31597_primary") @default(autoincrement())
+//   type        String    @db.VarChar(255)
+//   description String
+//   created_at  DateTime? @db.Timestamptz(6)
+//   updated_at  DateTime? @db.Timestamptz(6)
+// }
+
+// model resolve_items {
+//   id            Int      @id(map: "idx_31603_primary") @default(autoincrement())
+//   itemid        Int
+//   catid         Int
+//   bizid         Int?
+//   table_name    String   @db.VarChar(255)
+//   ownerid       String   @db.VarChar(255)
+//   status        String   @default("1") @db.VarChar(100)
+//   creation_date DateTime @default(now()) @db.Timestamptz(6)
+// }
+
+// model resolver {
+//   id           Int      @id(map: "idx_31610_primary") @default(autoincrement())
+//   bizid        Int
+//   category     Int
+//   table1       String   @db.VarChar(255)
+//   owner_id     String   @db.VarChar(255)
+//   date_created DateTime @default(now()) @db.Timestamptz(6)
+//   status       Int      @default(0)
+
+//   @@index([owner_id], map: "idx_owner_id")
+//   @@index([category])
+//   @@index([date_created])
+//   @@index([owner_id])
+// }
+
+// model routes {
+//   id               Int      @id(map: "idx_31617_primary")
+//   from             String   @db.VarChar(255)
+//   to               String   @db.VarChar(255)
+//   via              String?  @db.VarChar(255)
+//   price            Int
+//   commission       Decimal  @default(0.00) @db.Decimal(8, 2)
+//   depature         String   @db.VarChar(255)
+//   arrival          String   @db.VarChar(255)
+//   company_id       Int
+//   status           Int      @default(0)
+//   date_on_creation DateTime @default(now()) @db.Timestamptz(6)
+// }
+
+// model sample {
+//   id           Int     @id(map: "idx_31625_primary")
+//   amount       String? @db.VarChar(255)
+//   narrative    String? @db.VarChar(255)
+//   external_ref String? @db.VarChar(255)
+//   network_ref  String? @db.VarChar(255)
+//   date_time    String? @db.VarChar(255)
+//   msisdn       String? @db.VarChar(255)
+// }
+
+// model school_performances {
+//   id             BigInt    @id(map: "idx_31631_primary") @default(autoincrement())
+//   bizid          BigInt
+//   year           BigInt
+//   candidates     BigInt
+//   division_one   BigInt
+//   division_two   BigInt
+//   division_three BigInt
+//   division_four  BigInt
+//   created_at     DateTime? @db.Timestamptz(6)
+//   updated_at     DateTime? @db.Timestamptz(6)
+//   deleted_at     DateTime? @db.Timestamptz(6)
+// }
+
+// model sessions {
+//   id            String  @id @db.VarChar(255)
+//   user_id       BigInt?
+//   ip_address    String? @db.VarChar(45)
+//   user_agent    String?
+//   payload       String
+//   last_activity Int
+
+//   @@index([last_activity], map: "sessions_last_activity_index")
+//   @@index([user_id], map: "sessions_user_id_index")
+// }
+
+// /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+// model spatial_ref_sys {
+//   srid      Int     @id
+//   auth_name String? @db.VarChar(256)
+//   auth_srid Int?
+//   srtext    String? @db.VarChar(2048)
+//   proj4text String? @db.VarChar(2048)
+// }
+
+// model special_offers {
+//   id           Int      @id(map: "idx_30906_primary")
+//   bizid        Int
+//   name         String   @db.VarChar(255)
+//   about        String?
+//   features     String
+//   benefits     String
+//   qualify      String
+//   requirements String
+//   percentage   String
+//   status       Int      @default(1)
+//   createdon    DateTime @default(now()) @db.Timestamptz(6)
+// }
+
+// model staff {
+//   id         Int      @id(map: "idx_31635_primary")
+//   email      String   @unique(map: "idx_31635_email") @db.VarChar(255)
+//   name       String   @db.VarChar(255)
+//   password   String   @db.VarChar(255)
+//   status     Int      @default(1)
+//   created_on DateTime @default(now()) @db.Timestamptz(6)
+// }
+
+// model stages {
+//   id              Int      @id(map: "idx_31642_primary")
+//   company_id      Int
+//   stagename       String   @db.VarChar(255)
+//   contacts        String   @db.VarChar(255)
+//   status          Int      @default(0)
+//   date_created_on DateTime @default(now()) @db.Timestamptz(6)
+// }
+
+// model student_enrolment {
+//   id         BigInt    @id(map: "idx_31650_primary") @default(autoincrement())
+//   bizid      BigInt
+//   year       Int
+//   boys       Int
+//   girls      Int
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+//   deleted_at DateTime? @db.Timestamptz(6)
+// }
+
+// model subscribers {
+//   id         Int      @id(map: "idx_31654_primary")
+//   name       String   @db.VarChar(255)
+//   tel        String   @unique(map: "idx_31654_tel") @db.VarChar(255)
+//   profile    String?  @db.VarChar(255)
+//   device_id  String?  @db.VarChar(255)
+//   pin        String   @db.VarChar(255)
+//   sessionkey String?  @db.VarChar(255)
+//   status     Int      @default(0)
+//   ispaid     Int      @default(0)
+//   createdon  DateTime @default(now()) @db.Timestamptz(6)
+// }
+
+// model subscription {
+//   id       Int       @id(map: "idx_31662_primary")
+//   sid      String?   @db.VarChar(255)
+//   sdate    DateTime  @default(now()) @db.Timestamptz(6)
+//   samount  Int?
+//   edate    DateTime? @db.Date
+//   status   Int       @default(1)
+//   response String?   @db.VarChar(255)
+//   stype    String?   @db.VarChar(255)
+// }
+
+// /// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+// model sv_locations {
+//   id                Int       @id(map: "idx_31669_primary")
+//   categoryid        Int
+//   office            String    @db.VarChar(255)
+//   img_url           String    @db.VarChar(255)
+//   district          String    @db.VarChar(255)
+//   physical_location String    @db.VarChar(255)
+//   email             String    @db.VarChar(255)
+//   website           String
+//   tel               String    @db.VarChar(255)
+//   service_details   String
+//   owner_id          String    @default("0") @db.VarChar(255)
+//   latitude          String    @default("0") @db.VarChar(255)
+//   longitude         String    @default("0") @db.VarChar(255)
+//   status            Int?
+//   verified          Boolean   @default(false)
+//   date_created      DateTime  @default(now()) @db.Timestamptz(6)
+//   country           String    @default("UG") @db.VarChar(255)
+//   created_at        DateTime? @db.Timestamptz(6)
+//   updated_at        DateTime? @db.Timestamptz(6)
+//   deleted_at        DateTime? @db.Timestamptz(6)
+
+//   @@index([service_details(ops: raw("gin_trgm_ops"))], map: "idx_loc_details_trgm", type: Gin)
+//   @@index([district(ops: raw("gin_trgm_ops"))], map: "idx_loc_district_trgm", type: Gin)
+//   @@index([office(ops: raw("gin_trgm_ops"))], map: "idx_loc_office_trgm", type: Gin)
+//   @@index([physical_location(ops: raw("gin_trgm_ops"))], map: "idx_loc_phys_trgm", type: Gin)
+// }
+
+// model system_errors {
+//   id          BigInt    @id(map: "idx_31681_primary") @default(autoincrement())
+//   description String
+//   created_at  DateTime? @db.Timestamptz(6)
+//   updated_at  DateTime? @db.Timestamptz(6)
+// }
+
+// model teachers {
+//   id         BigInt    @id(map: "idx_31688_primary") @default(autoincrement())
+//   bizid      BigInt
+//   male       Int
+//   female     Int
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+//   deleted_at DateTime? @db.Timestamptz(6)
+// }
+
+// model toilet_photos {
+//   id         BigInt    @id(map: "idx_31693_primary") @default(autoincrement())
+//   toilet_id  BigInt
+//   photo      String    @db.VarChar(255)
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+//   deleted_at DateTime? @db.Timestamptz(6)
+//   toilets    toilets   @relation(fields: [toilet_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "toilet_photos_toilet_id_foreign")
+
+//   @@index([toilet_id], map: "idx_31693_toilet_photos_toilet_id_foreign")
+// }
+
+// model toilets {
+//   id            BigInt          @id(map: "idx_31698_primary") @default(autoincrement())
+//   bizid         BigInt
+//   male          Int
+//   female        Int
+//   created_at    DateTime?       @db.Timestamptz(6)
+//   updated_at    DateTime?       @db.Timestamptz(6)
+//   deleted_at    DateTime?       @db.Timestamptz(6)
+//   toilet_photos toilet_photos[]
+// }
+
+// model track_categories {
+//   id         BigInt    @id(map: "idx_31703_primary") @default(autoincrement())
+//   name       String    @db.VarChar(255)
+//   image      String    @db.VarChar(255)
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+//   deleted_at DateTime? @db.Timestamptz(6)
+// }
+
+// model tracks {
+//   id                BigInt    @id(map: "idx_31710_primary") @default(autoincrement())
+//   user_id           BigInt
+//   track_category_id BigInt
+//   sub_category      String    @db.VarChar(255)
+//   name              String    @db.VarChar(255)
+//   title             String
+//   artist            String    @db.VarChar(255)
+//   album             String?   @db.VarChar(255)
+//   genre             String?   @db.VarChar(255)
+//   description       String?
+//   artwork           String    @db.VarChar(255)
+//   duration          Int
+//   created_at        DateTime? @db.Timestamptz(6)
+//   updated_at        DateTime? @db.Timestamptz(6)
+//   deleted_at        DateTime? @db.Timestamptz(6)
+// }
+
+// model university_courses {
+//   id                   BigInt    @id(map: "idx_31717_primary") @default(autoincrement())
+//   bizid                BigInt
+//   faculty_id           BigInt?
+//   course               String    @db.VarChar(255)
+//   course_description   String?
+//   years                Int
+//   tuition              Decimal   @db.Decimal(17, 2)
+//   tuition_currency     String    @default("UGX") @db.VarChar(255)
+//   tuition_int          Decimal?  @db.Decimal(17, 2)
+//   tuition_int_currency String    @default("USD") @db.VarChar(255)
+//   other_fees           Decimal?  @db.Decimal(17, 2)
+//   other_fees_int       Decimal?  @db.Decimal(17, 2)
+//   created_at           DateTime? @db.Timestamptz(6)
+//   updated_at           DateTime? @db.Timestamptz(6)
+//   deleted_at           DateTime? @db.Timestamptz(6)
+// }
+
+// model university_faculties {
+//   id         BigInt    @id(map: "idx_31726_primary") @default(autoincrement())
+//   bizid      BigInt
+//   faculty    String    @db.VarChar(255)
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+// }
+
+// model user_third_parties {
+//   id         BigInt    @id(map: "idx_31731_primary") @default(autoincrement())
+//   user_id    BigInt
+//   added_by   BigInt
+//   created_at DateTime? @db.Timestamptz(6)
+//   updated_at DateTime? @db.Timestamptz(6)
+//   deleted_at DateTime? @db.Timestamptz(6)
+// }
+
+// model User {
+//   id                Int             @id(map: "idx_31735_primary") @default(autoincrement())
+//   name              String?         @db.VarChar(255)
+//   email             String?         @unique(map: "idx_31735_users_email_unique") @db.VarChar(255)
+//   tel               String?         @unique(map: "idx_31735_tel") @db.VarChar(255)
+//   password          String?         @db.VarChar(255)
+//   profile           String?         @db.VarChar(255)
+//   status            Boolean         @default(true)
+//   address           String?         @db.VarChar(255)
+//   ispaid            Boolean         @default(false)
+//   email_verified_at DateTime?       @db.Timestamptz(6)
+//   push_token        String?         @db.VarChar(255)
+//   push_token_error  String?
+//   app_version       String?         @db.VarChar(255)
+//   os                String?         @db.VarChar(255)
+//   device            String?         @db.VarChar(255)
+//   remember_token    String?         @db.VarChar(100)
+//   otp               String?         @db.VarChar(255)
+//   otp_expiry        DateTime?       @db.Timestamptz(6)
+//   apple_user        String?         @unique(map: "idx_31735_apple_user") @db.VarChar(100)
+//   created_at        DateTime?       @db.Timestamptz(6)
+//   updated_at        DateTime?       @db.Timestamptz(6)
+//   deleted_at        DateTime?       @db.Timestamptz(6)
+//   privilege         user_privilege? @default(none)
+//   is_ghost_user     Boolean         @default(false)
+//   wallet           Wallet?
+//   paymentMethods   PaymentMethod[]
+//   transactions     Transaction[]
+//   disputes         Dispute[]
+//   auditLogs        AuditLog[]
+//   systemNotifications SystemNotification[]
+//   paymentOtp             Otp?
+//   @@index([privilege], map: "idx_user_preveledge")
+//   @@index([id, name, profile], map: "idx_users_covering")
+//   @@index([id], map: "idx_users_id")
+//   @@index([name], map: "idx_users_name")
+//   @@index([created_at])
+//   @@index([name(ops: raw("gin_trgm_ops"))], map: "users_name_trgm_idx", type: Gin)
+//   @@index([os, status])
+//   @@index([status])
+//   @@map("users")
+// }
+
+// model Otp{
+//   id String @id @default(uuid())
+//   userId Int @unique
+//   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   otpHash String
+//   expiresAt  DateTime
+//   createdAt DateTime @default(now())
+//   attempts Int @default(0)
+//   @@map("Payment_otp")
+// }
+
+// model Wallet {
+//   id        String   @id @default(uuid())
+//   userId    Int   @unique
+//   user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   balance Decimal  @default(0) @db.Decimal(12, 2)
+//   createdAt  DateTime @default(now())
+//   updatedAt  DateTime @updatedAt
+//   @@map("payment_wallets")
+// }
+
+// model PaymentMethod {
+//   id        String @id @default(uuid())
+//   userId    Int @unique
+//   user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   type      PaymentMethodType
+//   name      String
+//   detail    String // e.g., "+256 772 *** 888" or "**** 4242"
+//   createdAt DateTime          @default(now())
+//   updatedAt DateTime          @updatedAt
+//   @@map("payment_methods")
+// }
+
+// model Transaction {
+//   id        String            @id @default(uuid())
+//   userId    Int @unique
+//   user      User              @relation(fields: [userId], references: [id])
+//   date      DateTime          @default(now())
+//   amount    Decimal           @db.Decimal(12, 2)
+//   currency  String            @default("UGX") // UGX or USD
+//   type      TransactionType
+//   status    TransactionStatus @default(PENDING)
+//   recipient String
+//   category  String // e.g., 'Transport', 'Rent', 'Utilities'
+//   method    String // e.g., 'MTN Mobile Money', 'Visa **** 4242'
+//   createdAt DateTime          @default(now())
+//   updatedAt DateTime          @updatedAt
+
+//   disputes Dispute[]
+
+//   @@map("payment_transactions")
+// }
+
+// model Dispute {
+//   id            String        @id @default(uuid())
+//   transactionId String @unique
+//   transaction   Transaction   @relation(fields: [transactionId], references: [id])
+//   userId        Int @unique
+//   user          User          @relation(fields: [userId], references: [id])
+//   amount        Decimal       @db.Decimal(12, 2)
+//   currency      String        @default("UGX")
+//   reason        String
+//   status        DisputeStatus @default(OPEN)
+//   evidence      String?
+//   createdAt     DateTime      @default(now())
+//   updatedAt     DateTime      @updatedAt
+
+//   @@map("payment_disputes")
+// }
+
+// model Fee {
+//   id          String      @id @default(uuid())
+//   name        String
+//   type        FeeType
+//   value       Decimal     @db.Decimal(12, 2)
+//   currency    String?     @default("UGX")
+//   category    FeeCategory
+//   active      Boolean     @default(true)
+//   lastUpdated DateTime    @updatedAt
+//   createdAt   DateTime    @default(now())
+
+//   @@map("payment_fees")
+// }
+
+// model AuditLog {
+//   id        String   @id @default(uuid())
+//   action    String
+//   adminId   Int @unique
+//   admin     User     @relation(fields: [adminId], references: [id])
+//   timestamp DateTime @default(now())
+//   details   String
+//   ip        String?
+
+//   @@map("payment_audit_logs")
+// }
+
+// model SystemNotification {
+//   id        String   @id @default(uuid())
+//   userId    Int @unique
+//   user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+//   title     String
+//   message   String
+//   type      NotificationType
+//   read      Boolean          @default(false)
+//   createdAt DateTime         @default(now())
+
+//   @@map("payment_system_notifications")
+// }
+
+// model views {
+//   id            Int      @id(map: "idx_31743_primary")
+//   bizid         Int
+//   status        Int      @default(1)
+//   catid         Int
+//   creation_date DateTime @default(now()) @db.Timestamptz(6)
+//   modified_on   DateTime @db.Date
+//   ip_address    String   @db.VarChar(255)
+// }
+
+// enum job_status {
+//   open
+//   closed
+// }
+
+// enum labor_category_enum {
+//   unspecialized
+//   specialized
+//   family_assistant
+// }
+
+// enum ledger_type {
+//   credit
+//   debit
+// }
+
+// enum line_type_enum {
+//   first_line
+//   second_line
+// }
+
+// enum notification_status {
+//   unread
+//   read
+// }
+
+// enum order_status {
+//   pending
+//   processing
+//   received
+// }
+
+// enum payment_status {
+//   pending
+//   successful
+//   failed
+// }
+
+// enum report_status {f
+//   reviewed
+//   pending
+// }
+
+// enum user_privilege {
+//   none
+//   admin
+//   super_admin
+// }
+
+// enum PaymentProvider {
+//   AIRTEL
+//   MTN
+// }
+
+// enum PaymentMethodType {
+//   CARD
+//   MOBILE_MONEY
+//   BANK
+// }
+
+// enum DisputeStatus {
+//   OPEN
+//   RESOLVED
+//   REJECTED
+// }
+
+// enum FeeType {
+//   PERCENTAGE
+//   FIXED
+// }
+
+// enum FeeCategory {
+//   DEPOSIT
+//   WITHDRAWAL
+//   TRANSFER
+//   PAYMENT
+//   API
+// }
+
+// enum NotificationType {
+//   ALERT
+//   INFO
+//   SUCCESS
+// }
+
+// enum TransactionType {
+//   DEPOSIT
+//   WITHDRAWAL
+//   TRANSFER
+//   PAYMENT
+//   SUBSCRIPTION
+// }
+
+// enum TransactionStatus {
+//   COMPLETED
+//   PENDING
+//   FAILED
+//   DISPUTED
+// }

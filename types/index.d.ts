@@ -99,7 +99,7 @@ declare global {
     duration: number;
   }
 
-  type NotificationType = "success" | "error" | "info" | "warning";
+  type NotificationType = "ALERT" | "INFO" | "SUCCESS";
 
   interface Notifications {
     id: string;
@@ -109,11 +109,13 @@ declare global {
 
   interface SystemNotification {
     id: string;
+    userId: number;
     title: string;
     message: string;
-    time: string;
+    type: NotificationType;
     read: boolean;
-    type: "ALERT" | "INFO" | "SUCCESS";
+    createdAt: Date;
+    path: string;
   }
 
   // New Types for Admin Modules
