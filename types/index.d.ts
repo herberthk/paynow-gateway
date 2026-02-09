@@ -41,6 +41,7 @@ declare global {
     wallet?: Wallet;
     created_at: string;
     tel?: string;
+    address?: string;
     // kycStatus: "VERIFIED" | "PENDING" | "UNVERIFIED" | "REJECTED";
     // wallet: Wallet;
     // joinDate?: string;

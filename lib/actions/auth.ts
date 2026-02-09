@@ -156,6 +156,8 @@ const loginNow = async (id: number) => {
       status: true,
       wallet: true,
       created_at: true,
+      tel: true,
+      address: true,
     },
   });
   if (!user) {
@@ -168,6 +170,8 @@ const loginNow = async (id: number) => {
     status: user?.status!,
     id: user.id,
     created_at: user.created_at?.toDateString()!,
+    address: user?.address!,
+    tel: user?.tel!,
     wallet: {
       ...user.wallet,
       id: user.wallet?.id!,
@@ -233,6 +237,8 @@ export const resetPassword = async (id: number, password: string) => {
         status: true,
         wallet: true,
         created_at: true,
+        tel: true,
+        address: true,
       },
     });
     if (!user) {
@@ -257,6 +263,8 @@ export const resetPassword = async (id: number, password: string) => {
       status: user?.status!,
       id: user.id,
       created_at: user.created_at?.toDateString()!,
+      address: user?.address!,
+      tel: user?.tel!,
       wallet: {
         ...user.wallet,
         id: user.wallet?.id!,

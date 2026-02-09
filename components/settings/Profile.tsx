@@ -1,54 +1,47 @@
 "use client";
-import { useAppStore, useNotificationStore } from "@/store";
+import { updateUserInfo } from "@/lib";
+import { useNotificationStore } from "@/store";
 import { UserIcon, Mail, Phone, MapPin, Loader2, Save } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type ProfileProps = {
   user: User;
 };
 const Profile = ({ user }: ProfileProps) => {
-  console.log(user);
   const notify = useNotificationStore((state) => state.notify);
   const [isSaving, setIsSaving] = useState(false);
-  const updateUser = useAppStore((state) => state.handleUpdateUser);
+  // const updateUser = useAppStore((state) => state.handleUpdateUser);
   // Profile State
   const [formData, setFormData] = useState({
     name: user?.name,
     email: user?.email,
-    phone: "+256 700 000000", // Mock data as it's not in User type
-    address: "Kampala, Uganda", // Mock data
+    tel: user?.tel || "",
+    address: user?.address || "",
   });
 
-  const handleUpdateUser = (updatedData: Partial<User>) => {
-    if (user) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      //@ts-expect-error
-      updateUser(updatedData);
-      notify("success", "Profile updated successfully.");
-    }
-  };
+  // const handleUpdateUser = (updatedData: Partial<User>) => {
+  //   if (user) {
+  //     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  //     //@ts-expect-error
+  //     updateUser(updatedData);
+  //     notify("success", "Profile updated successfully.");
+  //   }
+  // };
 
   // CRUD: Update Profile
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      handleUpdateUser({ name: formData?.name, email: formData?.email });
-      setIsSaving(false);
-    }, 1500);
+    const res = await updateUserInfo(formData);
+    if (res.type === "success") {
+      notify("success", res.message);
+    } else {
+      notify("error", res.message);
+    }
+    setIsSaving(false);
   };
 
-  // Sync prop changes to local state
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setFormData((prev) => ({
-      ...prev,
-      name: user?.name,
-      email: user?.email,
-    }));
-  }, [user]);
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden animate-fade-in-up transition-colors">
       <div className="p-6 border-b border-gray-100 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-700/30">
@@ -121,9 +114,9 @@ const Profile = ({ user }: ProfileProps) => {
               />
               <input
                 type="text"
-                value={formData.phone}
+                value={formData.tel}
                 onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
+                  setFormData({ ...formData, tel: e.target.value })
                 }
                 className="w-full bg-white dark:bg-slate-700 text-gray-900 dark:text-white pl-10 pr-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
               />
