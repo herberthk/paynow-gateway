@@ -82,7 +82,7 @@ model PaymentMethod {
 
 model Transaction {
   id        String            @id @default(uuid())
-  userId    Int @unique
+  userId    Int
   user      User              @relation(fields: [userId], references: [id])
   date      DateTime          @default(now())
   amount    Decimal           @db.Decimal(12, 2)
@@ -96,7 +96,7 @@ model Transaction {
   updatedAt DateTime          @updatedAt
 
   disputes Dispute[]
-
+  @@index([userId])
   @@map("payment_transactions")
 }
 
@@ -104,7 +104,7 @@ model Dispute {
   id            String        @id @default(uuid())
   transactionId String @unique
   transaction   Transaction   @relation(fields: [transactionId], references: [id])
-  userId        Int @unique
+  userId        Int
   user          User          @relation(fields: [userId], references: [id])
   amount        Decimal       @db.Decimal(12, 2)
   currency      String        @default("UGX")
@@ -113,7 +113,7 @@ model Dispute {
   evidence      String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
-
+  @@index([userId])
   @@map("payment_disputes")
 }
 
@@ -127,32 +127,33 @@ model Fee {
   active      Boolean     @default(true)
   lastUpdated DateTime    @updatedAt
   createdAt   DateTime    @default(now())
-
   @@map("payment_fees")
 }
 
 model AuditLog {
   id        String   @id @default(uuid())
   action    String
-  adminId   Int @unique
+  adminId   Int
   admin     User     @relation(fields: [adminId], references: [id])
   timestamp DateTime @default(now())
   details   String
   ip        String?
-
+  path      String?
+  @@index([adminId])
   @@map("payment_audit_logs")
 }
 
 model SystemNotification {
   id        String   @id @default(uuid())
-  userId    Int @unique
+  userId    Int
   user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   message   String
-  type      NotificationType
+  path      String?
+  type      NotificationType @default(INFO)
   read      Boolean          @default(false)
   createdAt DateTime         @default(now())
-
+  @@index([userId])
   @@map("payment_system_notifications")
 }
 

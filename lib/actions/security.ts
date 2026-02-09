@@ -48,7 +48,16 @@ export const updatePassword = async ({
         password: hashedPassword,
       },
     });
-
+    await prisma.systemNotification.create({
+      data: {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+        userId: user?.id!,
+        title: "Password reset successfully",
+        message: "Your password has been reset successfully",
+        type: "INFO",
+        path: "/dashboard/user/settings",
+      },
+    });
     return {
       type: "success",
       message: "Password reset successfully",
@@ -102,6 +111,17 @@ export const updateUserInfo = async ({
         name: true,
         tel: true,
         address: true,
+      },
+    });
+
+    await prisma.systemNotification.create({
+      data: {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
+        userId: user?.id!,
+        title: "Profile information updated successfully",
+        message: "Your profile information has been updated successfully",
+        type: "INFO",
+        path: "/dashboard/user/settings",
       },
     });
 
