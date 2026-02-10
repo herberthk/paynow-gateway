@@ -61,6 +61,43 @@ export const seedUsers = [
     status: true,
     ispaid: true,
   },
+  // Merchant Users for Transactions
+  {
+    name: "Uber Uganda",
+    email: "payments@uber.ug",
+    tel: "+256000000001",
+    password: await hashPassword("merchant123"),
+    privilege: "none" as const,
+    status: true,
+    ispaid: true,
+  },
+  {
+    name: "Jumia Food",
+    email: "billing@jumia.ug",
+    tel: "+256000000002",
+    password: await hashPassword("merchant123"),
+    privilege: "none" as const,
+    status: true,
+    ispaid: true,
+  },
+  {
+    name: "National Water",
+    email: "bills@nwsc.ug",
+    tel: "+256000000003",
+    password: await hashPassword("merchant123"),
+    privilege: "none" as const,
+    status: true,
+    ispaid: true,
+  },
+  {
+    name: "Umeme Ltd",
+    email: "tokens@umeme.ug",
+    tel: "+256000000004",
+    password: await hashPassword("merchant123"),
+    privilege: "none" as const,
+    status: true,
+    ispaid: true,
+  },
 ];
 
 // Seed data for Wallets (will be created after users)
@@ -84,6 +121,27 @@ export const seedWallets = (userIds: number[]) => [
   {
     userId: userIds[4],
     balance: 3200000, // 3,200,000 UGX
+  },
+  {
+    userId: userIds[5],
+    balance: 1000000,
+  },
+  // Merchant wallets
+  {
+    userId: userIds[6],
+    balance: 10000000,
+  },
+  {
+    userId: userIds[7],
+    balance: 10000000,
+  },
+  {
+    userId: userIds[8],
+    balance: 10000000,
+  },
+  {
+    userId: userIds[9],
+    balance: 10000000,
   },
 ];
 
@@ -121,7 +179,10 @@ export const seedPaymentMethods = (userIds: number[]) => [
 ];
 
 // Seed data for Transactions (30 per user)
-export const seedTransactions = (userIds: number[]) => {
+export const seedTransactions = (
+  userIds: number[],
+  users: { id: number; name: string | null }[],
+) => {
   const categories = [
     "Transport",
     "Rent",
@@ -143,22 +204,10 @@ export const seedTransactions = (userIds: number[]) => {
     "KCB Bank",
     "Bank of Africa",
   ];
-  const recipients = [
-    "Uber Uganda",
-    "Jumia Food",
-    "Shell Station",
-    "National Water",
-    "Umeme Ltd",
-    "Netflix",
-    "Shoprite",
-    "KFC",
-    "Cafe Javas",
-    "Total Energies",
-    "SafeBoda",
-    "Aga Khan Hospital",
-    "MultiChoice",
-    "LycaMobile",
-  ];
+
+  // Merchant users are the last 4 users (indices 6-9)
+  const merchantIds = userIds.slice(6);
+  const regularUserIds = userIds.slice(0, 6);
 
   const seededRandom = (seed: number) => {
     let value = seed;
@@ -169,9 +218,21 @@ export const seedTransactions = (userIds: number[]) => {
   };
 
   const random = seededRandom(12345);
-  const transactions: Transaction[] = [];
+  const transactions: {
+    userId: number;
+    recipientId: number;
+    recipientName: string;
+    amount: number;
+    currency: "UGX" | "USD";
+    type: TransactionType;
+    status: TransactionStatus;
+    category: string;
+    method: string;
+    txn_ref: string;
+    createdAt: Date;
+  }[] = [];
 
-  userIds.forEach((userId) => {
+  regularUserIds.forEach((userId) => {
     for (let i = 0; i < 30; i++) {
       const amount = Math.floor(random() * 500000) + 1000;
       const type =
@@ -185,18 +246,36 @@ export const seedTransactions = (userIds: number[]) => {
       const status =
         random() > 0.9 ? "FAILED" : random() > 0.8 ? "PENDING" : "COMPLETED";
 
+      let recipientId: number;
+      let recipientName: string;
+
+      if (type === "PAYMENT") {
+        // Payments go to merchants
+        recipientId = merchantIds[Math.floor(random() * merchantIds.length)];
+        recipientName =
+          users.find((u) => u.id === recipientId)?.name || "Merchant";
+      } else if (type === "TRANSFER") {
+        // Transfers go to other regular users
+        const otherUsers = regularUserIds.filter((id) => id !== userId);
+        recipientId = otherUsers[Math.floor(random() * otherUsers.length)];
+        recipientName = users.find((u) => u.id === recipientId)?.name || "User";
+      } else {
+        // Deposit/Withdrawal - recipient is self
+        recipientId = userId;
+        recipientName = users.find((u) => u.id === userId)?.name || "Self";
+      }
+
       transactions.push({
         userId,
+        recipientId,
+        recipientName,
         amount,
-        currency: random() > 0.9 ? "USD" : "UGX",
+        currency: (random() > 0.9 ? "USD" : "UGX") as "UGX" | "USD",
         type: type as TransactionType,
         status: status as TransactionStatus,
-        recipient: recipients[Math.floor(random() * recipients.length)],
         category: categories[Math.floor(random() * categories.length)],
         method: methods[Math.floor(random() * methods.length)],
         txn_ref: generateTxRef(),
-        // We'll set a spread of dates across the last 3 months
-        //@ts-ignore
         createdAt: new Date(
           Date.now() - Math.floor(random() * 90 * 24 * 60 * 60 * 1000),
         ),
@@ -377,7 +456,7 @@ export async function seedDatabase() {
     // Seed Transactions
     console.log("💸 Seeding transactions...");
     const transactions = await Promise.all(
-      seedTransactions(userIds).map((transaction) =>
+      seedTransactions(userIds, createdUsers).map((transaction) =>
         prisma.transaction.create({ data: transaction }),
       ),
     );

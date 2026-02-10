@@ -12,13 +12,14 @@ declare global {
 
   interface Transaction {
     id: string;
-    date: string;
+    createdAt: string;
     userId: number;
+    recipientId: number;
+    recipientName: string;
     amount: number;
     currency: "UGX" | "USD";
     type: TransactionType;
     status: TransactionStatus;
-    recipient: string;
     category: string; // e.g., 'Transport', 'Rent', 'Utilities'
     method: string; // e.g., 'MTN Mobile Money', 'Visa **** 4242'
     txn_ref?: string;

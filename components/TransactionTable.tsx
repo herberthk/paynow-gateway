@@ -196,7 +196,9 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
       doc.setTextColor(grayColor);
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
-      doc.text(new Date(tx.date).toLocaleString(), 105, y, { align: "center" });
+      doc.text(new Date(tx.createdAt).toLocaleString(), 105, y, {
+        align: "center",
+      });
 
       y += 20;
 
@@ -218,7 +220,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         y += 12; // increased spacing
       };
 
-      addRow("Recipient", tx.recipient);
+      addRow("Recipient", tx.recipientName);
       addRow("Category", tx.category);
       addRow("Payment Method", tx.method);
       addRow("Transaction Type", tx.type);
@@ -413,7 +415,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900 dark:text-white">
-                          {tx.recipient}
+                          {tx.recipientName}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           {tx.method} • {tx.type}
@@ -430,12 +432,12 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                     className="px-6 py-4 text-gray-500 dark:text-gray-400"
                     suppressHydrationWarning
                   >
-                    {new Date(tx.date).toLocaleDateString()}
+                    {new Date(tx.createdAt).toLocaleDateString()}
                     <div
                       className="text-xs text-gray-400 dark:text-gray-500"
                       suppressHydrationWarning
                     >
-                      {new Date(tx.date).toLocaleTimeString([], {
+                      {new Date(tx.createdAt).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
@@ -532,7 +534,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                                 Recipient
                               </p>
                               <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                {tx.recipient}
+                                {tx.recipientName}
                               </p>
                             </div>
                           </div>
