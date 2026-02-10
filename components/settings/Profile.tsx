@@ -1,14 +1,14 @@
 "use client";
 import { updateUserInfo } from "@/lib";
-import { useNotificationStore } from "@/store";
 import { UserIcon, Mail, Phone, MapPin, Loader2, Save } from "lucide-react";
 import { useState } from "react";
+import FeedbackModal from "./FeedbackModal";
 
 type ProfileProps = {
   user: User;
 };
 const Profile = ({ user }: ProfileProps) => {
-  const notify = useNotificationStore((state) => state.notify);
+  // const notify = useNotificationStore((state) => state.notify);
   const [isSaving, setIsSaving] = useState(false);
   // const updateUser = useAppStore((state) => state.handleUpdateUser);
   // Profile State
@@ -28,17 +28,32 @@ const Profile = ({ user }: ProfileProps) => {
   //   }
   // };
 
+  const [feedback, setFeedback] = useState<{
+    isOpen: boolean;
+    type: "success" | "error";
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
+
   // CRUD: Update Profile
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
 
     const res = await updateUserInfo(formData);
-    if (res.type === "success") {
-      notify("success", res.message);
-    } else {
-      notify("error", res.message);
-    }
+
+    setFeedback({
+      isOpen: true,
+      type: res.type === "success" ? "success" : "error",
+      title: res.type === "success" ? "Profile Updated" : "Update Failed",
+      message: res.message,
+    });
+
     setIsSaving(false);
   };
 
@@ -159,6 +174,14 @@ const Profile = ({ user }: ProfileProps) => {
           </button>
         </div>
       </form>
+
+      <FeedbackModal
+        isOpen={feedback.isOpen}
+        onClose={() => setFeedback({ ...feedback, isOpen: false })}
+        type={feedback.type}
+        title={feedback.title}
+        message={feedback.message}
+      />
     </div>
   );
 };

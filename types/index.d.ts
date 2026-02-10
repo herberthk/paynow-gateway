@@ -41,7 +41,7 @@ declare global {
     email: string;
     privilege: Privilege;
     status: boolean;
-    wallet?: Wallet;
+    // wallet?: Wallet;
     created_at: string;
     tel?: string;
     address?: string;

@@ -14,7 +14,7 @@ export const getNotifications = async ({
 }) => {
   try {
     const where = {
-      userId,
+      toUserId: userId,
     };
     if (type && type !== "ALL") {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -73,7 +73,7 @@ export const markAllNotificationsAsRead = async ({
   try {
     const notifications = await prisma.systemNotification.updateMany({
       where: {
-        userId,
+        toUserId: userId,
       },
       data: {
         read: true,
@@ -103,19 +103,23 @@ export const createNotification = async ({
   title,
   message,
   type,
+  path,
 }: {
   userId: number;
   title: string;
   message: string;
   type: NotificationType;
+  path: string;
 }) => {
   try {
     const notification = await prisma.systemNotification.create({
       data: {
-        userId,
+        toUserId: userId,
+        fromUserId: userId,
         title,
         message,
         type,
+        path,
       },
     });
     return notification;
@@ -132,7 +136,7 @@ export const getUnreadNotificationsCount = async ({
   try {
     const notifications = await prisma.systemNotification.count({
       where: {
-        userId,
+        toUserId: userId,
         read: false,
       },
     });
@@ -164,7 +168,7 @@ export const getNotificationByUserId = async ({
   try {
     const notifications = await prisma.systemNotification.findMany({
       where: {
-        userId,
+        toUserId: userId,
       },
     });
     return notifications;
@@ -184,7 +188,7 @@ export const getNotificationByUserIdAndId = async ({
   try {
     const notification = await prisma.systemNotification.findUnique({
       where: {
-        userId,
+        toUserId: userId,
         id,
       },
     });
@@ -206,7 +210,7 @@ export const getNotificationByUserIdAndIdAndRead = async ({
   try {
     const notification = await prisma.systemNotification.findUnique({
       where: {
-        userId,
+        toUserId: userId,
         id,
         read,
       },
@@ -225,11 +229,74 @@ export const deleteAllNotifications = async ({
   try {
     const notifications = await prisma.systemNotification.deleteMany({
       where: {
-        userId,
+        toUserId: userId,
       },
     });
     return notifications;
   } catch (error) {
     console.log(error);
+  }
+};
+
+/**
+ * Create notifications for P2P transfer
+ * @param senderId - User ID of sender
+ * @param recipientId - User ID of recipient
+ * @param recipientName - Name of recipient
+ * @param senderName - Name of sender
+ * @param amount - Transfer amount
+ * @param txn_ref - Transaction reference
+ */
+export const createTransferNotifications = async ({
+  senderId,
+  recipientId,
+  recipientName,
+  senderName,
+  amount,
+  txn_ref,
+}: {
+  senderId: number;
+  recipientId: number;
+  recipientName: string;
+  senderName: string;
+  amount: number;
+  txn_ref: string;
+}) => {
+  try {
+    // Notification for sender
+    const senderNotification = await prisma.systemNotification.create({
+      data: {
+        fromUserId: senderId,
+        toUserId: senderId,
+        title: "Transfer Sent",
+        message: `You successfully sent UGX ${amount.toLocaleString()} to ${recipientName}`,
+        type: "SUCCESS",
+        path: `/dashboard/user/transactions?ref=${txn_ref}`,
+      },
+    });
+
+    // Notification for recipient
+    const recipientNotification = await prisma.systemNotification.create({
+      data: {
+        fromUserId: senderId,
+        toUserId: recipientId,
+        title: "Money Received",
+        message: `You received UGX ${amount.toLocaleString()} from ${senderName}`,
+        type: "SUCCESS",
+        path: `/dashboard/user/transactions?ref=${txn_ref}`,
+      },
+    });
+
+    return {
+      success: true,
+      senderNotification,
+      recipientNotification,
+    };
+  } catch (error) {
+    console.error("Error creating transfer notifications:", error);
+    return {
+      success: false,
+      error,
+    };
   }
 };

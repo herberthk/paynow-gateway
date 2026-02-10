@@ -1,12 +1,25 @@
-"use client";
 import { Lock, AlertTriangle } from "lucide-react";
 import { useState } from "react";
-import { useNotificationStore } from "@/store";
 import { updatePassword } from "@/lib";
+import FeedbackModal from "./FeedbackModal";
+import { useNotificationStore } from "@/store";
 
 const Security = () => {
   const notify = useNotificationStore((state) => state.notify);
   const [isSaving, setIsSaving] = useState(false);
+
+  const [feedback, setFeedback] = useState<{
+    isOpen: boolean;
+    type: "success" | "error";
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
+
   // Security State
   const [passwords, setPasswords] = useState({
     current: "",
@@ -30,16 +43,32 @@ const Security = () => {
         currentPassword: passwords.current,
         newPassword: passwords.new,
       });
+
       if (res.type === "error") {
-        notify("error", res.message);
+        setFeedback({
+          isOpen: true,
+          type: "error",
+          title: "Update Failed",
+          message: res.message,
+        });
       } else {
-        notify("success", res.message);
+        setFeedback({
+          isOpen: true,
+          type: "success",
+          title: "Password Updated",
+          message: res.message,
+        });
         setPasswords({ current: "", new: "", confirm: "" });
       }
       setIsSaving(false);
     } catch (e) {
       console.log(e);
-      notify("error", "Something went wrong");
+      setFeedback({
+        isOpen: true,
+        type: "error",
+        title: "Error",
+        message: "Something went wrong",
+      });
       setIsSaving(false);
     }
   };
