@@ -27,7 +27,7 @@ model User {
   paymentMethods   PaymentMethod[]
   disputes         Dispute[]
   auditLogs        AuditLog[]
-  systemNotifications SystemNotification[]
+  // systemNotifications SystemNotification[]
   paymentOtp             Otp?
  sentTransactions     Transaction[] @relation("TransactionSender")
  receivedTransactions Transaction[] @relation("TransactionRecipient")
@@ -171,16 +171,16 @@ model AuditLog {
 
 model SystemNotification {
   id        String   @id @default(uuid())
-  userId    Int
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fromUserId    Int //Sender userId
+  toUserId    Int // Recipient userId
   title     String
   message   String
-  path      String?
+  path      String // Path to redirect to
   type      NotificationType @default(INFO)
   read      Boolean          @default(false)
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
-  @@index([userId,type])
+  @@index([fromUserId,type,toUserId])
   @@index([createdAt])
   @@map("payment_system_notifications")
 }

@@ -1,4 +1,5 @@
 import WalletView from "@/components/WalletView";
+import { getUserWallet } from "@/lib/actions/wallet";
 // import { getUserWallet } from "@/lib/actions/wallet";
 import { getUserSession } from "@/lib/session";
 
@@ -7,8 +8,8 @@ const Wallet = async () => {
   if (!user) {
     return;
   }
-  // const wallet = await getUserWallet(user.id);
-  return <WalletView user={user as User} />;
+  const wallet = await getUserWallet(user.id);
+  return <WalletView user={user as User} wallet={wallet as Wallet} />;
 };
 
 export default Wallet;

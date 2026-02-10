@@ -93,7 +93,7 @@ export const VerifyUserOtp = async ({
     return "Invalid otp";
   }
 
-  const validOtp = verifyOTP(otp, otpData.otpHash);
+  const validOtp = await verifyOTP(otp, otpData.otpHash);
   // console.log("otp data", otpData);
   if (!validOtp) {
     await prisma.otp.update({
@@ -154,7 +154,7 @@ const loginNow = async (id: number) => {
       email: true,
       privilege: true,
       status: true,
-      wallet: true,
+      // wallet: true,
       created_at: true,
       tel: true,
       address: true,
@@ -172,13 +172,13 @@ const loginNow = async (id: number) => {
     created_at: user.created_at?.toDateString()!,
     address: user?.address!,
     tel: user?.tel!,
-    wallet: {
-      ...user.wallet,
-      id: user.wallet?.id!,
-      balance: Number(user.wallet?.balance),
-      createdAt: user.wallet?.createdAt.toDateString()!,
-      updatedAt: user.wallet?.updatedAt.toDateString()!,
-    },
+    // wallet: {
+    //   ...user.wallet,
+    //   id: user.wallet?.id!,
+    //   balance: Number(user.wallet?.balance),
+    //   createdAt: user.wallet?.createdAt.toDateString()!,
+    //   updatedAt: user.wallet?.updatedAt.toDateString()!,
+    // },
   });
   const path =
     user.privilege === "super_admin" ? "/dashboard/admin" : "/dashboard/user";
@@ -235,7 +235,7 @@ export const resetPassword = async (id: number, password: string) => {
         email: true,
         privilege: true,
         status: true,
-        wallet: true,
+        // wallet: true,
         created_at: true,
         tel: true,
         address: true,
@@ -265,13 +265,13 @@ export const resetPassword = async (id: number, password: string) => {
       created_at: user.created_at?.toDateString()!,
       address: user?.address!,
       tel: user?.tel!,
-      wallet: {
-        ...user.wallet,
-        id: user.wallet?.id!,
-        balance: Number(user.wallet?.balance),
-        createdAt: user.wallet?.createdAt.toDateString()!,
-        updatedAt: user.wallet?.updatedAt.toDateString()!,
-      },
+      // wallet: {
+      //   ...user.wallet,
+      //   id: user.wallet?.id!,
+      //   balance: Number(user.wallet?.balance),
+      //   createdAt: user.wallet?.createdAt.toDateString()!,
+      //   updatedAt: user.wallet?.updatedAt.toDateString()!,
+      // },
     });
     path =
       user.privilege === "super_admin" ? "/dashboard/admin" : "/dashboard/user";

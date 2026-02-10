@@ -232,7 +232,7 @@ export const seedTransactions = (
     createdAt: Date;
   }[] = [];
 
-  regularUserIds.forEach((userId) => {
+  regularUserIds.forEach(async (userId) => {
     for (let i = 0; i < 30; i++) {
       const amount = Math.floor(random() * 500000) + 1000;
       const type =
@@ -275,7 +275,7 @@ export const seedTransactions = (
         status: status as TransactionStatus,
         category: categories[Math.floor(random() * categories.length)],
         method: methods[Math.floor(random() * methods.length)],
-        txn_ref: generateTxRef(),
+        txn_ref: await generateTxRef(),
         createdAt: new Date(
           Date.now() - Math.floor(random() * 90 * 24 * 60 * 60 * 1000),
         ),

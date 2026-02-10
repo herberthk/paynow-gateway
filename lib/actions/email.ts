@@ -38,7 +38,7 @@ type Props = {
 };
 
 export const sendOtp = async ({ id, email, name, type = "verify" }: Props) => {
-  const otp = generateOTP();
+  const otp = await generateOTP();
   const otpHash = await hashOTP(otp);
   // 15 minutes expiry
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000);

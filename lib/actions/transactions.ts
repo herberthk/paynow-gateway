@@ -109,112 +109,90 @@ export const getTransactions = async ({
   }
 };
 
-// export const seedTransactions = async () => {
+/**
+ * Create a P2P transaction record
+ * @param senderId - User ID of sender
+ * @param recipientId - User ID of recipient
+ * @param recipientName - Name of recipient
+ * @param amount - Transfer amount
+ * @param currency - Currency (default UGX)
+ * @returns Created transaction
+ */
+export const createP2PTransaction = async ({
+  senderId,
+  recipientId,
+  recipientName,
+  amount,
+  currency = "UGX",
+  txn_ref,
+}: {
+  senderId: number;
+  recipientId: number;
+  recipientName: string;
+  amount: number;
+  currency?: "UGX" | "USD";
+  txn_ref: string;
+}) => {
+  try {
+    const transaction = await prisma.transaction.create({
+      data: {
+        userId: senderId,
+        recipientId,
+        recipientName,
+        amount,
+        currency,
+        type: "TRANSFER",
+        status: "COMPLETED",
+        category: "Transfer",
+        method: "Wallet P2P Transfer",
+        txn_ref,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Transaction recorded successfully",
+      transaction: {
+        id: transaction.id,
+        txn_ref: transaction.txn_ref,
+        amount: transaction.amount.toNumber(),
+        createdAt: transaction.createdAt.toISOString(),
+      },
+    };
+  } catch (error) {
+    console.error("Error creating P2P transaction:", error);
+    return {
+      success: false,
+      message: "Failed to record transaction",
+      transaction: null,
+    };
+  }
+};
+
+// export const createTransaction = async (transaction: Transaction) => {
 //   try {
-//     const transactionCount = await prisma.transaction.count();
-
-//     if (transactionCount > 0) {
-//       return { success: true, message: "Database already populated" };
-//     }
-
-//     // Find or create a user to attach transactions to
-//     let user = await prisma.user.findFirst();
-//     if (!user) {
-//       // Create a default demo user if none exists
-//       user = await prisma.user.create({
-//         data: {
-//           name: "Demo User",
-//           email: "demo@example.com",
-//           status: true,
-//         },
-//       });
-//     }
-
-//     const categories = [
-//       "Transport",
-//       "Rent",
-//       "Utilities",
-//       "Entertainment",
-//       "Groceries",
-//       "Shopping",
-//       "Dining",
-//       "Business",
-//     ];
-//     const methods = [
-//       "MTN MoMo",
-//       "Airtel Money",
-//       "Visa **** 4242",
-//       "Mastercard **** 8899",
-//       "Wallet Transfer",
-//     ];
-//     const recipients = [
-//       "Uber",
-//       "Jumia Food",
-//       "Shell Station",
-//       "National Water",
-//       "Umeme Ltd",
-//       "Netflix",
-//       "Shoprite",
-//       "KFC",
-//       "Cafe Javas",
-//       "Total Energies",
-//     ];
-
-//     const seededRandom = (seed: number) => {
-//       let value = seed;
-//       return () => {
-//         value = (value * 9301 + 49297) % 233280;
-//         return value / 233280;
-//       };
-//     };
-
-//     const random = seededRandom(12345);
-//     const transactions = [];
-//     const notifications = [];
-
-//     for (let i = 0; i < 50; i++) {
-//       const date = new Date(
-//         new Date().getTime() - Math.floor(random() * 60) * 24 * 60 * 60 * 1000,
-//       );
-//       const amount = Math.floor(random() * 200000) + 5000;
-//       const type =
-//         random() > 0.7 ? "PAYMENT" : random() > 0.5 ? "DEPOSIT" : "TRANSFER";
-//       const status = random() > 0.9 ? "FAILED" : "COMPLETED"; // 10% failure rate
-
-//       transactions.push({
-//         userId: user.id,
-//         date: date,
-//         amount: amount,
-//         currency: random() > 0.9 ? "USD" : "UGX",
-//         type: type as TransactionType,
-//         status: status as TransactionStatus,
-//         recipient: recipients[Math.floor(random() * recipients.length)],
-//         category: categories[Math.floor(random() * categories.length)],
-//         method: methods[Math.floor(random() * methods.length)],
-//       });
-
-//       // Generate a notification for some transactions
-//       if (i % 3 === 0) {
-//         notifications.push({
-//           userId: user.id,
-//           title: `${type} ${status === "COMPLETED" ? "Successful" : "Failed"}`,
-//           message: `Your transaction of ${amount} to ${recipients[Math.floor(random() * recipients.length)]} has ${status.toLowerCase()}.`,
-//           type: status === "FAILED" ? "ALERT" : "SUCCESS",
-//           read: false,
-//           createdAt: date, // Match transaction date roughly
-//         });
-//       }
-//     }
-
-//     await prisma.$transaction([
-//       prisma.transaction.createMany({ data: transactions }),
-//       prisma.systemNotification.createMany({ data: notifications as any }),
-//     ]);
-
-//     revalidatePath("/dashboard/user/transactions");
-//     return { success: true, message: "Transactions seeded successfully" };
+//     const createdTransaction = await prisma.transaction.create({
+//       data: transaction,
+//     });
+//     return createdTransaction;
 //   } catch (error) {
-//     console.error("Error seeding transactions:", error);
-//     return { success: false, error: "Failed to seed transactions" };
+//     console.error("Error creating transaction:", error);
+//     return null;
 //   }
 // };
+
+export const updateTransaction = async (
+  id: string,
+  transaction: Transaction,
+) => {
+  try {
+    const updatedTransaction = await prisma.transaction.update({
+      where: { id },
+      data: transaction,
+    });
+    return updatedTransaction;
+  } catch (error) {
+    console.error("Error updating transaction:", error);
+    return null;
+  }
+};

@@ -18,7 +18,7 @@ const Page = async ({ params }: { params: { data: string } }) => {
   }
   const [id, secretHash] = decodedData.split("-");
   // console.log("data", decodedData);
-  const validSecret = verifyOTP(passwordResetSecret!, secretHash);
+  const validSecret = await verifyOTP(passwordResetSecret!, secretHash);
   // console.log("isSecretValid", validSecret);
   if (!validSecret) {
     return redirect("/");

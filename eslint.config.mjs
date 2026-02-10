@@ -9,6 +9,7 @@ const eslintConfig = defineConfig([
     rules: {
       "@typescript-eslint/ban-ts-comment": "off",
       "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/no-non-null-asserted-optional-chain": "off",
     },
   },
   // Override default ignores of eslint-config-next.
