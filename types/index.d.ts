@@ -124,7 +124,7 @@ declare global {
     transactionId: string;
     user: string;
     amount: number;
-    currency: "UGX" | "USD";
+    currency: Currency;
     reason: string;
     status: "OPEN" | "RESOLVED" | "REJECTED";
     date: string;
@@ -136,7 +136,7 @@ declare global {
     name: string;
     type: "PERCENTAGE" | "FIXED";
     value: number;
-    currency?: "UGX" | "USD";
+    currency?: Currency;
     category: "DEPOSIT" | "WITHDRAWAL" | "TRANSFER" | "PAYMENT" | "API";
     active: boolean;
     lastUpdated: string;
@@ -157,6 +157,8 @@ declare global {
     color?: string;
   }
   type SecurityTab = "profile" | "security";
+
+  type Currency = "UGX" | "USD";
 }
 
 // This export is needed to make the file a module
