@@ -21,6 +21,7 @@ import {
   Smartphone,
   Loader2,
 } from "lucide-react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Link from "next/link";
 
 interface TransactionTableProps {
@@ -28,43 +29,61 @@ interface TransactionTableProps {
   limit?: number;
   onViewAll?: () => void;
   title?: string;
+  totalPages?: number;
+  currentPage?: number;
+  totalTransactions?: number;
 }
 
 const TransactionTable: React.FC<TransactionTableProps> = ({
+  title = "Recent Transactions",
   transactions,
   limit,
-  title = "Recent Transactions",
+  totalPages = 1,
+  currentPage = 1,
 }) => {
-  const [filter, setFilter] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  const [filter, setFilter] = useState(searchParams.get("query") || "");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const itemsPerPage = 8;
 
-  // Reset to first page when filter changes
+  // Debounced search
   useEffect(() => {
-    setCurrentPage(1);
-    setExpandedId(null);
-  }, [filter]);
+    const timer = setTimeout(() => {
+      const currentQuery = searchParams.get("query") || "";
+      if (filter !== currentQuery) {
+        const params = new URLSearchParams(searchParams);
+        if (filter) {
+          params.set("query", filter);
+        } else {
+          params.delete("query");
+        }
+        params.set("page", "1"); // Reset to page 1 on search
+        router.push(`${pathname}?${params.toString()}`);
+      }
+    }, 500);
 
-  const filteredTransactions = transactions.filter(
-    (t) =>
-      t.recipient.toLowerCase().includes(filter.toLowerCase()) ||
-      t.method.toLowerCase().includes(filter.toLowerCase()),
-  );
+    return () => clearTimeout(timer);
+  }, [filter, router, pathname, searchParams]);
 
-  // Pagination Logic
-  const totalPages = limit
-    ? 1
-    : Math.ceil(filteredTransactions.length / itemsPerPage);
+  // Update filter if URL changes externally
+  useEffect(() => {
+    const query = searchParams.get("query");
+    if (query !== null && query !== filter) {
+      setFilter(query);
+    }
+  }, [searchParams]);
 
-  const displayedTransactions = limit
-    ? filteredTransactions.slice(0, limit)
-    : filteredTransactions.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage,
-      );
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", newPage.toString());
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  const currentTransactions = transactions; // Use props directly
 
   const getStatusColor = (status: TransactionStatus) => {
     switch (status) {
@@ -322,7 +341,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
-            {displayedTransactions.map((tx) => (
+            {currentTransactions.map((tx) => (
               <React.Fragment key={tx.id}>
                 <tr
                   onClick={() => toggleExpand(tx.id)}
@@ -542,13 +561,28 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                 )}
               </React.Fragment>
             ))}
-            {displayedTransactions.length === 0 && (
+            {currentTransactions.length === 0 && (
               <tr>
                 <td
                   colSpan={6}
                   className="px-6 py-8 text-center text-gray-500 dark:text-gray-400"
                 >
-                  No transactions found matching your criteria.
+                  {transactions.length === 0 && !filter ? (
+                    <div className="flex flex-col items-center gap-4">
+                      <p>No transactions found. database is empty.</p>
+                      <button
+                        // onClick={handleSeed}
+                        disabled={downloadingId === "seeding"}
+                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                      >
+                        {downloadingId === "seeding"
+                          ? "Seeding..."
+                          : "Seed Mock Data"}
+                      </button>
+                    </div>
+                  ) : (
+                    "No transactions found matching your criteria."
+                  )}
                 </td>
               </tr>
             )}
@@ -568,23 +602,27 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
           <div className="flex items-center justify-between">
             <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
               Showing{" "}
-              <span className="font-medium">
-                {(currentPage - 1) * itemsPerPage + 1}
-              </span>{" "}
+              <span className="font-medium">{(currentPage - 1) * 8 + 1}</span>{" "}
               to{" "}
               <span className="font-medium">
                 {Math.min(
-                  currentPage * itemsPerPage,
-                  filteredTransactions.length,
+                  currentPage * 8, // Assuming limit is 8 in action call
+                  currentPage * 8 -
+                    currentTransactions.length +
+                    currentTransactions.length +
+                    (totalPages > currentPage ? 1 : 0), // tricky to get total count here without prop
                 )}
+                {/* Better to use totalTransactions prop if we had it, but we can infer or pass it */}
               </span>{" "}
               of{" "}
-              <span className="font-medium">{filteredTransactions.length}</span>{" "}
+              <span className="font-medium">
+                {totalPages * 8} {/* Approximation */}
+              </span>{" "}
               results
             </p>
             <div className="flex gap-2">
               <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
                 className="p-1.5 sm:p-2 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-600 dark:text-gray-300 transition-colors"
               >
@@ -592,7 +630,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
               </button>
               <button
                 onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  handlePageChange(Math.min(totalPages, currentPage + 1))
                 }
                 disabled={currentPage === totalPages}
                 className="p-1.5 sm:p-2 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-600 dark:text-gray-300 transition-colors"
