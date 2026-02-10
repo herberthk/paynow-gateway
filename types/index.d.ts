@@ -13,6 +13,7 @@ declare global {
   interface Transaction {
     id: string;
     date: string;
+    userId: number;
     amount: number;
     currency: "UGX" | "USD";
     type: TransactionType;
@@ -20,6 +21,7 @@ declare global {
     recipient: string;
     category: string; // e.g., 'Transport', 'Rent', 'Utilities'
     method: string; // e.g., 'MTN Mobile Money', 'Visa **** 4242'
+    txn_ref?: string;
   }
 
   interface Wallet {

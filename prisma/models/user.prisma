@@ -25,11 +25,12 @@ model User {
   is_ghost_user     Boolean         @default(false)
   wallet           Wallet?
   paymentMethods   PaymentMethod[]
-  transactions     Transaction[]
   disputes         Dispute[]
   auditLogs        AuditLog[]
   systemNotifications SystemNotification[]
   paymentOtp             Otp?
+ sentTransactions     Transaction[] @relation("TransactionSender")
+ receivedTransactions Transaction[] @relation("TransactionRecipient")
   @@index([privilege], map: "idx_user_preveledge")
   @@index([id, name, profile], map: "idx_users_covering")
   @@index([id], map: "idx_users_id")
@@ -55,6 +56,7 @@ model Otp{
   expiresAt  DateTime
   createdAt DateTime @default(now())
   attempts Int @default(0)
+  @@index([expiresAt])
   @@map("Payment_otp")
 }
 
@@ -65,40 +67,58 @@ model Wallet {
   balance Decimal  @default(0) @db.Decimal(12, 2)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+  @@index([createdAt])
   @@map("payment_wallets")
 }
 
 model PaymentMethod {
   id        String @id @default(uuid())
-  userId    Int @unique
+  userId    Int
   user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
   type      PaymentMethodType
   name      String
-  detail    String // e.g., "+256 772 *** 888" or "**** 4242"
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  detail    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId,createdAt])
   @@map("payment_methods")
 }
 
+
 model Transaction {
-  id        String            @id @default(uuid())
+  id        String  @id @default(uuid())
+
   userId    Int
-  user      User              @relation(fields: [userId], references: [id])
-  date      DateTime          @default(now())
+  sender    User    @relation("TransactionSender", fields: [userId], references: [id], onDelete: Cascade)
+
+  recipientId Int
+  recipient   User   @relation("TransactionRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  recipientName String
   amount    Decimal           @db.Decimal(12, 2)
-  currency  String            @default("UGX") // UGX or USD
+  currency  Currency          @default(UGX)
   type      TransactionType
   status    TransactionStatus @default(PENDING)
-  recipient String
-  category  String // e.g., 'Transport', 'Rent', 'Utilities'
-  method    String // e.g., 'MTN Mobile Money', 'Visa **** 4242'
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  txn_ref   String            @unique
+  category  String
+  method    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deleted_at DateTime?
+  disputes  Dispute[]
 
-  disputes Dispute[]
-  @@index([userId])
+  @@index([recipientId])
+  @@index([recipientName])
+  @@index([status])
+  @@index([type])
+  @@index([method])
+  @@index([category])
+  @@index([txn_ref])
+  @@index([userId, createdAt])
   @@map("payment_transactions")
 }
+
 
 model Dispute {
   id            String        @id @default(uuid())
@@ -107,13 +127,15 @@ model Dispute {
   userId        Int
   user          User          @relation(fields: [userId], references: [id])
   amount        Decimal       @db.Decimal(12, 2)
-  currency      String        @default("UGX")
+  currency      Currency        @default(UGX)
   reason        String
   status        DisputeStatus @default(OPEN)
   evidence      String?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+  deleted_at DateTime?
   @@index([userId])
+  @@index([createdAt,status])
   @@map("payment_disputes")
 }
 
@@ -122,11 +144,12 @@ model Fee {
   name        String
   type        FeeType
   value       Decimal     @db.Decimal(12, 2)
-  currency    String?     @default("UGX")
+  currency    Currency    @default(UGX)
   category    FeeCategory
   active      Boolean     @default(true)
   lastUpdated DateTime    @updatedAt
   createdAt   DateTime    @default(now())
+  deleted_at DateTime?
   @@map("payment_fees")
 }
 
@@ -135,11 +158,14 @@ model AuditLog {
   action    String
   adminId   Int
   admin     User     @relation(fields: [adminId], references: [id])
-  timestamp DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   details   String
   ip        String?
   path      String?
   @@index([adminId])
+  @@index([createdAt])
+  deleted_at DateTime?
   @@map("payment_audit_logs")
 }
 
@@ -153,7 +179,9 @@ model SystemNotification {
   type      NotificationType @default(INFO)
   read      Boolean          @default(false)
   createdAt DateTime         @default(now())
-  @@index([userId])
+  updatedAt DateTime         @updatedAt
+  @@index([userId,type])
+  @@index([createdAt])
   @@map("payment_system_notifications")
 }
 
@@ -207,3 +235,9 @@ enum TransactionStatus {
   FAILED
   DISPUTED
 }
+
+enum Currency {
+  UGX
+  USD
+}
+  

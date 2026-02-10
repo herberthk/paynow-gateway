@@ -2,14 +2,20 @@
 import DashboardCharts from "@/components/DashboardCharts";
 import StatCard from "@/components/StatCard";
 import TransactionTable from "@/components/TransactionTable";
-import { transactions } from "@/services/mockData";
 import { stats } from "@/constants";
 
 type UserProps = {
   user: User;
-  // wallet: Wallet;
+  transactions: Transaction[];
+  totalPages: number;
+  totalTransactions: number;
 };
-const UserDashboard = ({ user }: UserProps) => {
+const UserDashboard = ({
+  user,
+  transactions,
+  totalPages,
+  totalTransactions,
+}: UserProps) => {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
@@ -33,7 +39,12 @@ const UserDashboard = ({ user }: UserProps) => {
       <DashboardCharts />
 
       <div>
-        <TransactionTable transactions={transactions} limit={5} />
+        <TransactionTable
+          transactions={transactions}
+          limit={5}
+          totalPages={totalPages}
+          totalTransactions={totalTransactions}
+        />
       </div>
     </div>
   );

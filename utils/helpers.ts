@@ -48,7 +48,23 @@ export const verifyOTPWithSalt = (
   );
 };
 
-// console.log("Otp", generateOTP());
+//generate random transaction reference of 8 characters alphanumeric it should be prefixed with TX_
+export const generateTransactionReference = (length = 8): string =>
+  crypto.randomBytes(length).toString("hex").toUpperCase();
+
+export const generateTxRef = (length = 8) => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(length));
+
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += chars[bytes[i] % chars.length];
+  }
+
+  return `TX_${result}`;
+};
+
+console.log("Transaction Reference", generateTxRef());
 // const otp = "222886";
 // console.log("Otp", hashOTP(otp));
 // const hash = "4d75a220ec79632b861ae05290b4eccc813ee63ed96020f4aba0d12a8e5482bb";
