@@ -36,7 +36,7 @@ export const getTransactions = async ({
               {
                 ...tx,
                 amount: tx.amount.toNumber(),
-                date: tx.createdAt.toISOString(),
+                createdAt: tx.createdAt.toISOString(),
                 currency: tx.currency as Currency,
                 txn_ref: tx.txn_ref!,
               },
@@ -50,7 +50,7 @@ export const getTransactions = async ({
     if (query) {
       //@ts-ignore
       where.OR = [
-        { recipient: { contains: query, mode: "insensitive" } },
+        { recipientName: { contains: query, mode: "insensitive" } },
         { method: { contains: query, mode: "insensitive" } },
         { category: { contains: query, mode: "insensitive" } },
       ];
@@ -84,10 +84,10 @@ export const getTransactions = async ({
     const serializedTransactions: Transaction[] = transactions.map((tx) => ({
       ...tx,
       amount: tx.amount.toNumber(),
-      date: tx.createdAt.toISOString(),
+      createdAt: tx.createdAt.toISOString(),
       // Ensure type alignment
-      type: tx.type,
-      status: tx.status,
+      type: tx.type as TransactionType,
+      status: tx.status as TransactionStatus,
       currency: tx.currency as Currency,
       txn_ref: tx.txn_ref!,
     }));

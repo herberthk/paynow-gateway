@@ -177,7 +177,7 @@ const Header: React.FC<UserProps> = ({ user }) => {
           >
             <Bell size={20} />
             {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-2 flex p-1 items-center text-center justify-center rounded-full bg-red-500 text-[11px] font-medium text-white ring-2 ring-white dark:ring-slate-800 animate-pulse">
+              <span className="absolute -top-0.5 -right-2 flex min-w-[20px] min-h-[20px] items-center text-center justify-center rounded-full bg-red-500 text-[11px] font-medium text-white ring-2 ring-white dark:ring-slate-800 animate-pulse">
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
