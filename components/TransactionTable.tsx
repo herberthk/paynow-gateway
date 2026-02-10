@@ -319,6 +319,49 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
               className="pl-9 pr-4 py-2 bg-white dark:bg-slate-700 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-600 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none w-full sm:w-64 placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
+          <div className="flex gap-2">
+            <select
+              value={searchParams.get("type") || "ALL"}
+              onChange={(e) => {
+                const params = new URLSearchParams(searchParams);
+                if (e.target.value === "ALL") {
+                  params.delete("type");
+                } else {
+                  params.set("type", e.target.value);
+                }
+                params.set("page", "1");
+                router.push(`${pathname}?${params.toString()}`);
+              }}
+              className="px-3 py-2 bg-white dark:bg-slate-700 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-600 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            >
+              <option value="ALL">All Types</option>
+              <option value="DEPOSIT">Deposit</option>
+              <option value="WITHDRAWAL">Withdrawal</option>
+              <option value="TRANSFER">Transfer</option>
+              <option value="PAYMENT">Payment</option>
+            </select>
+
+            <select
+              value={searchParams.get("status") || "ALL"}
+              onChange={(e) => {
+                const params = new URLSearchParams(searchParams);
+                if (e.target.value === "ALL") {
+                  params.delete("status");
+                } else {
+                  params.set("status", e.target.value);
+                }
+                params.set("page", "1");
+                router.push(`${pathname}?${params.toString()}`);
+              }}
+              className="px-3 py-2 bg-white dark:bg-slate-700 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-600 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            >
+              <option value="ALL">All Status</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="PENDING">Pending</option>
+              <option value="FAILED">Failed</option>
+              <option value="DISPUTED">Disputed</option>
+            </select>
+          </div>
           <button className="p-2 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-300 transition-colors">
             <Filter size={18} />
           </button>
@@ -442,18 +485,18 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                           {/* Col 1: Transaction Summary */}
                           <div className="space-y-4">
                             <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
-                              Transaction ID
+                              Transaction Reference
                             </h4>
                             <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-2 rounded border border-gray-200 dark:border-slate-700 w-fit">
                               <code className="text-xs font-mono text-gray-700 dark:text-gray-300">
-                                {tx.id}
+                                {tx.txn_ref}
                               </code>
                               <button
-                                onClick={(e) => copyToClipboard(tx.id, e)}
+                                onClick={(e) => copyToClipboard(tx.txn_ref!, e)}
                                 className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                                 title="Copy ID"
                               >
-                                {copiedId === tx.id ? (
+                                {copiedId === tx.txn_ref ? (
                                   <CheckCircle2
                                     size={14}
                                     className="text-green-500"

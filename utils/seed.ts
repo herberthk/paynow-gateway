@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
+import { generateTxRef } from "./helpers";
 
 const hashPassword = async (password: string) =>
   await bcrypt.hash(password, 10);
@@ -85,7 +86,7 @@ export const seedWallets = (userIds: number[]) => [
     balance: 3200000, // 3,200,000 UGX
   },
 ];
-// Seed data for Payment Methods (one per user due to @unique constraint)
+
 export const seedPaymentMethods = (userIds: number[]) => [
   {
     userId: userIds[0],
@@ -119,61 +120,93 @@ export const seedPaymentMethods = (userIds: number[]) => [
   },
 ];
 
-// Seed data for Transactions (one per user due to @unique constraint)
-export const seedTransactions = (userIds: number[]) => [
-  {
-    userId: userIds[0],
-    amount: 50000,
-    currency: "UGX",
-    type: "PAYMENT" as const,
-    status: "COMPLETED" as const,
-    recipient: "Uber Uganda",
-    category: "Transport",
-    method: "MTN Mobile Money",
-  },
-  {
-    userId: userIds[1],
-    amount: 25000,
-    currency: "UGX",
-    type: "DEPOSIT" as const,
-    status: "COMPLETED" as const,
-    recipient: "Self",
-    category: "Top-up",
-    method: "Airtel Money",
-  },
-  {
-    userId: userIds[2],
-    amount: 75000,
-    currency: "UGX",
-    type: "PAYMENT" as const,
-    status: "DISPUTED" as const,
-    recipient: "Total Energies",
-    category: "Transport",
-    method: "Stanbic Bank",
-  },
-  {
-    userId: userIds[3],
-    amount: 28000,
-    currency: "UGX",
-    type: "PAYMENT" as const,
-    status: "COMPLETED" as const,
-    recipient: "KFC",
-    category: "Dining",
-    method: "MTN Mobile Money",
-  },
-  {
-    userId: userIds[4],
-    amount: 500000,
-    currency: "UGX",
-    type: "DEPOSIT" as const,
-    status: "COMPLETED" as const,
-    recipient: "Self",
-    category: "Top-up",
-    method: "Airtel Money",
-  },
-];
+// Seed data for Transactions (30 per user)
+export const seedTransactions = (userIds: number[]) => {
+  const categories = [
+    "Transport",
+    "Rent",
+    "Utilities",
+    "Entertainment",
+    "Groceries",
+    "Shopping",
+    "Dining",
+    "Business",
+    "Health",
+    "Education",
+  ];
+  const methods = [
+    "MTN Mobile Money",
+    "Airtel Money",
+    "Visa **** 4242",
+    "Mastercard **** 8899",
+    "Stanbic Bank",
+    "KCB Bank",
+    "Bank of Africa",
+  ];
+  const recipients = [
+    "Uber Uganda",
+    "Jumia Food",
+    "Shell Station",
+    "National Water",
+    "Umeme Ltd",
+    "Netflix",
+    "Shoprite",
+    "KFC",
+    "Cafe Javas",
+    "Total Energies",
+    "SafeBoda",
+    "Aga Khan Hospital",
+    "MultiChoice",
+    "LycaMobile",
+  ];
 
-// Seed data for Disputes (one per user due to @unique constraint)
+  const seededRandom = (seed: number) => {
+    let value = seed;
+    return () => {
+      value = (value * 9301 + 49297) % 233280;
+      return value / 233280;
+    };
+  };
+
+  const random = seededRandom(12345);
+  const transactions: Transaction[] = [];
+
+  userIds.forEach((userId) => {
+    for (let i = 0; i < 30; i++) {
+      const amount = Math.floor(random() * 500000) + 1000;
+      const type =
+        random() > 0.7
+          ? "PAYMENT"
+          : random() > 0.4
+            ? "TRANSFER"
+            : random() > 0.2
+              ? "DEPOSIT"
+              : "WITHDRAWAL";
+      const status =
+        random() > 0.9 ? "FAILED" : random() > 0.8 ? "PENDING" : "COMPLETED";
+
+      transactions.push({
+        userId,
+        amount,
+        currency: random() > 0.9 ? "USD" : "UGX",
+        type: type as TransactionType,
+        status: status as TransactionStatus,
+        recipient: recipients[Math.floor(random() * recipients.length)],
+        category: categories[Math.floor(random() * categories.length)],
+        method: methods[Math.floor(random() * methods.length)],
+        txn_ref: generateTxRef(),
+        // We'll set a spread of dates across the last 3 months
+        //@ts-ignore
+        createdAt: new Date(
+          Date.now() - Math.floor(random() * 90 * 24 * 60 * 60 * 1000),
+        ),
+      });
+    }
+  });
+
+  return transactions;
+};
+
 export const seedDisputes = (userIds: number[], transactionIds: string[]) => [
   {
     transactionId: transactionIds[2], // The disputed transaction (userIds[2])
@@ -238,7 +271,6 @@ export const seedFees = [
   },
 ];
 
-// Seed data for Audit Logs (one per admin due to @unique constraint)
 export const seedAuditLogs = (adminId: number) => [
   {
     action: "Fee Change",
@@ -248,7 +280,6 @@ export const seedAuditLogs = (adminId: number) => [
   },
 ];
 
-// Seed data for System Notifications (one per user due to @unique constraint)
 export const seedSystemNotifications = (userIds: number[]) => [
   {
     userId: userIds[0],
@@ -257,6 +288,7 @@ export const seedSystemNotifications = (userIds: number[]) => [
       "Your account has been successfully created. Start making payments today!",
     type: "SUCCESS" as const,
     read: true,
+    path: "/dashboard/user/settings",
   },
   {
     userId: userIds[1],
@@ -264,6 +296,7 @@ export const seedSystemNotifications = (userIds: number[]) => [
     message: "Your payment of UGX 25,000 deposit is being processed.",
     type: "INFO" as const,
     read: false,
+    path: "/dashboard/user/settings",
   },
   {
     userId: userIds[2],
@@ -272,6 +305,7 @@ export const seedSystemNotifications = (userIds: number[]) => [
       "A dispute has been opened for your transaction. We will investigate and get back to you.",
     type: "ALERT" as const,
     read: false,
+    path: "/dashboard/user/settings",
   },
   {
     userId: userIds[3],
@@ -279,6 +313,7 @@ export const seedSystemNotifications = (userIds: number[]) => [
     message: "Your payment of UGX 28,000 to KFC was successful.",
     type: "SUCCESS" as const,
     read: true,
+    path: "/dashboard/user/settings",
   },
   {
     userId: userIds[4],
@@ -286,6 +321,7 @@ export const seedSystemNotifications = (userIds: number[]) => [
     message: "Your deposit of UGX 500,000 was successful.",
     type: "SUCCESS" as const,
     read: true,
+    path: "/dashboard/user/settings",
   },
 ];
 

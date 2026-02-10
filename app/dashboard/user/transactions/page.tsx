@@ -5,11 +5,15 @@ const Transactions = async (props: {
   searchParams?: Promise<{
     query?: string;
     page?: string;
+    status?: string;
+    type?: string;
   }>;
 }) => {
   const searchParams = await props.searchParams;
   const query = searchParams?.query || "";
   const currentPage = Number(searchParams?.page) || 1;
+  const status = searchParams?.status;
+  const type = searchParams?.type;
   const limit = 8;
 
   const { transactions, totalPages, totalTransactions } = await getTransactions(
@@ -17,6 +21,8 @@ const Transactions = async (props: {
       page: currentPage,
       limit,
       query,
+      status,
+      type,
     },
   );
 

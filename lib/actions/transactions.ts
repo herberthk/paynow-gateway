@@ -25,8 +25,30 @@ export const getTransactions = async ({
 
     const where = {};
 
+    if (query?.startsWith("TX_")) {
+      const tx = await prisma.transaction.findUnique({
+        where: { txn_ref: query },
+      });
+
+      return {
+        transactions: tx
+          ? [
+              {
+                ...tx,
+                amount: tx.amount.toNumber(),
+                date: tx.createdAt.toISOString(),
+                currency: tx.currency as Currency,
+                txn_ref: tx.txn_ref!,
+              },
+            ]
+          : [],
+        totalPages: 1,
+        currentPage: 1,
+        totalTransactions: tx ? 1 : 0,
+      };
+    }
     if (query) {
-      // @ts-ignore
+      //@ts-ignore
       where.OR = [
         { recipient: { contains: query, mode: "insensitive" } },
         { method: { contains: query, mode: "insensitive" } },
@@ -35,12 +57,12 @@ export const getTransactions = async ({
     }
 
     if (status && status !== "ALL") {
-      // @ts-ignore
+      //@ts-ignore
       where.status = status;
     }
 
     if (type && type !== "ALL") {
-      // @ts-ignore
+      //@ts-ignore
       where.type = type;
     }
 
@@ -50,7 +72,7 @@ export const getTransactions = async ({
         skip,
         take: limit,
         orderBy: {
-          date: "desc",
+          createdAt: "desc",
         },
       }),
       prisma.transaction.count({ where }),
@@ -62,13 +84,12 @@ export const getTransactions = async ({
     const serializedTransactions: Transaction[] = transactions.map((tx) => ({
       ...tx,
       amount: tx.amount.toNumber(),
-      date: tx.date.toISOString(),
-      createdAt: tx.createdAt.toISOString(),
-      updatedAt: tx.updatedAt.toISOString(),
+      date: tx.createdAt.toISOString(),
       // Ensure type alignment
       type: tx.type,
       status: tx.status,
       currency: tx.currency as Currency,
+      txn_ref: tx.txn_ref!,
     }));
 
     return {

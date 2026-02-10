@@ -16,7 +16,7 @@ const Page = async ({ params }: { params: { data: string } }) => {
   }
   const [id, email, name, action] = decodedId.split("-");
 
-  // console.log("decodedId", decodedId);
+  // console.log("otp data", { id, email, name, action });
   return (
     <Otp
       id={id}
