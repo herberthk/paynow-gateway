@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "bunx prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "generate": "bunx prisma generate",
@@ -43,7 +43,8 @@
     "recharts": "^3.5.1",
     "remark-gfm": "4",
     "tailwind-merge": "^3.4.0",
-    "zustand": "^5.0.10"
+    "zustand": "^5.0.10",
+    "prisma": "^7.3.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -56,7 +57,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
-    "prisma": "^7.3.0",
     "react-email": "^5.2.5",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
