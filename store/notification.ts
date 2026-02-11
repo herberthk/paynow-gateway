@@ -3,10 +3,7 @@ import { create } from "zustand";
 
 type State = {
   notifications: Notifications[];
-  notify: (
-    type: "success" | "error" | "info" | "warning",
-    message: string,
-  ) => void;
+  notify: (type: NotificationType, message: string) => void;
   removeNotification: (id: string) => void;
 };
 

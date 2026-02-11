@@ -12,7 +12,7 @@ import {
   Shield,
 } from "lucide-react";
 import NotificationPopup from "./NotificationPopup";
-import { useThemeStore } from "@/store";
+import { useThemeStore, useTransactionStore } from "@/store";
 import { useAppStore, useNotificationStore } from "@/store";
 import { logout } from "@/lib";
 import {
@@ -39,6 +39,7 @@ const Header: React.FC<UserProps> = ({ user }) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const totalBalance = useTransactionStore((state) => state.totalBalance);
   // const [initialLoad, setInitialLoad] = useState(true);
 
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -51,7 +52,7 @@ const Header: React.FC<UserProps> = ({ user }) => {
         getNotifications({ userId: user.id, limit: 4 }),
         getUnreadNotificationsCount({ userId: user.id }),
       ]);
-      setNotifications(notifications as SystemNotification[]);
+      setNotifications(notifications);
       setUnreadCount(count);
     } catch (error) {
       console.error("Failed to fetch notifications", error);
@@ -73,7 +74,7 @@ const Header: React.FC<UserProps> = ({ user }) => {
     await markAllNotificationsAsRead({ userId: user.id });
     await fetchData(); // Refresh to ensure state sync, or optimistically update
     setIsLoading(false);
-    notify("success", "All notifications marked as read");
+    notify("SUCCESS", "All notifications marked as read");
   };
 
   const handleClear = async () => {
@@ -82,7 +83,7 @@ const Header: React.FC<UserProps> = ({ user }) => {
     await deleteAllNotifications({ userId: user.id });
     await fetchData();
     setIsLoading(false);
-    notify("success", "Notifications cleared");
+    notify("SUCCESS", "Notifications cleared");
   };
 
   // Close popup when clicking outside
@@ -117,7 +118,7 @@ const Header: React.FC<UserProps> = ({ user }) => {
   };
   const handleLogout = async () => {
     await logout();
-    notify("info", "You have been logged out.");
+    notify("INFO", "You have been logged out.");
   };
   // useEffect(() => {
   //   if (isNotificationsOpen) {
@@ -254,7 +255,7 @@ const Header: React.FC<UserProps> = ({ user }) => {
                     <span>Balance</span>
                   </div>
                   <span className="font-bold text-indigo-600 dark:text-indigo-400 text-sm">
-                    UGX {user?.wallet?.balance.toLocaleString()}
+                    {totalBalance}
                   </span>
                 </div>
 
