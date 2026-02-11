@@ -1,3 +1,4 @@
+import { type LucideIcon } from "lucide-react";
 declare global {
   type UserRole = "USER" | "ADMIN";
 
@@ -162,6 +163,17 @@ declare global {
   type SecurityTab = "profile" | "security";
 
   type Currency = "UGX" | "USD";
+
+  type Trend = "up" | "down";
+  type DashboardStat = {
+    title: string;
+    value: string;
+    subValue?: string;
+    icon: string;
+    color: "blue" | "green" | "purple" | "orange";
+    trend?: Trend;
+    trendValue?: string;
+  };
 }
 
 // This export is needed to make the file a module

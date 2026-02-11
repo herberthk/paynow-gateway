@@ -1,20 +1,37 @@
 "use client";
+
 import DashboardCharts from "@/components/DashboardCharts";
 import StatCard from "@/components/StatCard";
 import TransactionTable from "@/components/TransactionTable";
-import { stats } from "@/constants";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  CreditCard,
+  Wallet as WalletIcon,
+  type LucideIcon,
+} from "lucide-react";
 
 type UserProps = {
   user: User;
   transactions: Transaction[];
   totalPages: number;
   totalTransactions: number;
+  stats: DashboardStat[]; // Changed from importing stats
 };
+
+const iconMap: Record<string, LucideIcon> = {
+  Wallet: WalletIcon,
+  ArrowUpRight: ArrowUpRight,
+  ArrowDownLeft: ArrowDownLeft,
+  CreditCard: CreditCard,
+};
+
 const UserDashboard = ({
   user,
   transactions,
   totalPages,
   totalTransactions,
+  stats,
 }: UserProps) => {
   return (
     <div className="space-y-6">
@@ -28,7 +45,8 @@ const UserDashboard = ({
             key={i}
             title={stat.title}
             value={stat.value}
-            icon={stat.icon}
+            subValue={stat.subValue}
+            icon={iconMap[stat.icon]}
             color={stat.color}
             trend={stat.trend}
             trendValue={stat.trendValue}

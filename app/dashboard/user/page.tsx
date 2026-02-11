@@ -1,5 +1,6 @@
 import UserDashboard from "@/components/UserDashboard";
 import { getUserSession } from "@/lib";
+import { getDashboardStats } from "@/lib/actions/dashboard";
 import { getTransactions } from "@/lib/actions/transactions";
 
 const UserDashboardPage = async (props: {
@@ -22,21 +23,25 @@ const UserDashboardPage = async (props: {
   const type = searchParams?.type;
   const limit = 5;
 
-  const { transactions, totalPages, totalTransactions } = await getTransactions(
-    {
-      page: currentPage,
-      limit,
-      query,
-      status,
-      type,
-    },
-  );
+  const [{ transactions, totalPages, totalTransactions }, dashboardStats] =
+    await Promise.all([
+      getTransactions({
+        page: currentPage,
+        limit,
+        query,
+        status,
+        type,
+      }),
+      getDashboardStats(user.id),
+    ]);
+
   return (
     <UserDashboard
       user={user as User}
       transactions={transactions}
       totalPages={totalPages}
       totalTransactions={totalTransactions}
+      stats={dashboardStats}
     />
   );
 };
