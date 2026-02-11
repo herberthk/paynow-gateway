@@ -29,7 +29,6 @@ export const updatePassword = async ({
     });
     const isPasswordValid = await bcrypt.compare(
       currentPassword,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
       user?.password!,
     );
     if (!isPasswordValid) {
@@ -48,10 +47,11 @@ export const updatePassword = async ({
         password: hashedPassword,
       },
     });
+    // TODO: Add a notification for the user
     await prisma.systemNotification.create({
       data: {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
-        userId: user?.id!,
+        toUserId: user?.id!,
+        fromUserId: user?.id!,
         title: "Password reset successfully",
         message: "Your password has been reset successfully",
         type: "INFO",
@@ -103,7 +103,7 @@ export const updateUserInfo = async ({
       },
       data: {
         name,
-        // email, Email update will be done later
+        // email, TODO: Email update will be done later
         tel,
         address,
       },
@@ -114,10 +114,11 @@ export const updateUserInfo = async ({
       },
     });
 
+    // TODO: Add a notification for the user
     await prisma.systemNotification.create({
       data: {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
-        userId: user?.id!,
+        toUserId: user?.id!,
+        fromUserId: user?.id!,
         title: "Profile information updated successfully",
         message: "Your profile information has been updated successfully",
         type: "INFO",

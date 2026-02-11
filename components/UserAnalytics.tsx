@@ -15,13 +15,19 @@ import {
   Area,
   Legend,
 } from "recharts";
-import { userSpendingData, categoryData } from "@/services/mockData";
 import {
   DollarSign,
   Wallet,
   PieChart as PieIcon,
   Calendar,
 } from "lucide-react";
+
+type AnalyticsProps = {
+  cashFlowData: { name: string; income: number; spend: number }[];
+  categoryData: { name: string; value: number; color: string }[];
+  totalIncome: number;
+  totalSpent: number;
+};
 
 const CustomTooltip = ({
   active,
@@ -59,7 +65,13 @@ const CustomTooltip = ({
   }
   return null;
 };
-const UserAnalytics: React.FC = () => {
+
+const UserAnalytics: React.FC<AnalyticsProps> = ({
+  cashFlowData,
+  categoryData,
+  totalIncome,
+  totalSpent,
+}) => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -94,7 +106,7 @@ const UserAnalytics: React.FC = () => {
                 Total Income
               </p>
               <p className="font-bold text-green-600 dark:text-green-400">
-                +UGX 700k
+                +UGX {(totalIncome / 1000).toFixed(1)}k
               </p>
             </div>
             <div className="text-right">
@@ -102,7 +114,7 @@ const UserAnalytics: React.FC = () => {
                 Total Spent
               </p>
               <p className="font-bold text-red-500 dark:text-red-400">
-                -UGX 399k
+                -UGX {(totalSpent / 1000).toFixed(1)}k
               </p>
             </div>
           </div>
@@ -110,7 +122,7 @@ const UserAnalytics: React.FC = () => {
 
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={userSpendingData}>
+            <AreaChart data={cashFlowData}>
               <defs>
                 <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10B981" stopOpacity={0.1} />
@@ -208,13 +220,17 @@ const UserAnalytics: React.FC = () => {
               </ResponsiveContainer>
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
                 <span className="block text-xl font-bold text-gray-900 dark:text-white">
-                  {Math.round(
-                    categoryData.reduce((acc, curr) => acc + curr.value, 0) /
-                      categoryData.length,
-                  )}
+                  {categoryData.length > 0
+                    ? Math.round(
+                        categoryData.reduce(
+                          (acc, curr) => acc + curr.value,
+                          0,
+                        ) / categoryData.length,
+                      ).toLocaleString()
+                    : 0}
                 </span>
                 <span className="block text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                  Avg Score
+                  Avg Spend
                 </span>
               </div>
             </div>
@@ -222,30 +238,34 @@ const UserAnalytics: React.FC = () => {
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                 Top spending categories
               </p>
-              {categoryData.slice(0, 5).map((category, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between text-sm"
-                >
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: category.color }}
-                    />
-                    <span className="text-gray-600 dark:text-gray-300">
-                      {category.name}
+              {categoryData.length > 0 ? (
+                categoryData.slice(0, 5).map((category, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: category.color }}
+                      />
+                      <span className="text-gray-600 dark:text-gray-300">
+                        {category.name}
+                      </span>
+                    </div>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {Math.round(
+                        (category.value /
+                          categoryData.reduce((a, b) => a + b.value, 0)) *
+                          100,
+                      )}
+                      %
                     </span>
                   </div>
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {Math.round(
-                      (category.value /
-                        categoryData.reduce((a, b) => a + b.value, 0)) *
-                        100,
-                    )}
-                    %
-                  </span>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-gray-400 italic">No spending data</p>
+              )}
             </div>
           </div>
         </div>
@@ -263,7 +283,7 @@ const UserAnalytics: React.FC = () => {
 
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={userSpendingData}>
+              <BarChart data={cashFlowData}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   vertical={false}
