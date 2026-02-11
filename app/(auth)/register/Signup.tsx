@@ -46,7 +46,7 @@ const Signup = () => {
 
     // Set default tab based on role
     // setActiveTab(role === UserRole.ADMIN ? "admin-overview" : "dashboard");
-    notify("success", `Welcome back, ${name}!`);
+    notify("SUCCESS", `Welcome back, ${name}!`);
     const path = role === "ADMIN" ? "/dashboard/admin" : "/dashboard/user";
     console.log("path", path);
     router.push(path);

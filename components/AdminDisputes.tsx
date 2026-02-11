@@ -47,7 +47,7 @@ const AdminDisputes = () => {
     );
     setSelectedDispute(null);
     notify(
-      decision === "RESOLVED" ? "success" : "info",
+      decision === "RESOLVED" ? "SUCCESS" : "INFO",
       decision === "RESOLVED"
         ? "Dispute resolved and refund processed."
         : "Dispute rejected.",
@@ -60,13 +60,13 @@ const AdminDisputes = () => {
     ) {
       setDisputes(disputes.filter((d) => d.id !== id));
       setSelectedDispute(null);
-      notify("info", "Dispute record deleted.");
+      notify("INFO", "Dispute record deleted.");
     }
   };
 
   const handleCreateDispute = () => {
     if (!newDispute.user || !newDispute.reason || !newDispute.amount) {
-      notify("error", "Please fill in all required fields.");
+      notify("ALERT", "Please fill in all required fields.");
       return;
     }
 
@@ -94,7 +94,7 @@ const AdminDisputes = () => {
       status: "OPEN",
       transactionId: "",
     });
-    notify("success", "New dispute ticket created successfully.");
+    notify("SUCCESS", "New dispute ticket created successfully.");
   };
 
   const filteredDisputes = disputes.filter((d) => {

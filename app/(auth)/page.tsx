@@ -21,7 +21,7 @@ const LoginPage = () => {
     try {
       const result = await login(email, password);
       if (result) {
-        notify("error", result);
+        notify("ALERT", result);
       }
       console.log("result", result);
       setIsLoading(false);

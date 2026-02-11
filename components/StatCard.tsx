@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { type LucideIcon, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 const StatCard: React.FC<StatCardProps> = ({
   title,

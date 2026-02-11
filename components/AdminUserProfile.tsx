@@ -51,7 +51,7 @@ const AdminUserProfile: FC<Props> = ({ user }) => {
   // In a real app, this would be an API call
   const userTransactions = allTransactions.filter(
     (t) =>
-      t.recipient === user.name ||
+      t.recipientName === user.name ||
       t.id.includes(String(currentUser.id)) ||
       // eslint-disable-next-line react-hooks/purity
       Math.random() > 0.7, // Mocking ownership
@@ -59,13 +59,13 @@ const AdminUserProfile: FC<Props> = ({ user }) => {
 
   const handleSaveProfile = () => {
     setIsEditing(false);
-    notify("success", "User profile updated successfully.");
+    notify("SUCCESS", "User profile updated successfully.");
   };
 
   const toggleUserStatus = () => {
     // Determine logic for suspension (Mock)
     const action = "suspended";
-    notify("warning", `User has been ${action}.`);
+    notify("ALERT", `User has been ${action}.`);
   };
 
   const handleAddNote = () => {
@@ -78,7 +78,7 @@ const AdminUserProfile: FC<Props> = ({ user }) => {
     };
     setNotes([newNote, ...notes]);
     setAdminNote("");
-    notify("success", "Note added to user file.");
+    notify("SUCCESS", "Note added to user file.");
   };
 
   return (
@@ -355,14 +355,14 @@ const AdminUserProfile: FC<Props> = ({ user }) => {
                         <div className="flex gap-2">
                           <button
                             onClick={() =>
-                              notify("success", "Document approved")
+                              notify("SUCCESS", "Document approved")
                             }
                             className="px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
                           >
                             Approve
                           </button>
                           <button
-                            onClick={() => notify("error", "Document rejected")}
+                            onClick={() => notify("ALERT", "Document rejected")}
                             className="px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
                           >
                             Reject

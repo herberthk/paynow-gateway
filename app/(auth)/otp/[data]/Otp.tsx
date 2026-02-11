@@ -33,7 +33,7 @@ const Otp: FC<Props> = ({ id, name, email, action }) => {
     setIsLoading(true);
     if (!otp) {
       setIsLoading(false);
-      notify("error", `Please enter otp`);
+      notify("ALERT", `Please enter otp`);
       setIsOTPinValid(true);
       return;
     }
@@ -43,9 +43,9 @@ const Otp: FC<Props> = ({ id, name, email, action }) => {
       console.log("result", result);
       if (result === "Invalid otp") {
         setIsLoading(false);
-        notify("error", `The otp you entered is invalid`);
-        notify("info", `Check your email ${email}`);
-        notify("info", `For the correct otp and try again`);
+        notify("ALERT", `The otp you entered is invalid`);
+        notify("INFO", `Check your email ${email}`);
+        notify("INFO", `For the correct otp and try again`);
         setIsOTPinValid(true);
         setTimeout(() => {
           setOtp("");
@@ -53,7 +53,7 @@ const Otp: FC<Props> = ({ id, name, email, action }) => {
         return;
       }
       setIsLoading(false);
-      notify("success", `Verified successfully`);
+      notify("SUCCESS", `Verified successfully`);
     } catch (error) {
       console.log("error", error);
       setIsLoading(false);
@@ -70,22 +70,22 @@ const Otp: FC<Props> = ({ id, name, email, action }) => {
       console.log("sent", sent);
       if (!sent) {
         setIsResendingOTP(false);
-        notify("error", `Failed to send otp`);
+        notify("ALERT", `Failed to send otp`);
         return;
       }
       setIsResendingOTP(false);
-      notify("success", `Otp sent successfully`);
-      notify("info", `Check ${email} for the correct otp and try again`);
+      notify("SUCCESS", `Otp sent successfully`);
+      notify("INFO", `Check ${email} for the correct otp and try again`);
     } catch (error) {
       console.log("error", error);
       setIsResendingOTP(false);
-      notify("error", `Failed to send otp`);
+      notify("ALERT", `Failed to send otp`);
     }
   };
 
   useEffect(() => {
-    // notify("info", `Check ${email} for the correct otp and try again`);
-    notify("info", `We sent a verification code to ${email}`);
+    notify("INFO", `Check ${email} for the correct otp and try again`);
+    notify("INFO", `We sent a verification code to ${email}`);
   }, [email, notify]);
 
   console.log("action", action);
