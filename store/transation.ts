@@ -4,10 +4,8 @@ import { persist, createJSONStorage } from "zustand/middleware";
 type State = {
   amount: number;
   setAmount: (amount: number) => void;
-  fee: number;
-  setFee: (fee: number) => void;
-  total: number;
-  setTotal: (total: number) => void;
+  totalBalance: string;
+  setTotalBalance: (totalBalance: string) => void;
 };
 
 export const useTransactionStore = create<State>()(
@@ -15,10 +13,8 @@ export const useTransactionStore = create<State>()(
     (set) => ({
       amount: 0,
       setAmount: (amount: number) => set(() => ({ amount })),
-      fee: 0,
-      setFee: (fee: number) => set(() => ({ fee })),
-      total: 0,
-      setTotal: (total: number) => set(() => ({ total })),
+      totalBalance: "",
+      setTotalBalance: (totalBalance: string) => set(() => ({ totalBalance })),
     }),
     {
       name: "transaction",

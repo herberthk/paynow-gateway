@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useAppStore, useTransactionStore } from "@/store";
 import { linkedMethods } from "@/services/mockData";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { findUserByEmailOrPhone } from "@/lib/actions/users";
 import { processP2PTransfer } from "@/lib/actions/wallet";
 import { createP2PTransaction } from "@/lib/actions/transactions";
@@ -56,6 +56,9 @@ const WalletView = ({ user, wallet }: UserProps) => {
   const [isTransferring, setIsTransferring] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const setTotalBalance = useTransactionStore((state) => state.setTotalBalance);
+  // setTotalBalance(stats[0].value);
 
   // Handle Send button click - Look up recipient
   const handleSendClick = async () => {
@@ -186,6 +189,10 @@ const WalletView = ({ user, wallet }: UserProps) => {
     setRecipientData(null);
     setError("");
   };
+
+  useEffect(() => {
+    setTotalBalance(`UGX ${wallet?.balance.toLocaleString()}`);
+  }, [wallet?.balance]);
 
   return (
     <div className="space-y-6">

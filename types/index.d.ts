@@ -115,7 +115,8 @@ declare global {
 
   interface SystemNotification {
     id: string;
-    userId: number;
+    toUserId: number;
+    fromUserId: number;
     title: string;
     message: string;
     type: NotificationType;

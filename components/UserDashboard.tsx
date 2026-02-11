@@ -3,6 +3,7 @@
 import DashboardCharts from "@/components/DashboardCharts";
 import StatCard from "@/components/StatCard";
 import TransactionTable from "@/components/TransactionTable";
+import { useTransactionStore } from "@/store";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -10,6 +11,7 @@ import {
   Wallet as WalletIcon,
   type LucideIcon,
 } from "lucide-react";
+import { useEffect } from "react";
 
 type UserProps = {
   user: User;
@@ -35,6 +37,11 @@ const UserDashboard = ({
   stats,
   analyticsData,
 }: UserProps) => {
+  const setTotalBalance = useTransactionStore((state) => state.setTotalBalance);
+
+  useEffect(() => {
+    setTotalBalance(stats[0].value);
+  }, [stats]);
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
