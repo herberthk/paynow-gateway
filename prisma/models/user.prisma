@@ -103,6 +103,7 @@ model Transaction {
   txn_ref   String            @unique
   category  String
   method    String
+  fee       Decimal           @db.Decimal(12, 2) @default(0.00)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   deleted_at DateTime?

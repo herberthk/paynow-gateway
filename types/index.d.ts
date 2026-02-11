@@ -26,6 +26,7 @@ declare global {
     category: string; // e.g., 'Transport', 'Rent', 'Utilities'
     method: string; // e.g., 'MTN Mobile Money', 'Visa **** 4242'
     txn_ref?: string;
+    fee: number;
   }
 
   interface Wallet {
@@ -44,12 +45,11 @@ declare global {
     email: string;
     privilege: Privilege;
     status: boolean;
-    // wallet?: Wallet;
     created_at: string;
     tel?: string;
     address?: string;
     // kycStatus: "VERIFIED" | "PENDING" | "UNVERIFIED" | "REJECTED";
-    // wallet: Wallet;
+    wallet?: Wallet;
     // joinDate?: string;
   }
 

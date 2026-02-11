@@ -127,71 +127,99 @@ const generateMockTransactions = (count: number): Transaction[] => {
     recipient: recipients[Math.floor(random() * recipients.length)],
     category: categories[Math.floor(random() * categories.length)],
     method: methods[Math.floor(random() * methods.length)],
+    fee: 200,
+    txn_ref: "txn_ref_123",
+    createdAt: new Date().toISOString(),
+    recipientId: 1,
+    userId: 1,
+    recipientName: "John Doe",
   }));
 };
 
 const initialTransactions: Transaction[] = [
   {
     id: "tx_001",
-    date: "2023-10-25T10:30:00",
+    createdAt: "2023-10-25T10:30:00",
     amount: 50000,
     currency: "UGX",
     type: "PAYMENT",
     status: "COMPLETED",
-    recipient: "Global Bus Co.",
+    recipientName: "Global Bus Co.",
     category: "Transport",
     method: "MTN MoMo",
+    fee: 200,
+    txn_ref: "txn_ref_123",
+    recipientId: 1,
+    userId: 1,
   },
   {
     id: "tx_002",
-    date: "2023-10-24T14:15:00",
+    createdAt: "2023-10-24T14:15:00",
     amount: 1500000,
     currency: "UGX",
     type: "PAYMENT",
     status: "COMPLETED",
-    recipient: "Kampala Heights Apts",
+    recipientName: "Kampala Heights Apts",
     category: "Rent",
     method: "Visa **** 4242",
+    fee: 200,
+    txn_ref: "txn_ref_123",
+    recipientId: 1,
+    userId: 1,
   },
   {
     id: "tx_003",
-    date: "2023-10-23T09:00:00",
+    createdAt: "2023-10-23T09:00:00",
     amount: 50,
     currency: "USD",
     type: "SUBSCRIPTION",
     status: "COMPLETED",
-    recipient: "Netflix Services",
+    recipientName: "Netflix Services",
     category: "Entertainment",
     method: "Direct Wallet",
+    fee: 200,
+    txn_ref: "txn_ref_123",
+    recipientId: 1,
+    userId: 1,
   },
   {
     id: "tx_004",
-    date: "2023-10-22T16:45:00",
+    createdAt: "2023-10-22T16:45:00",
     amount: 200000,
     currency: "UGX",
     type: "WITHDRAWAL",
     status: "PENDING",
-    recipient: "Airtel Money",
+    recipientName: "John Doe",
     category: "Withdrawal",
     method: "Wallet Transfer",
+    fee: 200,
+    txn_ref: "txn_ref_123",
+    recipientId: 1,
+    userId: 1,
   },
   {
     id: "tx_005",
-    date: "2023-10-21T11:20:00",
+    createdAt: "2023-10-21T11:20:00",
     amount: 500000,
     currency: "UGX",
     type: "TRANSFER",
     status: "DISPUTED",
-    recipient: "John Doe",
+    recipientName: "John Doe",
     category: "P2P",
     method: "Wallet Transfer",
+    fee: 200,
+    txn_ref: "txn_ref_123",
+    recipientId: 1,
+    userId: 1,
   },
 ];
 
 export const transactions: Transaction[] = [
   ...initialTransactions,
   ...generateMockTransactions(45),
-].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+].sort(
+  (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+);
 
 // Enhanced Revenue Data for Composed Charts (Admin)
 export const revenueData = [
@@ -479,7 +507,7 @@ export const mockFees: Fee[] = [
 ];
 
 // Helper to generate notifications
-const generateNotifications = (count: number) => {
+const generateNotifications = (count: number): SystemNotification[] => {
   const titles = [
     "New Login",
     "Payment Received",
@@ -512,6 +540,10 @@ const generateNotifications = (count: number) => {
     time: `${i + 1} ${i === 0 ? "hour" : "hours"} ago`,
     read: i > 2, // First 3 unread
     type: types[i % types.length],
+    fromUserId: 24,
+    toUserId: 25,
+    path: "/transactions",
+    createdAt: new Date("2023-10-25 09:00"),
   }));
 };
 
@@ -520,33 +552,45 @@ export const mockSystemNotifications: SystemNotification[] = [
     id: "n1",
     title: "High Value Transaction",
     message: "A transaction of UGX 1,500,000 was successfully processed.",
-    time: "2 mins ago",
+    createdAt: new Date("2023-10-25 09:00"),
     read: false,
     type: "SUCCESS",
+    fromUserId: 24,
+    toUserId: 25,
+    path: "/transactions",
   },
   {
     id: "n2",
     title: "Login Attempt",
     message: "New login detected from Chrome on Windows.",
-    time: "1 hour ago",
+    createdAt: new Date("2023-10-25 09:00"),
     read: false,
     type: "INFO",
+    fromUserId: 24,
+    toUserId: 25,
+    path: "/transactions",
   },
   {
     id: "n3",
     title: "KYC Update Required",
     message: "Your Tier 2 verification documents need attention.",
-    time: "3 hours ago",
+    createdAt: new Date("2023-10-25 09:00"),
     read: true,
     type: "ALERT",
+    fromUserId: 24,
+    toUserId: 25,
+    path: "/transactions",
   },
   {
     id: "n4",
     title: "Weekly Report",
     message: "Your weekly transaction summary is ready to view.",
-    time: "1 day ago",
+    createdAt: new Date("2023-10-25 09:00"),
     read: true,
     type: "INFO",
+    fromUserId: 24,
+    toUserId: 25,
+    path: "/transactions",
   },
   ...generateNotifications(25),
 ];

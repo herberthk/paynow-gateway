@@ -558,8 +558,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                                   Fee
                                 </span>
                                 <span className="font-medium text-gray-900 dark:text-white">
-                                  {tx.currency}{" "}
-                                  {(tx.amount * 0.01).toLocaleString()}
+                                  {tx.currency} {tx.fee.toLocaleString()}
                                 </span>
                               </div>
                               <div className="flex justify-between text-sm pt-2 border-t border-gray-200 dark:border-slate-700">

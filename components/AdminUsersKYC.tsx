@@ -64,7 +64,7 @@ const AdminUsersKYC = () => {
     const message = status
       ? "User approved successfully."
       : "User KYC rejected.";
-    notify(status === true ? "success" : "info", message);
+    notify(status === true ? "SUCCESS" : "INFO", message);
   };
 
   const handleDeleteUser = (userId: number, e: React.MouseEvent) => {
@@ -75,7 +75,7 @@ const AdminUsersKYC = () => {
       )
     ) {
       setUsers(users.filter((u) => u.id !== userId));
-      notify("info", "User deleted successfully.");
+      notify("INFO", "User deleted successfully.");
     }
   };
 
@@ -100,7 +100,7 @@ const AdminUsersKYC = () => {
 
   const handleSaveUser = () => {
     if (!currentUserData.name || !currentUserData.email) {
-      notify("error", "Please fill in all required fields.");
+      notify("ALERT", "Please fill in all required fields.");
       return;
     }
 
@@ -112,14 +112,14 @@ const AdminUsersKYC = () => {
         wallet: { balance: 0, id: "retyty45" },
       };
       setUsers([newUser, ...users]);
-      notify("success", "User account created successfully.");
+      notify("SUCCESS", "User account created successfully.");
     } else {
       setUsers(
         users.map((u) =>
           u.id === currentUserData.id ? { ...u, ...currentUserData } : u,
         ),
       );
-      notify("success", "User profile updated.");
+      notify("SUCCESS", "User profile updated.");
     }
     setIsModalOpen(false);
   };
@@ -229,8 +229,8 @@ const AdminUsersKYC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
-              {paginatedUsers.map((user) => (
-                <React.Fragment key={user.id}>
+              {paginatedUsers.map((user, index) => (
+                <React.Fragment key={`${user.id}-${index}`}>
                   <tr
                     onClick={() => toggleExpand(user.id)}
                     className={`cursor-pointer transition-all duration-200 border-l-4 ${

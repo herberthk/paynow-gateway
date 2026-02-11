@@ -40,7 +40,7 @@ const AdminTransactions: React.FC = () => {
   const filteredTransactions = transactions.filter((t) => {
     const matchesFilter = filter === "ALL" || t.status === filter;
     const matchesSearch =
-      t.recipient.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.recipientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       t.method.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
@@ -119,7 +119,7 @@ const AdminTransactions: React.FC = () => {
       };
 
       addLine("Transaction ID:", tx.id);
-      addLine("Date & Time:", new Date(tx.date).toLocaleString());
+      addLine("Date & Time:", new Date(tx.createdAt).toLocaleString());
       addLine("Status:", tx.status);
       addLine("Type:", tx.type);
       addLine("Method:", tx.method);
@@ -154,10 +154,10 @@ const AdminTransactions: React.FC = () => {
 
       doc.save(`Admin_Receipt_${tx.id}.pdf`);
 
-      if (notify) notify("success", "Admin receipt generated successfully.");
+      if (notify) notify("SUCCESS", "Admin receipt generated successfully.");
     } catch (e) {
       console.error(e);
-      if (notify) notify("error", "Failed to generate PDF.");
+      if (notify) notify("ALERT", "Failed to generate PDF.");
     } finally {
       setProcessingId(null);
     }
@@ -182,7 +182,7 @@ const AdminTransactions: React.FC = () => {
     );
 
     if (notify)
-      notify("success", `Transaction ${tx.id} has been fully refunded.`);
+      notify("SUCCESS", `Transaction ${tx.id} has been fully refunded.`);
     setProcessingId(null);
   };
 
@@ -306,7 +306,7 @@ const AdminTransactions: React.FC = () => {
                         </span>
                         <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                           <CornerDownRight size={10} />
-                          {tx.recipient}
+                          {tx.recipientName}
                         </div>
                       </div>
                     </td>
@@ -316,9 +316,9 @@ const AdminTransactions: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-gray-500 dark:text-gray-400">
-                      {new Date(tx.date).toLocaleDateString()}
+                      {new Date(tx.createdAt).toLocaleDateString()}
                       <div className="text-xs text-gray-400">
-                        {new Date(tx.date).toLocaleTimeString()}
+                        {new Date(tx.createdAt).toLocaleTimeString()}
                       </div>
                     </td>
                     <td className="px-6 py-4">
@@ -422,7 +422,7 @@ const AdminTransactions: React.FC = () => {
                                     Recipient
                                   </p>
                                   <p className="text-sm font-bold text-gray-900 dark:text-white">
-                                    {tx.recipient}
+                                    {tx.recipientName}
                                   </p>
                                   <p className="text-xs text-gray-500">
                                     Merchant Account
