@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+/// <reference path="./transaction.d.ts" />
 import { type LucideIcon } from "lucide-react";
 declare global {
   type UserRole = "USER" | "ADMIN";

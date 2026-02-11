@@ -14,17 +14,17 @@ export const getUserById = async (id: number) => {
   }
 };
 
-export const getUserWallet = async (id: number) => {
-  try {
-    const wallet = await prisma.wallet.findUnique({
-      where: { userId: id },
-    });
-    return wallet;
-  } catch (error) {
-    console.error("Error fetching user wallet:", error);
-    return null;
-  }
-};
+// export const getUserWallet = async (id: number) => {
+//   try {
+//     const wallet = await prisma.wallet.findUnique({
+//       where: { userId: id },
+//     });
+//     return wallet;
+//   } catch (error) {
+//     console.error("Error fetching user wallet:", error);
+//     return null;
+//   }
+// };
 
 export const getuserByEmail = async (email: string) => {
   try {

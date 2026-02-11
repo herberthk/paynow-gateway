@@ -1,5 +1,5 @@
 import UserDashboard from "@/components/UserDashboard";
-import { getUserSession } from "@/lib";
+import { getDashboardAnalyticsData, getUserSession } from "@/lib";
 import { getDashboardStats } from "@/lib/actions/dashboard";
 import { getTransactions } from "@/lib/actions/transactions";
 
@@ -23,17 +23,21 @@ const UserDashboardPage = async (props: {
   const type = searchParams?.type;
   const limit = 5;
 
-  const [{ transactions, totalPages, totalTransactions }, dashboardStats] =
-    await Promise.all([
-      getTransactions({
-        page: currentPage,
-        limit,
-        query,
-        status,
-        type,
-      }),
-      getDashboardStats(user.id),
-    ]);
+  const [
+    { transactions, totalPages, totalTransactions },
+    dashboardStats,
+    analyticsData,
+  ] = await Promise.all([
+    getTransactions({
+      page: currentPage,
+      limit,
+      query,
+      status,
+      type,
+    }),
+    getDashboardStats(user.id),
+    getDashboardAnalyticsData(user.id),
+  ]);
 
   return (
     <UserDashboard
@@ -42,6 +46,7 @@ const UserDashboardPage = async (props: {
       totalPages={totalPages}
       totalTransactions={totalTransactions}
       stats={dashboardStats}
+      analyticsData={analyticsData}
     />
   );
 };
