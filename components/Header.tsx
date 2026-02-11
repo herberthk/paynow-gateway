@@ -12,8 +12,13 @@ import {
   Shield,
 } from "lucide-react";
 import NotificationPopup from "./NotificationPopup";
-import { useThemeStore, useTransactionStore } from "@/store";
-import { useAppStore, useNotificationStore } from "@/store";
+import {
+  clearAllStores,
+  useThemeStore,
+  useTransactionStore,
+  useAppStore,
+  useNotificationStore,
+} from "@/store";
 import { logout } from "@/lib";
 import {
   getNotifications,
@@ -118,6 +123,7 @@ const Header: React.FC<UserProps> = ({ user }) => {
   };
   const handleLogout = async () => {
     await logout();
+    clearAllStores();
     notify("INFO", "You have been logged out.");
   };
   // useEffect(() => {
