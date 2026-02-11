@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "payment_transactions" ALTER COLUMN "fee" SET DEFAULT 0.00,
+ALTER COLUMN "fee" SET DATA TYPE DECIMAL(12,2);

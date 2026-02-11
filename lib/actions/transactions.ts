@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { getTransactionFee } from "./fee";
 
 export const getTransactions = async ({
   page = 1,
@@ -39,6 +40,7 @@ export const getTransactions = async ({
                 createdAt: tx.createdAt.toISOString(),
                 currency: tx.currency as Currency,
                 txn_ref: tx.txn_ref!,
+                fee: tx.fee.toNumber(),
               },
             ]
           : [],
@@ -90,6 +92,7 @@ export const getTransactions = async ({
       status: tx.status as TransactionStatus,
       currency: tx.currency as Currency,
       txn_ref: tx.txn_ref!,
+      fee: tx.fee.toNumber(),
     }));
 
     return {
@@ -134,6 +137,7 @@ export const createP2PTransaction = async ({
   txn_ref: string;
 }) => {
   try {
+    const fee = await getTransactionFee("TRANSFER");
     const transaction = await prisma.transaction.create({
       data: {
         userId: senderId,
@@ -146,6 +150,7 @@ export const createP2PTransaction = async ({
         category: "Transfer",
         method: "Wallet P2P Transfer",
         txn_ref,
+        fee,
       },
     });
 
@@ -168,18 +173,6 @@ export const createP2PTransaction = async ({
     };
   }
 };
-
-// export const createTransaction = async (transaction: Transaction) => {
-//   try {
-//     const createdTransaction = await prisma.transaction.create({
-//       data: transaction,
-//     });
-//     return createdTransaction;
-//   } catch (error) {
-//     console.error("Error creating transaction:", error);
-//     return null;
-//   }
-// };
 
 export const updateTransaction = async (
   id: string,
