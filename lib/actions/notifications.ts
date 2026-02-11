@@ -271,10 +271,9 @@ export const createTransferNotifications = async ({
         title: "Transfer Sent",
         message: `You successfully sent UGX ${amount.toLocaleString()} to ${recipientName}`,
         type: "SUCCESS",
-        path: `/dashboard/user/transactions?ref=${txn_ref}`,
+        path: `/dashboard/user/transactions?query=${txn_ref}`,
       },
     });
-
     // Notification for recipient
     const recipientNotification = await prisma.systemNotification.create({
       data: {
@@ -283,7 +282,7 @@ export const createTransferNotifications = async ({
         title: "Money Received",
         message: `You received UGX ${amount.toLocaleString()} from ${senderName}`,
         type: "SUCCESS",
-        path: `/dashboard/user/transactions?ref=${txn_ref}`,
+        path: `/dashboard/user/transactions?query=${txn_ref}`,
       },
     });
 

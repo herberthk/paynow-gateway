@@ -66,12 +66,12 @@ const AdminFeeManagement: React.FC = () => {
       ),
     );
     setEditingId(null);
-    notify("success", "Fee updated successfully");
+    notify("SUCCESS", "Fee updated successfully");
   };
 
   const handleAddFee = () => {
     if (!newFee.name || newFee.value === undefined) {
-      notify("error", "Please fill in all fields");
+      notify("ALERT", "Please fill in all fields");
       return;
     }
     const fee: Fee = {
@@ -93,12 +93,12 @@ const AdminFeeManagement: React.FC = () => {
       category: "PAYMENT",
       active: true,
     });
-    notify("success", "New fee rule added");
+    notify("SUCCESS", "New fee rule added");
   };
 
   const deleteFee = (id: string) => {
     setFees(fees.filter((f) => f.id !== id));
-    notify("info", "Fee rule removed");
+    notify("INFO", "Fee rule removed");
   };
 
   return (

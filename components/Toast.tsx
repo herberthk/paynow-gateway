@@ -34,25 +34,25 @@ const ToastItem: React.FC<{
   }, [remove]);
 
   const icons = {
-    success: (
+    SUCCESS: (
       <CheckCircle className="text-green-500 dark:text-green-400" size={20} />
     ),
-    error: (
+    ALERT: (
       <AlertTriangle className="text-red-500 dark:text-red-400" size={20} />
     ),
-    info: <Info className="text-blue-500 dark:text-blue-400" size={20} />,
-    warning: (
+    INFO: <Info className="text-blue-500 dark:text-blue-400" size={20} />,
+    WARNING: (
       <AlertCircle className="text-orange-500 dark:text-orange-400" size={20} />
     ),
   };
 
   const colors = {
-    success:
+    SUCCESS:
       "border-l-4 border-green-500 dark:border-green-600 bg-white dark:bg-slate-800",
-    error:
+    ALERT:
       "border-l-4 border-red-500 dark:border-red-600 bg-white dark:bg-slate-800",
-    info: "border-l-4 border-blue-500 dark:border-blue-600 bg-white dark:bg-slate-800",
-    warning:
+    INFO: "border-l-4 border-blue-500 dark:border-blue-600 bg-white dark:bg-slate-800",
+    WARNING:
       "border-l-4 border-orange-500 dark:border-orange-600 bg-white dark:bg-slate-800",
   };
 
@@ -63,7 +63,7 @@ const ToastItem: React.FC<{
       <div className="mt-0.5">{icons[notification.type]}</div>
       <div className="flex-1">
         <p
-          className={`font-medium text-sm ${notification.type === "error" ? "text-red-800 dark:text-red-200" : "text-gray-800 dark:text-gray-100"}`}
+          className={`font-medium text-sm ${notification.type === "ALERT" ? "text-red-800 dark:text-red-200" : "text-gray-800 dark:text-gray-100"}`}
         >
           {notification.message}
         </p>

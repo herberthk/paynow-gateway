@@ -20,24 +20,24 @@ const ResetPage = ({ id }: Props) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 8) {
-      notify("error", `The password is less than 8 characters`);
+      notify("ALERT", `The password is less than 8 characters`);
       return;
     }
     setIsLoading(true);
     try {
       const result = await resetPassword(id, password);
       if (result === "Password reset successfully") {
-        notify("success", result);
-        notify("info", "Please login with your new password");
+        notify("SUCCESS", result);
+        notify("INFO", "Please login with your new password");
         // router.push("/");
       } else {
-        notify("error", result!);
-        notify("info", "Please try again");
+        notify("ALERT", result!);
+        notify("INFO", "Please try again");
         router.push("/");
       }
       setIsLoading(false);
     } catch (error) {
-      // notify("error", "Failed to reset password");
+      // notify("ALERT", "Failed to reset password");
       setIsLoading(false);
       console.log("error", error);
     } finally {

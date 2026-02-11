@@ -18,7 +18,7 @@ const ForgetPassword = () => {
       const result = await initPasswordReset(email);
       console.log("result", result);
       if (result) {
-        notify("error", result);
+        notify("ALERT", result);
       }
       setIsLoading(false);
     } catch (error) {
