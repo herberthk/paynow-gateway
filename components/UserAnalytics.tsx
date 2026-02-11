@@ -21,13 +21,7 @@ import {
   PieChart as PieIcon,
   Calendar,
 } from "lucide-react";
-
-type AnalyticsProps = {
-  cashFlowData: { name: string; income: number; spend: number }[];
-  categoryData: { name: string; value: number; color: string }[];
-  totalIncome: number;
-  totalSpent: number;
-};
+import millify from "millify";
 
 const CustomTooltip = ({
   active,
@@ -221,12 +215,14 @@ const UserAnalytics: React.FC<AnalyticsProps> = ({
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
                 <span className="block text-xl font-bold text-gray-900 dark:text-white">
                   {categoryData.length > 0
-                    ? Math.round(
-                        categoryData.reduce(
-                          (acc, curr) => acc + curr.value,
-                          0,
-                        ) / categoryData.length,
-                      ).toLocaleString()
+                    ? millify(
+                        Math.round(
+                          categoryData.reduce(
+                            (acc, curr) => acc + curr.value,
+                            0,
+                          ) / categoryData.length,
+                        ),
+                      )
                     : 0}
                 </span>
                 <span className="block text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">

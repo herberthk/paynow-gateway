@@ -17,6 +17,7 @@ type UserProps = {
   totalPages: number;
   totalTransactions: number;
   stats: DashboardStat[]; // Changed from importing stats
+  analyticsData: AnalyticsData;
 };
 
 const iconMap: Record<string, LucideIcon> = {
@@ -32,6 +33,7 @@ const UserDashboard = ({
   totalPages,
   totalTransactions,
   stats,
+  analyticsData,
 }: UserProps) => {
   return (
     <div className="space-y-6">
@@ -54,7 +56,7 @@ const UserDashboard = ({
         ))}
       </div>
 
-      <DashboardCharts />
+      <DashboardCharts analyticsData={analyticsData} />
 
       <div>
         <TransactionTable

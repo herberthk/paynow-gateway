@@ -1,5 +1,3 @@
-"use client";
-import React from "react";
 import {
   AreaChart,
   Area,
@@ -13,8 +11,8 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { userSpendingData, categoryData } from "../services/mockData";
 import { TrendingUp, PieChart as PieIcon } from "lucide-react";
+import millify from "millify";
 
 const CustomTooltip = ({
   active,
@@ -57,7 +55,12 @@ const CustomTooltip = ({
   }
   return null;
 };
-const DashboardCharts: React.FC = () => {
+
+interface DashboardChartsProps {
+  analyticsData: AnalyticsData;
+}
+const DashboardCharts = ({ analyticsData }: DashboardChartsProps) => {
+  const { cashFlow, categories, totalIncome, totalSpent } = analyticsData;
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Spending Trend Chart */}
@@ -76,12 +79,30 @@ const DashboardCharts: React.FC = () => {
               </p>
             </div>
           </div>
+          <div className="flex gap-4">
+            <div className="text-right">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Total Income
+              </p>
+              <p className="font-bold text-green-600 dark:text-green-400">
+                +UGX {(totalIncome / 1000).toFixed(1)}k
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Total Spent
+              </p>
+              <p className="font-bold text-red-500 dark:text-red-400">
+                -UGX {(totalSpent / 1000).toFixed(1)}k
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={userSpendingData}
+              data={cashFlow}
               margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
             >
               <defs>
@@ -159,14 +180,14 @@ const DashboardCharts: React.FC = () => {
           </h3>
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          Top spending categories
+          Top 3 spending categories (Last 7 days)
         </p>
 
         <div className="flex-1 min-h-[200px] relative">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
-                data={categoryData}
+                data={categories}
                 cx="50%"
                 cy="50%"
                 innerRadius={60}
@@ -174,7 +195,7 @@ const DashboardCharts: React.FC = () => {
                 paddingAngle={5}
                 dataKey="value"
               >
-                {categoryData.map((entry, index) => (
+                {categories.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
                     fill={entry.color}
@@ -187,19 +208,21 @@ const DashboardCharts: React.FC = () => {
           </ResponsiveContainer>
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
             <span className="block text-xl font-bold text-gray-900 dark:text-white">
-              {Math.round(
-                categoryData.reduce((acc, curr) => acc + curr.value, 0) /
-                  categoryData.length,
+              {millify(
+                Math.round(
+                  categories.reduce((acc, curr) => acc + curr.value, 0) /
+                    categories.length,
+                ),
               )}
             </span>
             <span className="block text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-              Avg Score
+              Avg spend
             </span>
           </div>
         </div>
 
         <div className="mt-4 space-y-2">
-          {categoryData.slice(0, 3).map((category, index) => (
+          {categories.slice(0, 3).map((category, index) => (
             <div
               key={index}
               className="flex items-center justify-between text-sm"
@@ -216,7 +239,7 @@ const DashboardCharts: React.FC = () => {
               <span className="font-medium text-gray-900 dark:text-white">
                 {Math.round(
                   (category.value /
-                    categoryData.reduce((a, b) => a + b.value, 0)) *
+                    categories.reduce((a, b) => a + b.value, 0)) *
                     100,
                 )}
                 %
