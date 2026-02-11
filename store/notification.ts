@@ -5,10 +5,14 @@ type State = {
   notifications: Notifications[];
   notify: (type: NotificationType, message: string) => void;
   removeNotification: (id: string) => void;
+  reset: () => void;
 };
 
-export const useNotificationStore = create<State>((set) => ({
+const initialState: Omit<State, "notify" | "removeNotification" | "reset"> = {
   notifications: [],
+};
+export const useNotificationStore = create<State>((set) => ({
+  ...initialState,
   notify: (type, message) =>
     set((state) => ({
       notifications: [
@@ -20,4 +24,5 @@ export const useNotificationStore = create<State>((set) => ({
     set((state) => ({
       notifications: state.notifications.filter((n) => n.id !== id),
     })),
+  reset: () => set(initialState),
 }));

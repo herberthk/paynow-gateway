@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { LogOut } from "lucide-react";
-import { useAppStore, useNotificationStore } from "@/store";
+import { clearAllStores, useAppStore, useNotificationStore } from "@/store";
 import { logout } from "@/lib";
 import Link from "next/link";
 import { menuItems } from "@/constants";
@@ -16,7 +16,8 @@ const Sidebar: React.FC<UserProps> = ({ user }) => {
   const setIsOpen = useAppStore((state) => state.setIsSidebarOpen);
   const handleLogout = async () => {
     await logout();
-    notify("info", "You have been logged out.");
+    clearAllStores();
+    notify("INFO", "You have been logged out.");
   };
   const pathname = usePathname();
   const items = menuItems(user.privilege);

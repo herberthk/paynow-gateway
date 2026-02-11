@@ -14,13 +14,30 @@ type State = {
   closePaymentModal: () => void;
   openPaymentModal: (type: "deposit" | "withdraw") => void;
   handleUpdateUser: (updatedData: User) => void;
+  reset: () => void;
 };
 
-export const useAppStore = create<State>((set) => ({
+const initialState: Omit<
+  State,
+  | "setCurrentUser"
+  | "logout"
+  | "setIsSidebarOpen"
+  | "setActiveSecurityTab"
+  | "setPaymentModal"
+  | "closePaymentModal"
+  | "openPaymentModal"
+  | "handleUpdateUser"
+  | "reset"
+> = {
   currentUser: null,
   isAuthenticated: false,
   isSidebarOpen: false,
   activeSecurityTab: "profile",
+  paymentModal: { isOpen: false, type: "deposit" },
+};
+
+export const useAppStore = create<State>((set) => ({
+  ...initialState,
   setCurrentUser: (user: User) =>
     set(() => ({
       currentUser: user,
@@ -45,4 +62,5 @@ export const useAppStore = create<State>((set) => ({
     set((state) => ({
       currentUser: { ...state.currentUser, ...updatedData },
     })),
+  reset: () => set(initialState),
 }));

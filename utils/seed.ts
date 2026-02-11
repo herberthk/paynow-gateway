@@ -1,6 +1,16 @@
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
-import { generateTxRef } from "./helpers";
+const generateTxRef = (length = 8) => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(length));
+
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += chars[bytes[i] % chars.length];
+  }
+
+  return `TX_${result}`;
+};
 
 const hashPassword = async (password: string) =>
   await bcrypt.hash(password, 10);
@@ -8,9 +18,18 @@ const hashPassword = async (password: string) =>
 // Seed data for Users
 export const seedUsers = [
   {
-    name: "Herbert James",
+    name: "Allan Smith",
     email: "herberthtk100@gmail.com",
     tel: "+256700700001",
+    password: await hashPassword("1245689"), // Remember to hash passwords properly
+    privilege: "super_admin" as const,
+    status: true,
+    ispaid: true,
+  },
+  {
+    name: "Herald Olet",
+    email: "connectapp26@gmail.com",
+    tel: "+256779700101",
     password: await hashPassword("1245689"), // Remember to hash passwords properly
     privilege: "super_admin" as const,
     status: true,
@@ -232,7 +251,7 @@ export const seedTransactions = (
     createdAt: Date;
   }[] = [];
 
-  regularUserIds.forEach(async (userId) => {
+  regularUserIds.forEach((userId) => {
     for (let i = 0; i < 30; i++) {
       const amount = Math.floor(random() * 500000) + 1000;
       const type =
@@ -275,7 +294,7 @@ export const seedTransactions = (
         status: status as TransactionStatus,
         category: categories[Math.floor(random() * categories.length)],
         method: methods[Math.floor(random() * methods.length)],
-        txn_ref: await generateTxRef(),
+        txn_ref: generateTxRef(),
         createdAt: new Date(
           Date.now() - Math.floor(random() * 90 * 24 * 60 * 60 * 1000),
         ),
@@ -291,7 +310,7 @@ export const seedDisputes = (userIds: number[], transactionIds: string[]) => [
     transactionId: transactionIds[2], // The disputed transaction (userIds[2])
     userId: userIds[2],
     amount: 75000,
-    currency: "UGX",
+    currency: "UGX" as const,
     reason: "Duplicate charge detected",
     status: "OPEN" as const,
     evidence: "Receipt image uploaded showing single purchase",
@@ -304,7 +323,7 @@ export const seedFees = [
     name: "Mobile Money Withdrawal",
     type: "PERCENTAGE" as const,
     value: 1.5,
-    currency: "UGX",
+    currency: "UGX" as const,
     category: "WITHDRAWAL" as const,
     active: true,
   },
@@ -312,7 +331,7 @@ export const seedFees = [
     name: "Card Payment Processing",
     type: "PERCENTAGE" as const,
     value: 2.9,
-    currency: "UGX",
+    currency: "UGX" as const,
     category: "PAYMENT" as const,
     active: true,
   },
@@ -320,7 +339,7 @@ export const seedFees = [
     name: "Wallet Transfer (P2P)",
     type: "FIXED" as const,
     value: 500,
-    currency: "UGX",
+    currency: "UGX" as const,
     category: "TRANSFER" as const,
     active: true,
   },
@@ -328,7 +347,7 @@ export const seedFees = [
     name: "Bank Transfer Fee",
     type: "FIXED" as const,
     value: 2000,
-    currency: "UGX",
+    currency: "UGX" as const,
     category: "TRANSFER" as const,
     active: true,
   },
@@ -336,7 +355,7 @@ export const seedFees = [
     name: "Deposit Fee",
     type: "PERCENTAGE" as const,
     value: 0.5,
-    currency: "UGX",
+    currency: "UGX" as const,
     category: "DEPOSIT" as const,
     active: true,
   },
@@ -344,7 +363,7 @@ export const seedFees = [
     name: "API Call Overage",
     type: "FIXED" as const,
     value: 10,
-    currency: "UGX",
+    currency: "UGX" as const,
     category: "API" as const,
     active: false,
   },
@@ -361,7 +380,8 @@ export const seedAuditLogs = (adminId: number) => [
 
 export const seedSystemNotifications = (userIds: number[]) => [
   {
-    userId: userIds[0],
+    toUserId: userIds[0],
+    fromUserId: userIds[0],
     title: "Welcome to PayNow",
     message:
       "Your account has been successfully created. Start making payments today!",
@@ -370,7 +390,8 @@ export const seedSystemNotifications = (userIds: number[]) => [
     path: "/dashboard/user/settings",
   },
   {
-    userId: userIds[1],
+    toUserId: userIds[1],
+    fromUserId: userIds[1],
     title: "Payment Pending",
     message: "Your payment of UGX 25,000 deposit is being processed.",
     type: "INFO" as const,
@@ -378,7 +399,8 @@ export const seedSystemNotifications = (userIds: number[]) => [
     path: "/dashboard/user/settings",
   },
   {
-    userId: userIds[2],
+    toUserId: userIds[2],
+    fromUserId: userIds[2],
     title: "Dispute Opened",
     message:
       "A dispute has been opened for your transaction. We will investigate and get back to you.",
@@ -387,7 +409,8 @@ export const seedSystemNotifications = (userIds: number[]) => [
     path: "/dashboard/user/settings",
   },
   {
-    userId: userIds[3],
+    toUserId: userIds[3],
+    fromUserId: userIds[3],
     title: "Payment Successful",
     message: "Your payment of UGX 28,000 to KFC was successful.",
     type: "SUCCESS" as const,
@@ -395,7 +418,8 @@ export const seedSystemNotifications = (userIds: number[]) => [
     path: "/dashboard/user/settings",
   },
   {
-    userId: userIds[4],
+    toUserId: userIds[4],
+    fromUserId: userIds[4],
     title: "Deposit Completed",
     message: "Your deposit of UGX 500,000 was successful.",
     type: "SUCCESS" as const,
