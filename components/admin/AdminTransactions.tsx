@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { transactions as mockTransactions } from "../services/mockData";
+import { transactions as mockTransactions } from "@/services/mockData";
 import { jsPDF } from "jspdf";
 import {
   Search,

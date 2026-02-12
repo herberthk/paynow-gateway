@@ -1,8 +1,8 @@
 "use client";
 
-import DashboardCharts from "@/components/DashboardCharts";
-import StatCard from "@/components/StatCard";
-import TransactionTable from "@/components/TransactionTable";
+import DashboardCharts from "@/components/user/DashboardCharts";
+import StatCard from "@/components/global/StatCard";
+import TransactionTable from "@/components/global/TransactionTable";
 import { useTransactionStore } from "@/store";
 import {
   ArrowDownLeft,

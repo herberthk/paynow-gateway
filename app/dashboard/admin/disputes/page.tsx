@@ -1,4 +1,4 @@
-import AdminDisputes from "@/components/AdminDisputes";
+import AdminDisputes from "@/components/admin/AdminDisputes";
 
 const Disputes = () => {
   return <AdminDisputes />;

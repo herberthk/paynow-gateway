@@ -1,4 +1,4 @@
-import AdminTransactions from "@/components/AdminTransactions";
+import AdminTransactions from "@/components/admin/AdminTransactions";
 
 const Transactions = () => {
   return <AdminTransactions />;

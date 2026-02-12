@@ -1,4 +1,4 @@
-import TransactionTable from "@/components/TransactionTable";
+import TransactionTable from "@/components/global/TransactionTable";
 import { getTransactions } from "@/lib/actions/transactions";
 
 const Transactions = async (props: {

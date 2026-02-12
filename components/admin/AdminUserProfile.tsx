@@ -4,7 +4,7 @@ import {
   transactions as allTransactions,
   linkedMethods,
 } from "@/services/mockData";
-import TransactionTable from "./TransactionTable";
+import TransactionTable from "@/components/global/TransactionTable";
 import {
   ArrowLeft,
   Mail,
