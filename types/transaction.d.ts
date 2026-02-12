@@ -14,6 +14,7 @@ declare global {
   type AnalyticsData = {
     cashFlow: CashFlowData[];
     categories: CategoryData[];
+    incomeCategories: CategoryData[];
     totalIncome: number;
     totalSpent: number;
   };
@@ -21,6 +22,7 @@ declare global {
   type AnalyticsProps = {
     cashFlowData: { name: string; income: number; spend: number }[];
     categoryData: { name: string; value: number; color: string }[];
+    incomeCategoryData: { name: string; value: number; color: string }[];
     totalIncome: number;
     totalSpent: number;
   };

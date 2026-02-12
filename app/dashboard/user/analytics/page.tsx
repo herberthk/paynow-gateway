@@ -12,6 +12,7 @@ const Analytics = async () => {
     <UserAnalytics
       cashFlowData={analyticsData.cashFlow}
       categoryData={analyticsData.categories}
+      incomeCategoryData={analyticsData.incomeCategories}
       totalIncome={analyticsData.totalIncome}
       totalSpent={analyticsData.totalSpent}
     />

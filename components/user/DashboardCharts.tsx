@@ -29,7 +29,7 @@ const CustomTooltip = ({
 }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white dark:bg-slate-800 p-3 border border-gray-100 dark:border-slate-700 shadow-lg rounded-lg text-xs">
+      <div className="bg-white dark:bg-slate-800 p-3 border border-gray-100 dark:border-slate-700 shadow-lg rounded-lg text-xs z-500">
         <p className="font-bold text-gray-900 dark:text-white mb-1">{label}</p>
         {payload.map(
           (
@@ -45,7 +45,7 @@ const CustomTooltip = ({
                 {p.name}:
               </span>
               <span className="font-mono font-medium text-gray-900 dark:text-gray-200">
-                UGX {p.value.toLocaleString()}
+                UGX {millify(Number(p.value))}
               </span>
             </div>
           ),
@@ -203,10 +203,17 @@ const DashboardCharts = ({ analyticsData }: DashboardChartsProps) => {
                   />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip
+                content={
+                  <CustomTooltip active={true} payload={[]} label={""} />
+                }
+                animationDuration={700}
+                // formatter={(value) => `UGX ${millify(Number(value))}`}
+                wrapperStyle={{ zIndex: 50 }}
+              />
             </PieChart>
           </ResponsiveContainer>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-1">
             <span className="block text-xl font-bold text-gray-900 dark:text-white">
               {millify(
                 Math.round(
