@@ -6,12 +6,7 @@ import {
   PlusCircle,
   CreditCard,
   Smartphone,
-  CheckCircle,
-  X,
-  AlertCircle,
   Loader2,
-  PartyPopper,
-  ArrowRight,
 } from "lucide-react";
 import { useAppStore, useTransactionStore } from "@/store";
 import { linkedMethods } from "@/services/mockData";
@@ -21,18 +16,13 @@ import { processP2PTransfer } from "@/lib/actions/wallet";
 import { createP2PTransaction } from "@/lib/actions/transactions";
 import { createTransferNotifications } from "@/lib/actions/notifications";
 import { generateTxRef } from "@/utils/helpers";
+import { ErrorModal } from "./modals/Error";
+import { ConfirmationModal } from "./modals/Confirmation";
+import { SuccessModal } from "./modals/Success";
 
 type UserProps = {
   user: User;
   wallet: Wallet;
-};
-
-type RecipientUser = {
-  id: number;
-  name: string | null;
-  email: string | null;
-  tel: string | null;
-  walletId: string;
 };
 
 const WalletView = ({ user, wallet }: UserProps) => {
@@ -49,13 +39,17 @@ const WalletView = ({ user, wallet }: UserProps) => {
   const [recipientData, setRecipientData] = useState<RecipientUser | null>(
     null,
   );
-  const [completedTxnRef, setCompletedTxnRef] = useState("");
 
   // Loading and error states
   const [isSearching, setIsSearching] = useState(false);
   const [isTransferring, setIsTransferring] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [transaction, setTransaction] = useState<PreviewTransaction>({
+    amount: 0,
+    currency: "UGX",
+    txn_ref: "",
+    fee: 0,
+  });
 
   const setTotalBalance = useTransactionStore((state) => state.setTotalBalance);
   // setTotalBalance(stats[0].value);
@@ -64,7 +58,7 @@ const WalletView = ({ user, wallet }: UserProps) => {
   const handleSendClick = async () => {
     // Reset states
     setError("");
-    setSuccess("");
+    // setSuccess("");
 
     // Validate inputs
     if (!recipient.trim()) {
@@ -160,6 +154,12 @@ const WalletView = ({ user, wallet }: UserProps) => {
         );
       }
 
+      setTransaction({
+        amount: transactionResult.transaction?.amount!,
+        currency: transactionResult.transaction?.currency!,
+        txn_ref,
+        fee: transactionResult.transaction?.fee!,
+      });
       // Create notifications for both sender and recipient
       await createTransferNotifications({
         senderId: user.id,
@@ -171,7 +171,6 @@ const WalletView = ({ user, wallet }: UserProps) => {
       });
 
       // Success! Show beautiful success modal
-      setCompletedTxnRef(txn_ref);
       setShowConfirmModal(false);
       setShowSuccessModal(true);
       setRecipient("");
@@ -196,47 +195,8 @@ const WalletView = ({ user, wallet }: UserProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Success Notification */}
-      {success && (
-        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 flex items-start gap-3">
-          <CheckCircle
-            className="text-green-600 dark:text-green-400 mt-0.5"
-            size={20}
-          />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-green-900 dark:text-green-100">
-              {success}
-            </p>
-          </div>
-          <button
-            onClick={() => setSuccess("")}
-            className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
-
-      {/* Error Notification */}
-      {error && (
-        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start gap-3">
-          <AlertCircle
-            className="text-red-600 dark:text-red-400 mt-0.5"
-            size={20}
-          />
-          <div className="flex-1">
-            <p className="text-sm font-medium text-red-900 dark:text-red-100">
-              {error}
-            </p>
-          </div>
-          <button
-            onClick={() => setError("")}
-            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
+      {/* Error Modal */}
+      {error && <ErrorModal error={error} onClose={() => setError("")} />}
 
       {/* Wallet Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -387,230 +347,23 @@ const WalletView = ({ user, wallet }: UserProps) => {
 
       {/* Confirmation Modal */}
       {showConfirmModal && recipientData && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 dark:border-slate-700 overflow-hidden">
-            {/* Header */}
-            <div className="bg-linear-to-r from-indigo-600 to-purple-600 p-6 text-white">
-              <h3 className="text-xl font-bold flex items-center gap-2">
-                <CheckCircle size={24} />
-                Confirm Transfer
-              </h3>
-              <p className="text-indigo-100 text-sm mt-1">
-                Please review the transfer details
-              </p>
-            </div>
-
-            {/* Body */}
-            <div className="p-6 space-y-4">
-              {/* Recipient Info */}
-              <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-4 border border-gray-200 dark:border-slate-600">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                  Recipient
-                </p>
-                <p className="font-bold text-gray-900 dark:text-white text-lg">
-                  {recipientData.name || "Unknown User"}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                  {recipientData.email || recipientData.tel}
-                </p>
-              </div>
-
-              {/* Amount Details */}
-              <div className="space-y-2">
-                <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-slate-600">
-                  <span className="text-gray-600 dark:text-gray-300">
-                    Transfer Amount
-                  </span>
-                  <span className="font-semibold text-gray-900 dark:text-white">
-                    UGX {parseFloat(amount).toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-slate-600">
-                  <span className="text-gray-600 dark:text-gray-300">Fee</span>
-                  <span className="font-semibold text-orange-600 dark:text-orange-400">
-                    UGX 200
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg px-3 mt-2">
-                  <span className="font-semibold text-gray-900 dark:text-white">
-                    Total Debit
-                  </span>
-                  <span className="font-bold text-indigo-600 dark:text-indigo-400 text-lg">
-                    UGX {(parseFloat(amount) + 200).toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
-              {/* Warning */}
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 flex items-start gap-2">
-                <AlertCircle
-                  size={16}
-                  className="text-amber-600 dark:text-amber-400 mt-0.5"
-                />
-                <p className="text-xs text-amber-800 dark:text-amber-200">
-                  This action cannot be undone. Please ensure the details are
-                  correct.
-                </p>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="bg-gray-50 dark:bg-slate-700 p-4 flex gap-3">
-              <button
-                onClick={handleCancelTransfer}
-                disabled={isTransferring}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmTransfer}
-                disabled={isTransferring}
-                className="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 disabled:cursor-not-allowed"
-              >
-                {isTransferring ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle size={16} />
-                    Confirm Transfer
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmationModal
+          amount={amount}
+          recipientData={recipientData}
+          handleCancelTransfer={handleCancelTransfer}
+          handleConfirmTransfer={handleConfirmTransfer}
+          isTransferring={isTransferring}
+        />
       )}
 
       {/* Success Modal */}
       {showSuccessModal && recipientData && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full border border-gray-200 dark:border-slate-700 overflow-hidden animate-in zoom-in duration-300">
-            {/* Header with gradient and animation */}
-            <div className="bg-linear-to-br from-green-600 to-emerald-600 p-8 text-white relative overflow-hidden">
-              {/* Background pattern */}
-              <div className="absolute inset-0 opacity-10">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-white rounded-full -mr-20 -mt-20"></div>
-                <div className="absolute bottom-0 left-0 w-32 h-32 bg-white rounded-full -ml-16 -mb-16"></div>
-              </div>
-
-              <div className="relative z-10 text-center">
-                <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full mb-4 animate-bounce">
-                  <PartyPopper size={40} className="text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-2">
-                  Transfer Successful!
-                </h3>
-                <p className="text-green-100">Your money is on its way</p>
-              </div>
-            </div>
-
-            {/* Body */}
-            <div className="p-6 space-y-4">
-              {/* Success checkmark animation */}
-              <div className="flex justify-center">
-                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                  <CheckCircle
-                    size={32}
-                    className="text-green-600 dark:text-green-400"
-                  />
-                </div>
-              </div>
-
-              {/* Transfer Details */}
-              <div className="bg-linear-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-5 border border-green-200 dark:border-green-800">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex-1">
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                      Sent to
-                    </p>
-                    <p className="font-bold text-gray-900 dark:text-white text-lg">
-                      {recipientData.name || "Unknown User"}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      {recipientData.email || recipientData.tel}
-                    </p>
-                  </div>
-                  <ArrowRight
-                    className="text-green-600 dark:text-green-400 mx-3"
-                    size={24}
-                  />
-                  <div className="text-right">
-                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">
-                      Amount Sent
-                    </p>
-                    <p className="font-bold text-green-600 dark:text-green-400 text-xl">
-                      UGX{" "}
-                      {parseFloat(
-                        String(transactionAmout) || "0",
-                      ).toLocaleString()}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      + UGX 200 Fee
-                    </p>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-green-200 dark:border-green-800">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Transaction ID
-                    </span>
-                    <span className="font-mono text-gray-900 dark:text-white font-medium">
-                      {completedTxnRef}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Status
-                    </span>
-                    <span className="flex items-center gap-1 text-green-600 dark:text-green-400 font-semibold">
-                      <CheckCircle size={14} />
-                      Completed
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Info message */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-start gap-2">
-                <AlertCircle
-                  size={16}
-                  className="text-blue-600 dark:text-blue-400 mt-0.5"
-                />
-                <p className="text-xs text-blue-800 dark:text-blue-200">
-                  Both you and the recipient will receive a notification about
-                  this transfer.
-                </p>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="bg-gray-50 dark:bg-slate-700 p-4 flex gap-3">
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(completedTxnRef);
-                }}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-100 dark:hover:bg-slate-600 transition-colors"
-              >
-                Copy Ref
-              </button>
-              <button
-                onClick={() => {
-                  setShowSuccessModal(false);
-                  setRecipientData(null);
-                  window.location.reload();
-                }}
-                className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
+        <SuccessModal
+          recipientData={recipientData}
+          setShowSuccessModal={setShowSuccessModal}
+          setRecipientData={setRecipientData}
+          transaction={transaction}
+        />
       )}
     </div>
   );

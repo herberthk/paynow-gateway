@@ -17,7 +17,7 @@ import {
   markNotificationAsRead,
   deleteNotification,
 } from "../lib/actions/notifications";
-import { getUserSession } from "@/lib/session";
+import { getUserSession } from "@/lib/actions/session";
 import Link from "next/link";
 
 const notificationFilters: NotificationFilter[] = [

@@ -1,9 +1,10 @@
 "use server";
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { createSession, getUserSession } from "../session";
+import { createSession, getUserSession } from "./session";
 import bcrypt from "bcrypt";
 import { revalidatePath } from "next/cache";
+import { getAdmins } from "./admin";
 
 export const updatePassword = async ({
   currentPassword,
@@ -25,6 +26,7 @@ export const updatePassword = async ({
       select: {
         id: true,
         password: true,
+        name: true,
       },
     });
     const isPasswordValid = await bcrypt.compare(
@@ -47,16 +49,17 @@ export const updatePassword = async ({
         password: hashedPassword,
       },
     });
-    // TODO: Add a notification for the user
-    await prisma.systemNotification.create({
-      data: {
-        toUserId: user?.id!,
+    const admins = await getAdmins();
+    // send notifications to admins
+    await prisma.systemNotification.createMany({
+      data: admins.map((admin) => ({
+        toUserId: admin.id,
         fromUserId: user?.id!,
         title: "Password reset successfully",
-        message: "Your password has been reset successfully",
+        message: `${user?.name} has reset their password`,
         type: "INFO",
-        path: "/dashboard/user/settings",
-      },
+        path: `/dashboard/admin/user/${user?.id}`,
+      })),
     });
     return {
       type: "success",
@@ -95,6 +98,7 @@ export const updateUserInfo = async ({
       },
       select: {
         id: true,
+        name: true,
       },
     });
     const updatedUser = await prisma.user.update({
@@ -114,16 +118,17 @@ export const updateUserInfo = async ({
       },
     });
 
-    // TODO: Add a notification for the user
-    await prisma.systemNotification.create({
-      data: {
-        toUserId: user?.id!,
+    const admins = await getAdmins();
+    // send notifications to admins
+    await prisma.systemNotification.createMany({
+      data: admins.map((admin) => ({
+        toUserId: admin.id,
         fromUserId: user?.id!,
         title: "Profile information updated successfully",
-        message: "Your profile information has been updated successfully",
+        message: `${user?.name} has updated their profile information`,
         type: "INFO",
-        path: "/dashboard/user/settings",
-      },
+        path: `/dashboard/admin/user/${user?.id}`,
+      })),
     });
 
     await createSession({

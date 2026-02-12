@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { getTransactionFee } from "./fee";
+import { getUserSession } from "./session";
 
 export const getTransactions = async ({
   page = 1,
@@ -22,9 +23,19 @@ export const getTransactions = async ({
   totalTransactions: number;
 }> => {
   try {
+    const user = await getUserSession();
+    if (!user) {
+      return {
+        transactions: [],
+        totalPages: 0,
+        currentPage: 1,
+        totalTransactions: 0,
+      };
+    }
+    const isAdmin = user.privilege === "super_admin";
     const skip = (page - 1) * limit;
-
-    const where = {};
+    // if user is admin, fetch all transactions, else fetch only user's transactions
+    const where = isAdmin ? {} : { recipientId: user.id };
 
     if (query?.startsWith("TX_")) {
       const tx = await prisma.transaction.findUnique({
@@ -137,6 +148,14 @@ export const createP2PTransaction = async ({
   txn_ref: string;
 }) => {
   try {
+    const user = await getUserSession();
+    if (!user) {
+      return {
+        success: false,
+        message: "User not found",
+        transaction: null,
+      };
+    }
     const fee = await getTransactionFee("TRANSFER");
     const transaction = await prisma.transaction.create({
       data: {
@@ -162,6 +181,8 @@ export const createP2PTransaction = async ({
         txn_ref: transaction.txn_ref,
         amount: transaction.amount.toNumber(),
         createdAt: transaction.createdAt.toISOString(),
+        currency: transaction.currency,
+        fee: transaction.fee.toNumber(),
       },
     };
   } catch (error) {

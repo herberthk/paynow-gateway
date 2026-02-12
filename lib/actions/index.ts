@@ -7,3 +7,4 @@ export * from "./transactions";
 export * from "./users";
 export * from "./notifications";
 export * from "./wallet";
+export * from "./session";
