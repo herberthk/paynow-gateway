@@ -1,7 +1,7 @@
 import WalletView from "@/components/WalletView";
 import { getUserWallet } from "@/lib/actions/wallet";
 // import { getUserWallet } from "@/lib/actions/wallet";
-import { getUserSession } from "@/lib/session";
+import { getUserSession } from "@/lib/actions/session";
 
 const Wallet = async () => {
   const user = await getUserSession();

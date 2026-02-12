@@ -24,6 +24,21 @@ declare global {
     totalIncome: number;
     totalSpent: number;
   };
+
+  type RecipientUser = {
+    id: number;
+    name: string | null;
+    email: string | null;
+    tel: string | null;
+    walletId: string;
+  };
+
+  type PreviewTransaction = {
+    amount: number;
+    currency: string;
+    txn_ref: string;
+    fee: number;
+  };
 }
 
 export {};

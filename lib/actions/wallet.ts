@@ -59,7 +59,10 @@ export const processP2PTransfer = async (
       });
 
       if (!senderWallet) {
-        throw new Error("Sender wallet not found");
+        return {
+          success: false,
+          message: "Sender wallet not found",
+        };
       }
 
       const senderBalance = senderWallet.balance.toNumber();
@@ -70,9 +73,10 @@ export const processP2PTransfer = async (
 
       // Check sufficient balance
       if (senderBalance < totalDeduction) {
-        throw new Error(
-          `Insufficient balance. Available: UGX ${senderBalance.toLocaleString()} (Required: UGX ${totalDeduction.toLocaleString()} including fee)`,
-        );
+        return {
+          success: false,
+          message: `Insufficient balance. Available: UGX ${senderBalance.toLocaleString()} (Required: UGX ${totalDeduction.toLocaleString()} including fee)`,
+        };
       }
 
       // Get recipient wallet
@@ -81,7 +85,10 @@ export const processP2PTransfer = async (
       });
 
       if (!recipientWallet) {
-        throw new Error("Recipient wallet not found");
+        return {
+          success: false,
+          message: "Recipient wallet not found",
+        };
       }
 
       // Debit sender (Amount + Fee)
