@@ -55,6 +55,7 @@ export const getAnalyticsData = async (
 
     // 2. Process Category Data (Group by Category)
     const categoryMap = new Map<string, number>();
+    const incomeCategoryMap = new Map<string, number>();
 
     transactions.forEach((tx) => {
       const amount = tx.amount.toNumber();
@@ -76,6 +77,13 @@ export const getAnalyticsData = async (
         if (["TRANSFER", "DEPOSIT", "PAYMENT"].includes(tx.type)) {
           dayStats.income += amount;
           totalIncome += amount;
+
+          // Add to Income Category Data
+          const catName = tx.category || "Uncategorized";
+          incomeCategoryMap.set(
+            catName,
+            (incomeCategoryMap.get(catName) || 0) + amount,
+          );
         }
       } else if (tx.userId === userId) {
         // Expense (Transfer sent, Payment, Withdrawal)
@@ -103,7 +111,7 @@ export const getAnalyticsData = async (
       }),
     );
 
-    // Format Category Data for Recharts
+    // Format Category Data for Recharts (Expenses)
     const categories: CategoryData[] = Array.from(categoryMap.entries())
       .map(([name, value], index) => ({
         name,
@@ -112,9 +120,21 @@ export const getAnalyticsData = async (
       }))
       .sort((a, b) => b.value - a.value); // Sort by highest spend
 
+    // Format Income Category Data for Recharts
+    const incomeCategories: CategoryData[] = Array.from(
+      incomeCategoryMap.entries(),
+    )
+      .map(([name, value], index) => ({
+        name,
+        value,
+        color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
+      }))
+      .sort((a, b) => b.value - a.value); // Sort by highest income
+
     return {
       cashFlow,
       categories,
+      incomeCategories,
       totalIncome,
       totalSpent,
     };
@@ -123,6 +143,7 @@ export const getAnalyticsData = async (
     return {
       cashFlow: [],
       categories: [],
+      incomeCategories: [],
       totalIncome: 0,
       totalSpent: 0,
     };
@@ -134,8 +155,8 @@ export const getDashboardAnalyticsData = async (
 ): Promise<AnalyticsData> => {
   try {
     const now = new Date();
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(now.getDate() - 7);
+    const startDate = new Date();
+    startDate.setDate(now.getDate() - 6);
 
     // Fetch all completed transactions relevant to the user in the last 7 days
     const transactions = await prisma.transaction.findMany({
@@ -146,7 +167,7 @@ export const getDashboardAnalyticsData = async (
         ],
         status: "COMPLETED",
         createdAt: {
-          gte: sevenDaysAgo,
+          gte: startDate,
           lte: now,
         },
       },
@@ -169,8 +190,8 @@ export const getDashboardAnalyticsData = async (
     let totalSpent = 0;
 
     // Initialize map for the last 7 days to ensure continuity in the chart
-    for (let i = 0; i <= 7; i++) {
-      const d = new Date(sevenDaysAgo);
+    for (let i = 0; i <= 6; i++) {
+      const d = new Date(startDate);
       d.setDate(d.getDate() + i);
       const dateKey = d.toLocaleDateString("en-US", {
         month: "short",
@@ -181,6 +202,7 @@ export const getDashboardAnalyticsData = async (
 
     // 2. Process Category Data (Group by Category)
     const categoryMap = new Map<string, number>();
+    const incomeCategoryMap = new Map<string, number>();
 
     transactions.forEach((tx) => {
       const amount = tx.amount.toNumber();
@@ -202,6 +224,13 @@ export const getDashboardAnalyticsData = async (
         if (["TRANSFER", "DEPOSIT", "PAYMENT"].includes(tx.type)) {
           dayStats.income += amount;
           totalIncome += amount;
+
+          // Add to Income Category Data
+          const catName = tx.category || "Uncategorized";
+          incomeCategoryMap.set(
+            catName,
+            (incomeCategoryMap.get(catName) || 0) + amount,
+          );
         }
       } else if (tx.userId === userId) {
         // Expense (Transfer sent, Payment, Withdrawal)
@@ -229,18 +258,32 @@ export const getDashboardAnalyticsData = async (
       }),
     );
 
-    // Format Category Data for Recharts
+    // Format Category Data for Recharts (Top 3 only for expenses)
     const categories: CategoryData[] = Array.from(categoryMap.entries())
       .map(([name, value], index) => ({
         name,
         value,
         color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
       }))
-      .sort((a, b) => b.value - a.value); // Sort by highest spend
+      .sort((a, b) => b.value - a.value) // Sort by highest spend
+      .slice(0, 3); // Return only top 3 categories
+
+    // Format Income Category Data for Recharts (Top 3 only)
+    const incomeCategories: CategoryData[] = Array.from(
+      incomeCategoryMap.entries(),
+    )
+      .map(([name, value], index) => ({
+        name,
+        value,
+        color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
+      }))
+      .sort((a, b) => b.value - a.value) // Sort by highest income
+      .slice(0, 3); // Return only top 3 categories
 
     return {
       cashFlow,
       categories,
+      incomeCategories,
       totalIncome,
       totalSpent,
     };
@@ -249,6 +292,7 @@ export const getDashboardAnalyticsData = async (
     return {
       cashFlow: [],
       categories: [],
+      incomeCategories: [],
       totalIncome: 0,
       totalSpent: 0,
     };

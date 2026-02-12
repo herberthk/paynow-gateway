@@ -211,7 +211,7 @@ const TransactionModal = ({
                 <>
                   {/* Success: Transfer Details */}
                   <div
-                    className={`bg-gradient-to-br ${theme.bg} rounded-xl p-5 border ${theme.border}`}
+                    className={`bg-linear-to-br ${theme.bg} rounded-xl p-5 border ${theme.border}`}
                   >
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex-1">

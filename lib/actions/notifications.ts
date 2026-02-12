@@ -17,7 +17,6 @@ export const getNotifications = async ({
       toUserId: userId,
     };
     if (type && type !== "ALL") {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       where.type = type;
     }
