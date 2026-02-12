@@ -1,4 +1,4 @@
-import AdminFeeManagement from "@/components/AdminFeeManagement";
+import AdminFeeManagement from "@/components/admin/AdminFeeManagement";
 
 const Settings = () => {
   return <AdminFeeManagement />;

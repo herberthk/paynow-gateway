@@ -16,7 +16,7 @@ import {
   getNotifications,
   markNotificationAsRead,
   deleteNotification,
-} from "../lib/actions/notifications";
+} from "@/lib";
 import { getUserSession } from "@/lib/actions/session";
 import Link from "next/link";
 

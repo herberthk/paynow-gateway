@@ -3,7 +3,7 @@ import { render } from "@react-email/render";
 import nodemailer from "nodemailer";
 import prisma from "@/lib/prisma";
 import { generateOTP, hashOTP } from "@/utils";
-import OTPEmail from "@/components/OtpEmail";
+import OTPEmail from "@/components/global/OtpEmail";
 
 // type Props = {
 //   otp: string;

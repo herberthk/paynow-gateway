@@ -1,5 +1,5 @@
-import AdminDashboard from "@/components/AdminDashboard";
-import StatCards from "@/components/StatCards";
+import AdminDashboard from "@/components/admin/AdminDashboard";
+import StatCards from "@/components/global/StatCards";
 
 const AdminDashboardPage = () => {
   return (

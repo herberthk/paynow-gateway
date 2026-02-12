@@ -1,4 +1,4 @@
-import UserDashboard from "@/components/UserDashboard";
+import UserDashboard from "@/components/user/UserDashboard";
 import { getDashboardAnalyticsData, getUserSession } from "@/lib";
 import { getDashboardStats } from "@/lib/actions/dashboard";
 import { getTransactions } from "@/lib/actions/transactions";

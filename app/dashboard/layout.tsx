@@ -1,7 +1,7 @@
-import DashboardAssistant from "@/components/DashboardAssistant";
-import Header from "@/components/Header";
-import PaymentModal from "@/components/PaymentModal";
-import Sidebar from "@/components/Sidebar";
+import DashboardAssistant from "@/components/AI/DashboardAssistant";
+import Header from "@/components/global/Header";
+import PaymentModal from "@/components/global/PaymentModal";
+import Sidebar from "@/components/global/Sidebar";
 import { getUserSession } from "@/lib";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";

@@ -16,9 +16,7 @@ import { processP2PTransfer } from "@/lib/actions/wallet";
 import { createP2PTransaction } from "@/lib/actions/transactions";
 import { createTransferNotifications } from "@/lib/actions/notifications";
 import { generateTxRef } from "@/utils/helpers";
-import { ErrorModal } from "./modals/Error";
-import { ConfirmationModal } from "./modals/Confirmation";
-import { SuccessModal } from "./modals/Success";
+import { ErrorModal, ConfirmationModal, SuccessModal } from "../modals";
 
 type UserProps = {
   user: User;

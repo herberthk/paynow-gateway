@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { createPostgresAdapter } from "@prisma/studio-core/data/postgres-core";
 import { createStudioBFFClient } from "@prisma/studio-core/data/bff";
 import { useMemo, Suspense } from "react";
-import StudioWrapper from "@/components/StudioWrapper";
+import StudioWrapper from "@/components/global/StudioWrapper";
 
 // Dynamically import Studio with no SSR to avoid hydration issues
 const Studio = dynamic(

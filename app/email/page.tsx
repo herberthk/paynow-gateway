@@ -1,4 +1,4 @@
-import OTPEmail from "@/components/OtpEmail";
+import OTPEmail from "@/components/global/OtpEmail";
 
 // Preview component for testing
 export default function EmailPreview() {

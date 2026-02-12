@@ -1,4 +1,4 @@
-import AdminUsersKYC from "@/components/AdminUsersKYC";
+import AdminUsersKYC from "@/components/admin/AdminUsersKYC";
 
 const Kyc = () => {
   return <AdminUsersKYC />;

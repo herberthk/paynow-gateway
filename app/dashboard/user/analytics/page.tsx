@@ -1,4 +1,4 @@
-import UserAnalytics from "@/components/UserAnalytics";
+import UserAnalytics from "@/components/user/UserAnalytics";
 import { getUserSession } from "@/lib";
 import { getAnalyticsData } from "@/lib/actions/analytics";
 
