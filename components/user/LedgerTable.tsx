@@ -110,6 +110,53 @@ const LedgerTable: React.FC<LedgerTableProps> = ({
     searchParams,
   ]);
 
+  // Handle CSV Download
+  const handleDownload = () => {
+    if (!entries.length) return;
+
+    // Define CSV headers
+    const headers = [
+      "Date",
+      "Time",
+      "Reference",
+      "Description",
+      "Account",
+      "Type",
+      "Amount (UGX)",
+    ];
+
+    // Map entries to CSV rows
+    const csvRows = entries.map((entry) => {
+      const date = new Date(entry.createdAt).toLocaleDateString();
+      const time = new Date(entry.createdAt).toLocaleTimeString();
+      return [
+        date,
+        time,
+        entry.transaction?.txn_ref || "N/A",
+        `"${(entry.description || "").replace(/"/g, '""')}"`, // Escape quotes
+        entry.account,
+        entry.type,
+        entry.amount,
+      ].join(",");
+    });
+
+    // Combine headers and rows
+    const csvContent = [headers.join(","), ...csvRows].join("\n");
+
+    // Create a blob and trigger download
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `ledger_export_${new Date().toISOString().split("T")[0]}.csv`,
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm flex flex-col h-full transition-colors">
       <div className="p-5 border-b border-gray-200 dark:border-slate-700 flex flex-col gap-4">
@@ -145,7 +192,11 @@ const LedgerTable: React.FC<LedgerTableProps> = ({
               <Filter size={18} />
               Filters
             </button>
-            <button className="p-2 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-300 transition-colors">
+            <button
+              onClick={handleDownload}
+              className="p-2 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-300 transition-colors"
+              title="Download CSV"
+            >
               <Download size={18} />
             </button>
           </div>
