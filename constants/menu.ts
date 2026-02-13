@@ -8,6 +8,7 @@ import {
   Users,
   AlertCircle,
   Banknote,
+  BookOpen,
 } from "lucide-react";
 export const menuItems = (userRole: Privilege) =>
   userRole === "super_admin"
@@ -85,6 +86,12 @@ export const menuItems = (userRole: Privilege) =>
           label: "Activity Logs",
           icon: ShieldCheck,
           href: "/dashboard/activity-logs",
+        },
+        {
+          id: "/dashboard/user/ledger",
+          label: "Ledger Book",
+          icon: BookOpen,
+          href: "/dashboard/user/ledger",
         },
         {
           id: "/dashboard/user/settings",

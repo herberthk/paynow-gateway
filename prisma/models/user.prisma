@@ -31,6 +31,7 @@ model User {
   paymentOtp             Otp?
  sentTransactions     Transaction[] @relation("TransactionSender")
  receivedTransactions Transaction[] @relation("TransactionRecipient")
+  ledger           Ledger[]
   @@index([privilege], map: "idx_user_preveledge")
   @@index([id, name, profile], map: "idx_users_covering")
   @@index([id], map: "idx_users_id")
@@ -108,6 +109,7 @@ model Transaction {
   updatedAt DateTime @updatedAt
   deleted_at DateTime?
   disputes  Dispute[]
+  ledger    Ledger[]
 
   @@index([recipientId])
   @@index([recipientName])
@@ -186,6 +188,26 @@ model SystemNotification {
   @@map("payment_system_notifications")
 }
 
+model Ledger {
+  id            String      @id @default(uuid())
+  transactionId String
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  userId        Int
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          LedgerType
+  amount        Decimal     @db.Decimal(12, 2)
+  account       String      // e.g., "Wallet", "Income", "Expense", "Transfer Out", "Transfer In"
+  description   String?
+  balanceAfter  Decimal?    @db.Decimal(12, 2) // Optional: Snapshot of balance after transaction
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([type])
+  @@index([account])
+  @@map("payment_ledger")
+}
+
 enum PaymentProvider {
   AIRTEL
   MTN
@@ -240,5 +262,10 @@ enum TransactionStatus {
 enum Currency {
   UGX
   USD
+}
+
+enum LedgerType {
+  DEBIT
+  CREDIT
 }
   
