@@ -10,3 +10,4 @@ export * from "./wallet";
 export * from "./session";
 export * from "./ledger";
 export * from "./financial-statements";
+export * from "./admin";
