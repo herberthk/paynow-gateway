@@ -140,6 +140,7 @@ export const createLedgerEntry = async ({
   description,
   senderAccount = "Wallet",
   recipientAccount = "Wallet",
+  recipientName,
 }: {
   transactionId: string;
   senderId: number;
@@ -149,6 +150,7 @@ export const createLedgerEntry = async ({
   description: string;
   senderAccount?: string;
   recipientAccount?: string;
+  recipientName?: string;
 }) => {
   try {
     // 1. Sender Entry (Credit Wallet/Asset, Debit Expense/Liability)
@@ -190,7 +192,7 @@ export const createLedgerEntry = async ({
               type: "CREDIT",
               amount,
               account: senderAccount, // "Wallet"
-              description: `Sent to ${type === "TRANSFER" ? "user" : "merchant"} #${recipientId}`,
+              description: `Sent to ${type === "TRANSFER" ? recipientName : "merchant"} #${recipientId}`,
             },
           });
           // 2. Debit Sender Expense
@@ -214,7 +216,7 @@ export const createLedgerEntry = async ({
               type: "DEBIT",
               amount,
               account: recipientAccount, // "Wallet"
-              description: `Received from #${senderId}`,
+              description: `Received from ${type === "TRANSFER" ? recipientName : "merchant"} #${senderId}`,
             },
           });
           // 2. Credit Recipient Income
