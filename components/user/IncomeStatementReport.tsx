@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Calendar, Download, TrendingUp } from "lucide-react";
+import { generateIncomeStatementPDF } from "@/utils/pdf-generator";
 
 interface IncomeStatementData {
   period: {
@@ -98,7 +99,10 @@ const IncomeStatementReport = ({
             Update Report
           </button>
         </div>
-        <button className="px-4 py-2 border border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
+        <button
+          onClick={() => data && generateIncomeStatementPDF(data)}
+          className="px-4 py-2 border border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+        >
           <Download size={16} />
           Export PDF
         </button>

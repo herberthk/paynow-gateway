@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Calendar, Download, Wallet } from "lucide-react";
+import { generateBalanceSheetPDF } from "@/utils/pdf-generator";
 
 interface BalanceSheetData {
   asOf: Date;
@@ -72,7 +73,10 @@ const BalanceSheetReport = ({ data }: { data: BalanceSheetData | null }) => {
             Update Report
           </button>
         </div>
-        <button className="px-4 py-2 border border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors flex items-center gap-2">
+        <button
+          onClick={() => data && generateBalanceSheetPDF(data)}
+          className="px-4 py-2 border border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+        >
           <Download size={16} />
           Export PDF
         </button>
