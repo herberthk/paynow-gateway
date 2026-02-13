@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { getTransactionFee } from "./fee";
 import { getUserSession } from "./session";
+import { createLedgerEntry } from "./ledger";
 
 export const getTransactions = async ({
   page = 1,
@@ -171,6 +172,18 @@ export const createP2PTransaction = async ({
         txn_ref,
         fee,
       },
+    });
+
+    // Create Ledger Entries
+    await createLedgerEntry({
+      transactionId: transaction.id,
+      senderId,
+      recipientId,
+      amount,
+      type: "TRANSFER",
+      description: `Starts with ${txn_ref}`,
+      senderAccount: "Wallet",
+      recipientAccount: "Wallet",
     });
 
     return {
