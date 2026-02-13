@@ -1,36 +1,70 @@
 "use client";
-import { ArrowUpRight, Users, Briefcase } from "lucide-react";
+import { ArrowUpRight, Users, Briefcase, AlertCircle } from "lucide-react";
 import StatCard from "./StatCard";
 
-const StatCards = () => {
+interface StatCardsProps {
+  totalRevenue?: number;
+  totalUsers?: number;
+  activeDisputes?: number;
+  pendingTransactions?: number;
+  revenueTrend?: "up" | "down";
+  revenueTrendValue?: string;
+  usersTrend?: "up" | "down";
+  usersTrendValue?: string;
+}
+
+const StatCards = ({
+  totalRevenue,
+  totalUsers,
+  activeDisputes,
+  pendingTransactions,
+  revenueTrend,
+  revenueTrendValue,
+  usersTrend,
+  usersTrendValue,
+}: StatCardsProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard
         title="Total Revenue"
-        value="UGX 1.2B"
+        value={
+          totalRevenue !== undefined
+            ? `UGX ${totalRevenue.toLocaleString()}`
+            : "Loading..."
+        }
         icon={Briefcase}
         color="blue"
-        trend="up"
-        trendValue="+8.2%"
+        trend={revenueTrend}
+        trendValue={revenueTrendValue}
       />
       <StatCard
         title="Total Users"
-        value="12,450"
+        value={
+          totalUsers !== undefined ? totalUsers.toLocaleString() : "Loading..."
+        }
         icon={Users}
         color="green"
-        trend="up"
-        trendValue="+120 this week"
+        trend={usersTrend}
+        trendValue={usersTrendValue}
       />
       <StatCard
         title="Active Disputes"
-        value="24"
-        icon={Users}
+        value={
+          activeDisputes !== undefined
+            ? activeDisputes.toLocaleString()
+            : "Loading..."
+        }
+        icon={AlertCircle}
         color="orange"
         subValue="Requires Attention"
       />
       <StatCard
-        title="Withdrawals Pending"
-        value="18"
+        title="Pending Transactions"
+        value={
+          pendingTransactions !== undefined
+            ? pendingTransactions.toLocaleString()
+            : "Loading..."
+        }
         icon={ArrowUpRight}
         color="purple"
       />
