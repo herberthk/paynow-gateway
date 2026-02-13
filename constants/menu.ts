@@ -9,6 +9,7 @@ import {
   AlertCircle,
   Banknote,
   BookOpen,
+  TrendingUp,
 } from "lucide-react";
 export const menuItems = (userRole: Privilege) =>
   userRole === "super_admin"
@@ -92,6 +93,18 @@ export const menuItems = (userRole: Privilege) =>
           label: "Ledger Book",
           icon: BookOpen,
           href: "/dashboard/user/ledger",
+        },
+        {
+          id: "/dashboard/user/financial-statements/income-statement",
+          label: "Income Statement",
+          icon: TrendingUp,
+          href: "/dashboard/user/financial-statements/income-statement",
+        },
+        {
+          id: "/dashboard/user/financial-statements/balance-sheet",
+          label: "Balance Sheet",
+          icon: Wallet,
+          href: "/dashboard/user/financial-statements/balance-sheet",
         },
         {
           id: "/dashboard/user/settings",
