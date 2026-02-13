@@ -19,7 +19,7 @@ const BalanceSheetReport = ({ data }: { data: BalanceSheetData | null }) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
+  // console.log("BalanceSheetReport", data);
   // Format date for input (YYYY-MM-DD)
   const formatDate = (date: Date) => {
     try {

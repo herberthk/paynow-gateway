@@ -25,7 +25,7 @@ const IncomeStatementReport = ({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
+  // console.log("IncomeStatementReport", data);
   // Format date for input (YYYY-MM-DD)
   const formatDate = (date: Date) => {
     try {
