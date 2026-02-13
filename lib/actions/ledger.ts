@@ -203,7 +203,7 @@ export const createLedgerEntry = async ({
               type: "DEBIT",
               amount,
               account: type === "TRANSFER" ? "Transfer Out" : "Payment",
-              description: description,
+              description: `Sent to ${type === "TRANSFER" ? recipientName : "merchant"} #${recipientId}`,
             },
           });
 

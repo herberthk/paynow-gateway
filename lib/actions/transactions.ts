@@ -181,7 +181,7 @@ export const createP2PTransaction = async ({
       recipientId,
       amount,
       type: "TRANSFER",
-      description: `Starts with ${txn_ref}`,
+      description: `Sent to ${recipientName} #${recipientId}`,
       senderAccount: "Wallet",
       recipientAccount: "Wallet",
       recipientName,
