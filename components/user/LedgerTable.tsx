@@ -239,17 +239,17 @@ const LedgerTable: React.FC<LedgerTableProps> = ({
         <table className="w-full text-sm text-left border-collapse min-w-[800px]">
           <thead className="bg-gray-50 dark:bg-slate-700/50 text-gray-500 dark:text-gray-400 font-medium border-b border-gray-200 dark:border-slate-700 sticky top-0 z-10">
             <tr>
-              <th className="px-6 py-4 whitespace-nowrap w-40">Date</th>
-              <th className="px-6 py-4 whitespace-nowrap w-32">Reference</th>
+              <th className="px-6 py-4 whitespace-nowrap">DATE</th>
+              <th className="px-6 py-4 whitespace-nowrap">REFERENCE</th>
               <th className="px-6 py-4 whitespace-nowrap w-auto">
-                Description
+                DESCRIPTION
               </th>
-              <th className="px-6 py-4 whitespace-nowrap w-40">Account</th>
-              <th className="px-6 py-4 text-right whitespace-nowrap w-32 bg-gray-50 dark:bg-slate-700/50">
-                Debit
+              <th className="px-6 py-4 whitespace-nowrap">ACCOUNT</th>
+              <th className="pr-2 text-right py-4 whitespace-nowrap bg-gray-50 dark:bg-slate-700/50">
+                DEBIT(UGX)
               </th>
-              <th className="px-6 py-4 text-right whitespace-nowrap w-32 bg-gray-50 dark:bg-slate-700/50">
-                Credit
+              <th className="pr-2 text-right py-4 whitespace-nowrap bg-gray-50 dark:bg-slate-700/50">
+                CREDIT(UGX)
               </th>
             </tr>
           </thead>
@@ -277,7 +277,7 @@ const LedgerTable: React.FC<LedgerTableProps> = ({
                     </span>
                   </td>
                   <td
-                    className="px-6 py-4 text-gray-700 dark:text-gray-300 font-medium max-w-xs truncate"
+                    className="px-6 py-4 text-gray-700 dark:text-gray-300 font-medium truncate"
                     title={entry.description || ""}
                   >
                     {entry.description || "-"}
@@ -297,29 +297,29 @@ const LedgerTable: React.FC<LedgerTableProps> = ({
                     </span>
                   </td>
                   <td
-                    className={`px-6 py-4 text-right font-medium relative ${entry.type === "DEBIT" ? "bg-red-50/30 dark:bg-red-900/5" : ""}`}
+                    className={`pr-2 py-4 text-right font-medium relative ${entry.type === "DEBIT" ? "bg-red-50/30 dark:bg-red-900/5" : ""}`}
                   >
                     {entry.type === "DEBIT" ? (
                       <span className="text-gray-900 dark:text-white">
-                        <span className="text-xs text-gray-400 mr-1">UGX</span>
+                        {/* <span className="text-xs text-gray-400 mr-1">UGX</span> */}
                         {entry.amount.toLocaleString()}
                       </span>
                     ) : (
-                      <span className="text-gray-300 dark:text-gray-600">
+                      <span className="text-gray-300 dark:text-gray-600 text-center">
                         -
                       </span>
                     )}
                   </td>
                   <td
-                    className={`px-6 py-4 text-right font-medium relative ${entry.type === "CREDIT" ? "bg-green-50/30 dark:bg-green-900/5" : ""}`}
+                    className={`pr-2 py-4 text-right font-medium relative ${entry.type === "CREDIT" ? "bg-green-50/30 dark:bg-green-900/5" : ""}`}
                   >
                     {entry.type === "CREDIT" ? (
                       <span className="text-gray-900 dark:text-white">
-                        <span className="text-xs text-gray-400 mr-1">UGX</span>
+                        {/* <span className="text-xs text-gray-400 mr-1">UGX</span> */}
                         {entry.amount.toLocaleString()}
                       </span>
                     ) : (
-                      <span className="text-gray-300 dark:text-gray-600">
+                      <span className="text-gray-300 dark:text-gray-600 text-center">
                         -
                       </span>
                     )}
@@ -330,7 +330,7 @@ const LedgerTable: React.FC<LedgerTableProps> = ({
               <tr>
                 <td
                   colSpan={6}
-                  className="px-6 py-12 text-center text-gray-500 dark:text-gray-400"
+                  className=" py-12 text-center text-gray-500 dark:text-gray-400"
                 >
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Search
