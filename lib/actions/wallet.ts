@@ -5,29 +5,29 @@ import { getUserSession } from "./session";
 import { generateTxRef } from "@/utils";
 import { getAdmins } from "./admin";
 import { getTransactionFee } from "./fee";
-export const getUserWallet = async (id: number) => {
-  const wallet = await prisma.wallet.findFirst({
-    where: {
-      userId: id,
-    },
-    select: {
-      amount: true,
-      id: true,
-      updatedAt: true,
-      createdAt: true,
-      userId: true,
-      type: true,
-      reason: true,
-      refference: true,
-    },
-  });
-  return {
-    ...wallet,
-    balance: Number(wallet?.amount),
-    createdAt: wallet?.createdAt.toDateString(),
-    updatedAt: wallet?.updatedAt.toDateString(),
-  };
-};
+// export const getUserWallet = async (id: number) => {
+//   const wallet = await prisma.wallet.findFirst({
+//     where: {
+//       userId: id,
+//     },
+//     select: {
+//       amount: true,
+//       id: true,
+//       updatedAt: true,
+//       createdAt: true,
+//       userId: true,
+//       type: true,
+//       reason: true,
+//       refference: true,
+//     },
+//   });
+//   return {
+//     ...wallet,
+//     balance: Number(wallet?.amount),
+//     createdAt: wallet?.createdAt.toDateString(),
+//     updatedAt: wallet?.updatedAt.toDateString(),
+//   };
+// };
 
 /**
  * Calculate total available balance for a user across all wallets
@@ -65,7 +65,6 @@ export const getWalletBalance = async (userId: number) => {
     return {
       success: false,
       balance: 0,
-      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 };

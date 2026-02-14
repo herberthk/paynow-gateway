@@ -13,14 +13,11 @@ import { linkedMethods } from "@/services/mockData";
 import { useEffect, useState } from "react";
 import { findUserByEmailOrPhone } from "@/lib/actions/users";
 import { processP2PTransfer } from "@/lib/actions/wallet";
-import { createP2PTransaction } from "@/lib/actions/transactions";
-import { createTransferNotifications } from "@/lib/actions/notifications";
-import { generateTxRef } from "@/utils/helpers";
 import { ErrorModal, ConfirmationModal, SuccessModal } from "../modals";
 
 type UserProps = {
   user: User;
-  wallet: Wallet;
+  wallet: WalletResult;
 };
 
 const WalletView = ({ user, wallet }: UserProps) => {
@@ -73,9 +70,9 @@ const WalletView = ({ user, wallet }: UserProps) => {
     const TRANSACTION_FEE = 200;
     const totalRequired = transferAmount + TRANSACTION_FEE;
 
-    if (totalRequired > wallet.amount) {
+    if (totalRequired > wallet.balance) {
       setError(
-        `Insufficient balance. Available: UGX ${wallet.amount.toLocaleString()} (Required: UGX ${totalRequired.toLocaleString()})`,
+        `Insufficient balance. Available: UGX ${wallet.balance.toLocaleString()} (Required: UGX ${totalRequired.toLocaleString()})`,
       );
       return;
     }
@@ -159,8 +156,8 @@ const WalletView = ({ user, wallet }: UserProps) => {
   };
 
   useEffect(() => {
-    setTotalBalance(`UGX ${wallet?.amount.toLocaleString()}`);
-  }, [wallet?.amount]);
+    setTotalBalance(`UGX ${wallet?.balance.toLocaleString()}`);
+  }, [wallet?.balance]);
 
   return (
     <div className="space-y-6">
@@ -178,12 +175,12 @@ const WalletView = ({ user, wallet }: UserProps) => {
               Total Balance (UGX)
             </p>
             <h2 className="text-4xl font-bold mb-4">
-              UGX {wallet.amount.toLocaleString()}
+              UGX {wallet.balance.toLocaleString()}
             </h2>
 
             <p className="text-indigo-100 font-medium mb-1 mt-6">USD Balance</p>
             <h3 className="text-2xl font-bold">
-              $ {(Number(wallet.amount) / 3650).toLocaleString()}
+              $ {(Number(wallet.balance) / 3650).toLocaleString()}
             </h3>
           </div>
           <div className="mt-6 flex gap-3 relative z-10">
