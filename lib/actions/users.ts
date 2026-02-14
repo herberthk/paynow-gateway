@@ -87,7 +87,7 @@ export const findUserByEmailOrPhone = async (identifier: string) => {
           wallet: {
             select: {
               id: true,
-              balance: true,
+              amount: true,
             },
           },
         },
@@ -104,7 +104,7 @@ export const findUserByEmailOrPhone = async (identifier: string) => {
           wallet: {
             select: {
               id: true,
-              balance: true,
+              amount: true,
             },
           },
         },
@@ -121,7 +121,10 @@ export const findUserByEmailOrPhone = async (identifier: string) => {
       };
     }
 
-    if (!user.wallet) {
+    // Since wallet is an array but userId is unique, take the first wallet
+    const userWallet = user.wallet?.[0];
+
+    if (!userWallet) {
       return {
         success: false,
         message: "User does not have a wallet set up",
@@ -137,7 +140,7 @@ export const findUserByEmailOrPhone = async (identifier: string) => {
         name: user.name,
         email: user.email,
         tel: user.tel,
-        walletId: user.wallet.id,
+        walletId: userWallet.id,
       },
     };
   } catch (error) {

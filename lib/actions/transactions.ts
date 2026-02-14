@@ -158,6 +158,13 @@ export const createP2PTransaction = async ({
       };
     }
     const fee = await getTransactionFee("TRANSFER");
+    if (!fee.success) {
+      return {
+        success: false,
+        message: fee.message,
+        transaction: null,
+      };
+    }
     const transaction = await prisma.transaction.create({
       data: {
         userId: senderId,
@@ -170,22 +177,22 @@ export const createP2PTransaction = async ({
         category: "Transfer",
         method: "Wallet P2P Transfer",
         txn_ref,
-        fee,
+        fee: fee.amount,
       },
     });
 
     // Create Ledger Entries
-    await createLedgerEntry({
-      transactionId: transaction.id,
-      senderId,
-      recipientId,
-      amount,
-      type: "TRANSFER",
-      description: `Sent to ${recipientName} #${recipientId}`,
-      senderAccount: "Wallet",
-      recipientAccount: "Wallet",
-      recipientName,
-    });
+    // await createLedgerEntry({
+    //   transactionId: transaction.id,
+    //   senderId,
+    //   recipientId,
+    //   amount,
+    //   type: "TRANSFER",
+    //   description: `Sent to ${recipientName} #${recipientId}`,
+    //   senderAccount: "Wallet",
+    //   recipientAccount: "Wallet",
+    //   recipientName,
+    // });
 
     return {
       success: true,

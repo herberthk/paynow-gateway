@@ -1,10 +1,15 @@
 "use server";
 import prisma from "@/lib/prisma";
+import { getWalletBalance, getWalletBalanceBeforeDate } from "./wallet";
 export const getAdmins = async () => {
   try {
     const response = await prisma.user.findMany({
       where: {
         privilege: "super_admin",
+      },
+      select: {
+        id: true,
+        name: true,
       },
     });
     return response;
@@ -70,10 +75,7 @@ export const getAdminDashboardStats = async () => {
       previousWeekUsers,
     ] = await Promise.all([
       // Total Revenue: Sum of all wallet balances for super admin
-      prisma.wallet.aggregate({
-        _sum: { balance: true },
-        where: { user: { privilege: "super_admin" } },
-      }),
+      getWalletBalance(user.id),
       // Total Users: Count all users
       prisma.user.count(),
       // Active Disputes: Count disputes with OPEN status
@@ -85,21 +87,15 @@ export const getAdminDashboardStats = async () => {
         where: { status: "PENDING" },
       }),
       // Previous week revenue (wallets created before one week ago)
-      prisma.wallet.aggregate({
-        _sum: { balance: true },
-        where: {
-          user: { privilege: "super_admin" },
-          createdAt: { lt: oneWeekAgo },
-        },
-      }),
+      getWalletBalanceBeforeDate(user.id, oneWeekAgo),
       // Previous week users (users created before one week ago)
       prisma.user.count({
         where: { created_at: { lt: oneWeekAgo } },
       }),
     ]);
 
-    const currentRevenue = totalRevenue._sum.balance?.toNumber() || 0;
-    const previousRevenue = previousWeekRevenue._sum.balance?.toNumber() || 0;
+    const currentRevenue = totalRevenue?.balance || 0;
+    const previousRevenue = previousWeekRevenue?.balance || 0;
     const revenueDiff = currentRevenue - previousRevenue;
     const revenuePercentChange =
       previousRevenue > 0 ? (revenueDiff / previousRevenue) * 100 : 0;

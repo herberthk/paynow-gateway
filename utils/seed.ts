@@ -123,44 +123,74 @@ export const seedUsers = [
 export const seedWallets = (userIds: number[]) => [
   {
     userId: userIds[0],
-    balance: 5000000, // 5,000,000 UGX
+    amount: 5000000, // 5,000,000 UGX
+    type: "CREDIT" as const,
+    reason: "Primary wallet for user account",
+    refference: generateTxRef(),
   },
   {
     userId: userIds[1],
-    balance: 250000, // 250,000 UGX
+    amount: 250000, // 250,000 UGX
+    type: "CREDIT" as const,
+    reason: "Primary wallet for user account",
+    refference: generateTxRef(),
   },
   {
     userId: userIds[2],
-    balance: 1500000, // 1,500,000 UGX
+    amount: 1500000, // 1,500,000 UGX
+    type: "CREDIT" as const,
+    reason: "Primary wallet for user account",
+    refference: generateTxRef(),
   },
   {
     userId: userIds[3],
-    balance: 75000, // 75,000 UGX
+    amount: 75000, // 75,000 UGX
+    type: "CREDIT" as const,
+    reason: "Primary wallet for user account",
+    refference: generateTxRef(),
   },
   {
     userId: userIds[4],
-    balance: 3200000, // 3,200,000 UGX
+    amount: 3200000, // 3,200,000 UGX
+    type: "CREDIT" as const,
+    reason: "Primary wallet for user account",
+    refference: generateTxRef(),
   },
   {
     userId: userIds[5],
-    balance: 1000000,
+    amount: 1000000,
+    type: "CREDIT" as const,
+    reason: "Primary wallet for user account",
+    refference: generateTxRef(),
   },
   // Merchant wallets
   {
     userId: userIds[6],
-    balance: 10000000,
+    amount: 10000000,
+    type: "CREDIT" as const,
+    reason: "Merchant payment collection wallet",
+    refference: generateTxRef(),
   },
   {
     userId: userIds[7],
-    balance: 10000000,
+    amount: 10000000,
+    type: "CREDIT" as const,
+    reason: "Merchant payment collection wallet",
+    refference: generateTxRef(),
   },
   {
     userId: userIds[8],
-    balance: 10000000,
+    amount: 10000000,
+    type: "CREDIT" as const,
+    reason: "Merchant payment collection wallet",
+    refference: generateTxRef(),
   },
   {
     userId: userIds[9],
-    balance: 10000000,
+    amount: 10000000,
+    type: "CREDIT" as const,
+    reason: "Merchant payment collection wallet",
+    refference: generateTxRef(),
   },
 ];
 
@@ -438,6 +468,7 @@ export async function seedDatabase() {
     await prisma.systemNotification.deleteMany();
     await prisma.auditLog.deleteMany();
     await prisma.dispute.deleteMany();
+    await prisma.ledger.deleteMany();
     await prisma.transaction.deleteMany();
     await prisma.fee.deleteMany();
     await prisma.paymentMethod.deleteMany();
@@ -486,6 +517,117 @@ export async function seedDatabase() {
     );
     const transactionIds = transactions.map((t) => t.id);
     console.log(`✅ Created ${transactions.length} transactions`);
+
+    // Seed Ledger Entries for each transaction
+    console.log("📒 Seeding ledger entries...");
+    let ledgerCount = 0;
+    for (const transaction of transactions) {
+      await prisma.$transaction(async (tx) => {
+        switch (transaction.type) {
+          case "TRANSFER":
+          case "PAYMENT":
+            // Sender: Credit Wallet (money out), Debit Expense
+            await tx.ledger.create({
+              data: {
+                transactionId: transaction.id,
+                userId: transaction.userId,
+                type: "CREDIT",
+                amount: transaction.amount,
+                account: "Wallet",
+                description: `Sent to ${transaction.recipientName}`,
+              },
+            });
+            await tx.ledger.create({
+              data: {
+                transactionId: transaction.id,
+                userId: transaction.userId,
+                type: "DEBIT",
+                amount: transaction.amount,
+                account:
+                  transaction.type === "TRANSFER" ? "Transfer Out" : "Payment",
+                description: `Sent to ${transaction.recipientName}`,
+              },
+            });
+            // Recipient: Debit Wallet (money in), Credit Income
+            await tx.ledger.create({
+              data: {
+                transactionId: transaction.id,
+                userId: transaction.recipientId,
+                type: "DEBIT",
+                amount: transaction.amount,
+                account: "Wallet",
+                description: `Received from sender #${transaction.userId}`,
+              },
+            });
+            await tx.ledger.create({
+              data: {
+                transactionId: transaction.id,
+                userId: transaction.recipientId,
+                type: "CREDIT",
+                amount: transaction.amount,
+                account:
+                  transaction.type === "TRANSFER"
+                    ? "Transfer In"
+                    : "Sales/Revenue",
+                description: `Received from sender #${transaction.userId}`,
+              },
+            });
+            ledgerCount += 4;
+            break;
+
+          case "DEPOSIT":
+            // Debit Wallet (money in), Credit Bank/External
+            await tx.ledger.create({
+              data: {
+                transactionId: transaction.id,
+                userId: transaction.recipientId,
+                type: "DEBIT",
+                amount: transaction.amount,
+                account: "Wallet",
+                description: "Deposit",
+              },
+            });
+            await tx.ledger.create({
+              data: {
+                transactionId: transaction.id,
+                userId: transaction.recipientId,
+                type: "CREDIT",
+                amount: transaction.amount,
+                account: "Bank/External",
+                description: "Deposit from external source",
+              },
+            });
+            ledgerCount += 2;
+            break;
+
+          case "WITHDRAWAL":
+            // Credit Wallet (money out), Debit Bank/External
+            await tx.ledger.create({
+              data: {
+                transactionId: transaction.id,
+                userId: transaction.userId,
+                type: "CREDIT",
+                amount: transaction.amount,
+                account: "Wallet",
+                description: "Withdrawal",
+              },
+            });
+            await tx.ledger.create({
+              data: {
+                transactionId: transaction.id,
+                userId: transaction.userId,
+                type: "DEBIT",
+                amount: transaction.amount,
+                account: "Bank/External",
+                description: "Withdrawal to external destination",
+              },
+            });
+            ledgerCount += 2;
+            break;
+        }
+      });
+    }
+    console.log(`✅ Created ${ledgerCount} ledger entries`);
 
     // Seed Disputes
     console.log("⚖️  Seeding disputes...");

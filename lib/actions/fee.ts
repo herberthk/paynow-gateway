@@ -3,10 +3,19 @@
 export const getTransactionFee = async (type: TransactionType) => {
   switch (type) {
     case "TRANSFER":
-      return 200.0;
+      return {
+        success: true,
+        amount: 200.0,
+      };
     case "PAYMENT":
-      return 0.0;
+      return {
+        success: true,
+        amount: 0.0,
+      };
     default:
-      return 0;
+      return {
+        success: false,
+        message: "Invalid transaction type",
+      };
   }
 };
