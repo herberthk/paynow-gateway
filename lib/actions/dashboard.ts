@@ -1,18 +1,16 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import { getWalletBalance } from "./wallet";
 
 export const getDashboardStats = async (
   userId: number,
 ): Promise<DashboardStat[]> => {
   try {
     // 1. Get Wallet Balance (first wallet for user)
-    const wallet = await prisma.wallet.findFirst({
-      where: { userId },
-      select: { amount: true },
-    });
+    const wallet = await getWalletBalance(userId);
 
-    const balance = wallet?.amount.toNumber() || 0;
+    const balance = wallet?.balance || 0;
     // Date Ranges
     const now = new Date();
     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);

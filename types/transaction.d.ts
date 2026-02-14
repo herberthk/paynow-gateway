@@ -41,6 +41,11 @@ declare global {
     txn_ref: string;
     fee: number;
   };
+
+  type WalletResult = {
+    success: boolean;
+    balance: number;
+  };
 }
 
 export {};
