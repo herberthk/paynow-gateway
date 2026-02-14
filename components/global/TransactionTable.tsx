@@ -254,7 +254,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900 dark:text-white">
-                          {tx.recipientName}
+                          {tx.displayName}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           {tx.method} • {tx.type}
@@ -370,10 +370,10 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
 
                             <div className="space-y-1">
                               <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Recipient
+                                Sender
                               </p>
                               <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                {tx.recipientName}
+                                {tx.displayName}
                               </p>
                             </div>
                           </div>

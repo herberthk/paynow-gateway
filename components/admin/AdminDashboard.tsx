@@ -1,13 +1,5 @@
 "use client";
-import React, { useState } from "react";
-import { Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
-import {
-  revenueData,
-  monthlyRevenueData,
-  auditLogs,
-  successRateData,
-} from "@/services/mockData";
-import { FileText, Activity } from "lucide-react";
+import React, { useState, useEffect } from "react";
 import RevenueVolume from "./RevenueVolume";
 import PaymentMethod from "./PaymentMethod";
 import CategoryDistribution from "./CategoryDistribution";
@@ -15,11 +7,42 @@ import PeakTraffic from "./PeakTraffic";
 import SystemMonitor from "./SystemMonitor";
 import AuditTrail from "./AuditTrail";
 
-const AdminDashboard: React.FC = () => {
-  const [timeRange, setTimeRange] = useState<"7d" | "30d" | "90d">("7d");
+// Define a type for financial data, assuming it's an array of objects
+// You might want to define a more specific interface for FinancialData
+type FinancialData = {
+  name: string;
+  revenue: number;
+  volume: number;
+  previous: number;
+};
 
-  // Dynamic data based on filter simulation
-  const financialData = timeRange === "7d" ? revenueData : monthlyRevenueData;
+const AdminDashboard: React.FC = () => {
+  const [financialData, setFinancialData] = useState<FinancialData[]>([]);
+  const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRevenueData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `/api/admin/revenue-volume?period=${period}`,
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setFinancialData(data);
+      } catch (error) {
+        console.error("Error fetching revenue data:", error);
+        setFinancialData([]); // Clear data on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRevenueData();
+  }, [period]);
 
   return (
     <div className="space-y-6">
@@ -34,24 +57,36 @@ const AdminDashboard: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-1 shadow-sm transition-colors">
-          {(["7d", "30d", "90d"] as const).map((range) => (
+          {(["daily", "weekly", "monthly"] as const).map((range) => (
             <button
               key={range}
-              onClick={() => setTimeRange(range)}
+              onClick={() => setPeriod(range)}
               className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all ${
-                timeRange === range
+                period === range
                   ? "bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 shadow-sm"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-50 dark:hover:bg-slate-700"
               }`}
             >
-              {range === "7d" ? "Week" : range === "30d" ? "Month" : "Quarter"}
+              {range === "daily"
+                ? "Daily"
+                : range === "weekly"
+                  ? "Weekly"
+                  : "Monthly"}
             </button>
           ))}
         </div>
       </div>
 
       {/* Main Financial Chart */}
-      <RevenueVolume financialData={financialData} />
+      {loading ? (
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 h-96 flex items-center justify-center">
+          <p className="text-gray-500 dark:text-gray-400">
+            Loading revenue data...
+          </p>
+        </div>
+      ) : (
+        <RevenueVolume financialData={financialData} />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Payment Method Health */}

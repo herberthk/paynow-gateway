@@ -50,6 +50,21 @@ const CustomTooltip = ({
   return null;
 };
 const RevenueVolume = ({ financialData }: RevenueVolumeProps) => {
+  // Calculate trend from financial data
+  const currentTotal = financialData.reduce(
+    (sum, item) => sum + item.revenue,
+    0,
+  );
+  const previousTotal = financialData.reduce(
+    (sum, item) => sum + item.previous,
+    0,
+  );
+  const trendPercent =
+    previousTotal > 0
+      ? ((currentTotal - previousTotal) / previousTotal) * 100
+      : 0;
+  const isPositive = trendPercent >= 0;
+
   return (
     <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm transition-colors">
       <div className="flex items-center justify-between mb-6">
@@ -62,8 +77,19 @@ const RevenueVolume = ({ financialData }: RevenueVolumeProps) => {
               Revenue & Volume
             </h3>
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
-                <TrendingUp size={14} /> +12.5%
+              <span
+                className={`font-medium flex items-center gap-1 ${
+                  isPositive
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
+                }`}
+              >
+                <TrendingUp
+                  size={14}
+                  className={isPositive ? "" : "rotate-180"}
+                />
+                {isPositive ? "+" : ""}
+                {trendPercent.toFixed(1)}%
               </span>
               <span className="text-gray-400 dark:text-gray-500">
                 vs previous period

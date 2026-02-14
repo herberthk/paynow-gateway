@@ -18,7 +18,7 @@ declare global {
     createdAt: string;
     userId: number;
     recipientId: number;
-    recipientName: string;
+    displayName: string;
     amount: number;
     currency: "UGX" | "USD";
     type: TransactionType;
@@ -27,6 +27,7 @@ declare global {
     method: string; // e.g., 'MTN Mobile Money', 'Visa **** 4242'
     txn_ref?: string;
     fee: number;
+    reason?: string;
   }
 
   interface Wallet {
