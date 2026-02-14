@@ -125,8 +125,8 @@ export const processP2PTransfer = async (
   amount: number,
 ) => {
   try {
-    const user = await getUserSession();
-    if (!user) {
+    const sender = await getUserSession();
+    if (!sender) {
       return {
         success: false,
         message: "User not found",
@@ -134,10 +134,10 @@ export const processP2PTransfer = async (
       };
     }
     // Validate amount
-    if (amount <= 0) {
+    if (amount <= 500) {
       return {
         success: false,
-        message: "Transfer amount must be greater than zero",
+        message: "Transfer amount must be greater than 500",
       };
     }
 
@@ -158,25 +158,23 @@ export const processP2PTransfer = async (
         transaction: null,
       };
     }
+
+    const admins = await getAdmins(); // pre-fetch
     // Generate transaction reference
     const refference = await generateTxRef();
-
-    const TRANSACTION_FEE = fee.amount;
+    const senderBalance = (await getWalletBalance(senderId)).balance;
     // Use Prisma transaction to ensure atomicity
     const result = await prisma.$transaction(async (tx) => {
-      const senderBalance = (await getWalletBalance(senderId)).balance;
+      const TRANSACTION_FEE = fee.amount;
 
       const totalDeduction = amount + TRANSACTION_FEE;
 
       // Check sufficient balance
       if (senderBalance < totalDeduction) {
-        return {
-          success: false,
-          message: `Insufficient balance. Available: UGX ${senderBalance.toLocaleString()} (Required: UGX ${totalDeduction.toLocaleString()} including fee)`,
-        };
+        throw new Error(
+          `Insufficient balance. Available UGX ${senderBalance.toLocaleString()}, Required UGX ${totalDeduction.toLocaleString()}`,
+        );
       }
-
-      const sender = await getUserSession();
       const recipient = await tx.user.findUnique({
         where: { id: recipientId },
         select: { name: true },
@@ -204,12 +202,12 @@ export const processP2PTransfer = async (
         },
       });
 
-      // Create transaction record
+      // Create transaction record for both sender and recipient
       await tx.transaction.create({
         data: {
           userId: senderId,
           recipientId,
-          recipientName: recipient?.name || "Unknown",
+          displayName: sender?.name || "Unknown",
           amount,
           currency: "UGX",
           type: "TRANSFER",
@@ -218,8 +216,27 @@ export const processP2PTransfer = async (
           method: "Wallet P2P Transfer",
           txn_ref: refference,
           fee: TRANSACTION_FEE,
+          reason: `Received UGX ${amount.toLocaleString()} from ${sender?.name || "Unknown"}`,
         },
       });
+
+      // console.log("Transaction created:", transaction);
+
+      // const transaction = await prisma.transaction.create({
+      //   data: {
+      //     userId: senderId,
+      //     recipientId,
+      //     recipientName,
+      //     amount,
+      //     currency,
+      //     type: "TRANSFER",
+      //     status: "COMPLETED",
+      //     category: "Transfer",
+      //     method: "Wallet P2P Transfer",
+      //     txn_ref,
+      //     fee: fee.amount,
+      //   },
+      // });
 
       // Create ledger entries for the transfer
       // Sender: Credit Wallet (money out), Debit Transfer Out (expense)
@@ -269,7 +286,6 @@ export const processP2PTransfer = async (
       // Create ledger entries for the fee
       if (TRANSACTION_FEE > 0) {
         // Credit admin wallet
-        const admins = await getAdmins();
         await tx.wallet.createMany({
           data: admins.map((admin) => ({
             userId: admin.id,
@@ -300,40 +316,40 @@ export const processP2PTransfer = async (
         //   },
         // });
       }
+      // Notification for sender and recipient
+      await tx.systemNotification.createMany({
+        data: [
+          {
+            fromUserId: senderId,
+            toUserId: senderId,
+            title: "Transfer Sent",
+            message: `You sent UGX ${amount.toLocaleString()} to ${recipient?.name ?? "Unknown"}`,
+            type: "SUCCESS",
+            path: `/dashboard/user/transactions?query=${refference}`,
+          },
+          {
+            fromUserId: senderId,
+            toUserId: recipientId,
+            title: "Money Received",
+            message: `You received UGX ${amount.toLocaleString()} from ${sender.name ?? "Unknown"}`,
+            type: "SUCCESS",
+            path: `/dashboard/user/transactions?query=${refference}`,
+          },
+        ],
+      });
 
-      // Notification for sender
-      await tx.systemNotification.create({
-        data: {
-          fromUserId: senderId,
-          toUserId: senderId,
-          title: "Transfer Sent",
-          message: `You successfully sent UGX ${amount.toLocaleString()} to ${recipient?.name || "Unknown"}`,
-          type: "SUCCESS",
-          path: `/dashboard/user/transactions?query=${refference}`,
-        },
-      });
-      // Notification for recipient
-      await tx.systemNotification.create({
-        data: {
-          fromUserId: senderId,
-          toUserId: recipientId,
-          title: "Money Received",
-          message: `You received UGX ${amount.toLocaleString()} from ${sender?.name || "Unknown"}`,
-          type: "SUCCESS",
-          path: `/dashboard/user/transactions?query=${refference}`,
-        },
-      });
+      return {
+        success: true,
+        message: "Transfer completed successfully",
+        amount,
+        refference,
+        fee: TRANSACTION_FEE,
+        currency: "UGX",
+      };
     });
 
     revalidatePath("/dashboard/user/wallet");
-    return {
-      success: result?.success,
-      message: "Transfer completed successfully",
-      amount,
-      refference,
-      fee: TRANSACTION_FEE,
-      currency: "UGX",
-    };
+    return result;
   } catch (error: unknown) {
     console.error("Error processing P2P transfer:", error);
     return {

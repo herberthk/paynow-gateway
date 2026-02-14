@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { findUserByEmailOrPhone } from "@/lib/actions/users";
 import { processP2PTransfer } from "@/lib/actions/wallet";
 import { ErrorModal, ConfirmationModal, SuccessModal } from "../modals";
+import { getTransactionFee } from "@/lib";
 
 type UserProps = {
   user: User;
@@ -67,7 +68,7 @@ const WalletView = ({ user, wallet }: UserProps) => {
       return;
     }
 
-    const TRANSACTION_FEE = 200;
+    const TRANSACTION_FEE = (await getTransactionFee("TRANSFER")).amount!;
     const totalRequired = transferAmount + TRANSACTION_FEE;
 
     if (totalRequired > wallet.balance) {
@@ -122,10 +123,11 @@ const WalletView = ({ user, wallet }: UserProps) => {
         recipientData.id,
         transferAmount,
       );
-
+      // console.log("Transfer Result:", transferResult);
       if (!transferResult.success) {
         setError(transferResult.message || "Transfer failed");
         setIsTransferring(false);
+        setShowConfirmModal(false);
         return;
       }
 

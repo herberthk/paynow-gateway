@@ -123,3 +123,270 @@ export const getAdminDashboardStats = async () => {
     return null;
   }
 };
+
+type Period = "daily" | "weekly" | "monthly";
+
+type FinancialData = {
+  name: string;
+  revenue: number;
+  volume: number;
+  previous: number;
+};
+
+/**
+ * Get revenue and volume data for charts
+ * @param period - daily (last 7 days), weekly (last 4 weeks), or monthly (last 12 months)
+ * @returns Financial data for revenue volume charts
+ */
+export const getRevenueVolumeData = async (period: Period = "daily") => {
+  try {
+    const { getUserSession } = await import("./session");
+    const user = await getUserSession();
+    if (!user || user.privilege !== "super_admin") {
+      return [];
+    }
+
+    const now = new Date();
+    const currentDataMap = new Map<
+      string,
+      { revenue: number; volume: number }
+    >();
+    const previousDataMap = new Map<
+      string,
+      { revenue: number; volume: number }
+    >();
+
+    // Helper to format date key
+    const formatDateKey = (date: Date, type: Period): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+
+      if (type === "daily") return `${year}-${month}-${day}`;
+      if (type === "monthly") return `${year}-${month}`;
+
+      // Weekly: IYYY-IW (ISO Week)
+      // Simple approximation for grouping: use year-week number
+      const d = new Date(
+        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+      );
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      const weekNo = Math.ceil(
+        ((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7,
+      );
+      return `${d.getUTCFullYear()}-${String(weekNo).padStart(2, "0")}`;
+    };
+
+    // Calculate ranges and generate empty structure
+    let startDate: Date;
+    let previousStartDate: Date;
+    let groupByFormat: string;
+
+    // Prepare result array structure
+    const labels: { label: string; currentKey: string; previousKey: string }[] =
+      [];
+
+    if (period === "daily") {
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 6);
+      startDate.setHours(0, 0, 0, 0);
+
+      previousStartDate = new Date(startDate);
+      previousStartDate.setDate(startDate.getDate() - 7);
+
+      groupByFormat = "YYYY-MM-DD";
+
+      // Generate last 7 days keys
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(startDate);
+        d.setDate(startDate.getDate() + i);
+
+        const prevD = new Date(d);
+        prevD.setDate(d.getDate() - 7);
+
+        labels.push({
+          label: d.toLocaleDateString("en-US", { weekday: "short" }), // Mon, Tue
+          currentKey: formatDateKey(d, "daily"),
+          previousKey: formatDateKey(prevD, "daily"),
+        });
+      }
+    } else if (period === "weekly") {
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 27); // approx 4 weeks
+      previousStartDate = new Date(startDate);
+      previousStartDate.setDate(startDate.getDate() - 28);
+
+      groupByFormat = "YYYY-IW"; // Postgres ISO Week
+
+      // Generate last 4 weeks keys
+      for (let i = 0; i < 4; i++) {
+        const d = new Date(now);
+        d.setDate(now.getDate() - (3 - i) * 7);
+
+        const prevD = new Date(d);
+        prevD.setDate(d.getDate() - 28);
+
+        labels.push({
+          label: `Week ${i + 1}`,
+          currentKey: formatDateKey(d, "weekly"),
+          previousKey: formatDateKey(prevD, "weekly"),
+        });
+      }
+    } else {
+      // Monthly
+      startDate = new Date(now);
+      startDate.setMonth(now.getMonth() - 11);
+      startDate.setDate(1); // Start of month
+
+      previousStartDate = new Date(startDate);
+      previousStartDate.setFullYear(startDate.getFullYear() - 1);
+
+      groupByFormat = "YYYY-MM";
+
+      // Generate last 12 months keys
+      for (let i = 0; i < 12; i++) {
+        const d = new Date(startDate);
+        d.setMonth(startDate.getMonth() + i);
+
+        const prevD = new Date(d);
+        prevD.setFullYear(d.getFullYear() - 1);
+
+        labels.push({
+          label: d.toLocaleDateString("en-US", { month: "short" }),
+          currentKey: formatDateKey(d, "monthly"),
+          previousKey: formatDateKey(prevD, "monthly"),
+        });
+      }
+    }
+
+    // Fetch data from DB
+    // NOTE: Using SUM(fee) for Admin Revenue
+    // Fetch Revenue from Wallet (CREDITs to Admin)
+    const currentRevenueResult = await prisma.$queryRaw<
+      { date: string; revenue: number }[]
+    >`
+      SELECT 
+        TO_CHAR("createdAt", ${groupByFormat}) as date,
+        COALESCE(SUM(amount), 0) as revenue
+      FROM payment_wallets
+      WHERE "userId" = ${user.id}
+        AND type = 'CREDIT'
+        AND "createdAt" >= ${startDate}
+        AND "createdAt" <= ${now}
+      GROUP BY date
+      ORDER BY date;
+    `;
+
+    const previousRevenueResult = await prisma.$queryRaw<
+      { date: string; revenue: number }[]
+    >`
+      SELECT 
+        TO_CHAR("createdAt", ${groupByFormat}) as date,
+        COALESCE(SUM(amount), 0) as revenue
+      FROM payment_wallets
+      WHERE "userId" = ${user.id}
+        AND type = 'CREDIT'
+        AND "createdAt" >= ${previousStartDate}
+        AND "createdAt" < ${startDate}
+      GROUP BY date
+      ORDER BY date;
+    `;
+
+    // Fetch Volume from Transactions
+    const currentVolumeResult = await prisma.$queryRaw<
+      { date: string; volume: number }[]
+    >`
+      SELECT 
+        TO_CHAR("createdAt", ${groupByFormat}) as date,
+        COUNT(id) as volume
+      FROM payment_transactions
+      WHERE "createdAt" >= ${startDate}
+        AND "createdAt" <= ${now}
+        AND status = 'COMPLETED'
+      GROUP BY date
+      ORDER BY date;
+    `;
+
+    const previousVolumeResult = await prisma.$queryRaw<
+      { date: string; volume: number }[]
+    >`
+      SELECT 
+        TO_CHAR("createdAt", ${groupByFormat}) as date,
+        COUNT(id) as volume
+      FROM payment_transactions
+      WHERE "createdAt" >= ${previousStartDate}
+        AND "createdAt" < ${startDate}
+        AND status = 'COMPLETED'
+      GROUP BY date
+      ORDER BY date;
+    `;
+
+    // Populate maps
+    currentRevenueResult.forEach((row) => {
+      const existing = currentDataMap.get(row.date) || {
+        revenue: 0,
+        volume: 0,
+      };
+      currentDataMap.set(row.date, {
+        ...existing,
+        revenue: Number(row.revenue),
+      });
+    });
+
+    currentVolumeResult.forEach((row) => {
+      const existing = currentDataMap.get(row.date) || {
+        revenue: 0,
+        volume: 0,
+      };
+      currentDataMap.set(row.date, { ...existing, volume: Number(row.volume) });
+    });
+
+    previousRevenueResult.forEach((row) => {
+      const existing = previousDataMap.get(row.date) || {
+        revenue: 0,
+        volume: 0,
+      };
+      previousDataMap.set(row.date, {
+        ...existing,
+        revenue: Number(row.revenue),
+      });
+    });
+
+    previousVolumeResult.forEach((row) => {
+      const existing = previousDataMap.get(row.date) || {
+        revenue: 0,
+        volume: 0,
+      };
+      previousDataMap.set(row.date, {
+        ...existing,
+        volume: Number(row.volume),
+      });
+    });
+
+    // Construct final data array
+    const financialData: FinancialData[] = labels.map((item) => {
+      const current = currentDataMap.get(item.currentKey) || {
+        revenue: 0,
+        volume: 0,
+      };
+      const previous = previousDataMap.get(item.previousKey) || {
+        revenue: 0,
+        volume: 0,
+      };
+
+      return {
+        name: item.label,
+        revenue: current.revenue,
+        volume: current.volume,
+        previous: previous.revenue,
+      };
+    });
+
+    return financialData;
+  } catch (error) {
+    console.error("Error fetching revenue volume data:", error);
+    return [];
+  }
+};

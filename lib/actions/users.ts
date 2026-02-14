@@ -121,16 +121,12 @@ export const findUserByEmailOrPhone = async (identifier: string) => {
       };
     }
 
-    // Since wallet is an array but userId is unique, take the first wallet
+    // Since wallet is an array but userId is no longer unique, we check if any wallet exists
     const userWallet = user.wallet?.[0];
 
-    if (!userWallet) {
-      return {
-        success: false,
-        message: "User does not have a wallet set up",
-        user: null,
-      };
-    }
+    // Note: We no longer strictly require a wallet to be present for the recipient,
+    // as the P2P transfer process will create a new CREDIT wallet entry.
+    // However, for backward compatibility, we try to return a wallet ID if one exists.
 
     return {
       success: true,
@@ -140,7 +136,7 @@ export const findUserByEmailOrPhone = async (identifier: string) => {
         name: user.name,
         email: user.email,
         tel: user.tel,
-        walletId: userWallet.id,
+        walletId: userWallet?.id,
       },
     };
   } catch (error) {

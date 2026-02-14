@@ -3,7 +3,7 @@
 import prisma from "@/lib/prisma";
 import { getTransactionFee } from "./fee";
 import { getUserSession } from "./session";
-import { createLedgerEntry } from "./ledger";
+// import { createLedgerEntry } from "./ledger";
 
 export const getTransactions = async ({
   page = 1,
@@ -53,6 +53,8 @@ export const getTransactions = async ({
                 currency: tx.currency as Currency,
                 txn_ref: tx.txn_ref!,
                 fee: tx.fee.toNumber(),
+                displayName: tx.displayName!,
+                reason: tx.reason!,
               },
             ]
           : [],
@@ -105,6 +107,8 @@ export const getTransactions = async ({
       currency: tx.currency as Currency,
       txn_ref: tx.txn_ref!,
       fee: tx.fee.toNumber(),
+      displayName: tx.displayName!,
+      reason: tx.reason!,
     }));
 
     return {
@@ -136,14 +140,14 @@ export const getTransactions = async ({
 export const createP2PTransaction = async ({
   senderId,
   recipientId,
-  recipientName,
+  displayName,
   amount,
   currency = "UGX",
   txn_ref,
 }: {
   senderId: number;
   recipientId: number;
-  recipientName: string;
+  displayName: string;
   amount: number;
   currency?: "UGX" | "USD";
   txn_ref: string;
@@ -169,7 +173,7 @@ export const createP2PTransaction = async ({
       data: {
         userId: senderId,
         recipientId,
-        recipientName,
+        displayName,
         amount,
         currency,
         type: "TRANSFER",
