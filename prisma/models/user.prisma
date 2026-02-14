@@ -23,7 +23,7 @@ model User {
   deleted_at        DateTime?       @db.Timestamptz(6)
   privilege         user_privilege? @default(none)
   is_ghost_user     Boolean         @default(false)
-  wallet           Wallet?
+  wallet           Wallet[]
   paymentMethods   PaymentMethod[]
   disputes         Dispute[]
   auditLogs        AuditLog[]
@@ -63,12 +63,18 @@ model Otp{
 
 model Wallet {
   id        String   @id @default(uuid())
-  userId    Int   @unique
+  userId    Int
   user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  balance Decimal  @default(0) @db.Decimal(12, 2)
+  amount Decimal  @default(0) @db.Decimal(12, 2)
+  currency Currency @default(UGX)
+  type LedgerType @default(CREDIT)
+  reason String?
+  refference String @unique
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   @@index([createdAt])
+  @@index([userId])
+  @@index([type])
   @@map("payment_wallets")
 }
 

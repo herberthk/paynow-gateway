@@ -30,11 +30,14 @@ declare global {
   }
 
   interface Wallet {
-    balance: number;
+    amount: number;
     id: string;
     createdAt?: string;
     updatedAt?: string;
     userId?: number;
+    refference?: string;
+    type: LedgerType;
+    reason: string;
   }
 
   type Privilege = "none" | "super_admin" | "admin";
@@ -177,6 +180,7 @@ declare global {
     trend?: Trend;
     trendValue?: string;
   };
+  type LedgerType = "DEBIT" | "CREDIT";
 }
 
 // This export is needed to make the file a module

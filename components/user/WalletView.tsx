@@ -73,9 +73,9 @@ const WalletView = ({ user, wallet }: UserProps) => {
     const TRANSACTION_FEE = 200;
     const totalRequired = transferAmount + TRANSACTION_FEE;
 
-    if (totalRequired > wallet.balance) {
+    if (totalRequired > wallet.amount) {
       setError(
-        `Insufficient balance. Available: UGX ${wallet.balance.toLocaleString()} (Required: UGX ${totalRequired.toLocaleString()})`,
+        `Insufficient balance. Available: UGX ${wallet.amount.toLocaleString()} (Required: UGX ${totalRequired.toLocaleString()})`,
       );
       return;
     }
@@ -132,40 +132,11 @@ const WalletView = ({ user, wallet }: UserProps) => {
         return;
       }
 
-      // Generate transaction reference
-      const txn_ref = await generateTxRef();
-
-      // Record transaction
-      const transactionResult = await createP2PTransaction({
-        senderId: user.id,
-        recipientId: recipientData.id,
-        recipientName: recipientData.name || "Unknown",
-        amount: transferAmount,
-        currency: "UGX",
-        txn_ref,
-      });
-
-      if (!transactionResult.success) {
-        console.error(
-          "Failed to record transaction:",
-          transactionResult.message,
-        );
-      }
-
       setTransaction({
-        amount: transactionResult.transaction?.amount!,
-        currency: transactionResult.transaction?.currency!,
-        txn_ref,
-        fee: transactionResult.transaction?.fee!,
-      });
-      // Create notifications for both sender and recipient
-      await createTransferNotifications({
-        senderId: user.id,
-        recipientId: recipientData.id,
-        recipientName: recipientData.name || "Unknown",
-        senderName: user.name || "Unknown",
-        amount: transferAmount,
-        txn_ref,
+        amount: transferResult.amount!,
+        currency: transferResult.currency!,
+        txn_ref: transferResult.refference!,
+        fee: transferResult.fee!,
       });
 
       // Success! Show beautiful success modal
@@ -188,8 +159,8 @@ const WalletView = ({ user, wallet }: UserProps) => {
   };
 
   useEffect(() => {
-    setTotalBalance(`UGX ${wallet?.balance.toLocaleString()}`);
-  }, [wallet?.balance]);
+    setTotalBalance(`UGX ${wallet?.amount.toLocaleString()}`);
+  }, [wallet?.amount]);
 
   return (
     <div className="space-y-6">
@@ -207,12 +178,12 @@ const WalletView = ({ user, wallet }: UserProps) => {
               Total Balance (UGX)
             </p>
             <h2 className="text-4xl font-bold mb-4">
-              UGX {wallet.balance.toLocaleString()}
+              UGX {wallet.amount.toLocaleString()}
             </h2>
 
             <p className="text-indigo-100 font-medium mb-1 mt-6">USD Balance</p>
             <h3 className="text-2xl font-bold">
-              $ {(Number(wallet.balance) / 3650).toLocaleString()}
+              $ {(Number(wallet.amount) / 3650).toLocaleString()}
             </h3>
           </div>
           <div className="mt-6 flex gap-3 relative z-10">
