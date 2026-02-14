@@ -46,6 +46,13 @@ declare global {
     success: boolean;
     balance: number;
   };
+
+  type FinancialData = {
+    name: string;
+    revenue: number;
+    volume: number;
+    previous: number;
+  };
 }
 
 export {};
