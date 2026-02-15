@@ -6,8 +6,6 @@ import {
   Download,
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
-  ChevronUp,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -23,17 +21,15 @@ interface LedgerTableProps {
 // Minimal type definition if not available globally yet
 type LedgerEntry = {
   id: string;
-  transactionId: string;
+  // transactionId: string;
   userId: number;
   type: "DEBIT" | "CREDIT";
   amount: number;
-  account: string;
-  description: string | null;
-  balanceAfter: number;
+  // account: string;
+  reason: string | null;
+  // balanceAfter: number;
   createdAt: string;
-  transaction: {
-    txn_ref: string;
-  };
+  refference: string;
 };
 
 const LedgerTable: React.FC<LedgerTableProps> = ({
@@ -132,9 +128,9 @@ const LedgerTable: React.FC<LedgerTableProps> = ({
       return [
         date,
         time,
-        entry.transaction?.txn_ref || "N/A",
-        `"${(entry.description || "").replace(/"/g, '""')}"`, // Escape quotes
-        entry.account,
+        entry.refference || "N/A",
+        `"${(entry.reason || "").replace(/"/g, '""')}"`, // Escape quotes
+        // entry.account,
         entry.type,
         entry.amount,
       ].join(",");
@@ -295,7 +291,7 @@ const LedgerTable: React.FC<LedgerTableProps> = ({
               <th className="px-6 py-4 whitespace-nowrap w-auto">
                 DESCRIPTION
               </th>
-              <th className="px-6 py-4 whitespace-nowrap">ACCOUNT</th>
+              {/* <th className="px-6 py-4 whitespace-nowrap">ACCOUNT</th> */}
               <th className="pr-2 text-right py-4 whitespace-nowrap bg-gray-50 dark:bg-slate-700/50">
                 DEBIT(UGX)
               </th>
@@ -305,7 +301,7 @@ const LedgerTable: React.FC<LedgerTableProps> = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
-            {entries.length > 0 ? (
+            {entries && entries.length > 0 ? (
               entries.map((entry) => (
                 <tr
                   key={entry.id}
@@ -324,16 +320,16 @@ const LedgerTable: React.FC<LedgerTableProps> = ({
                   </td>
                   <td className="px-6 py-4">
                     <span className="font-mono text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-800 px-2 py-1 rounded select-all">
-                      {entry.transaction?.txn_ref || "N/A"}
+                      {entry.refference || "N/A"}
                     </span>
                   </td>
                   <td
                     className="px-6 py-4 text-gray-700 dark:text-gray-300 font-medium truncate"
-                    title={entry.description || ""}
+                    title={entry.reason || ""}
                   >
-                    {entry.description || "-"}
+                    {entry.reason || "-"}
                   </td>
-                  <td className="px-6 py-4">
+                  {/* <td className="px-6 py-4">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border
                       ${
@@ -346,7 +342,7 @@ const LedgerTable: React.FC<LedgerTableProps> = ({
                     >
                       {entry.account}
                     </span>
-                  </td>
+                  </td> */}
                   <td
                     className={`pr-2 py-4 text-right font-medium relative ${entry.type === "DEBIT" ? "bg-red-50/30 dark:bg-red-900/5" : ""}`}
                   >

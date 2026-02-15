@@ -288,3 +288,143 @@ export const createLedgerEntry = async ({
     return { success: false, error };
   }
 };
+
+export const getWalletLedger = async ({
+  page = 1,
+  limit = 10,
+  query = "",
+  startDate,
+  endDate,
+  minAmount,
+  maxAmount,
+  type,
+  account,
+}: {
+  page?: number;
+  limit?: number;
+  query?: string;
+  startDate?: string;
+  endDate?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  type?: "DEBIT" | "CREDIT" | "ALL";
+  account?: string;
+}) => {
+  try {
+    const user = await getUserSession();
+    if (!user) {
+      return {
+        entries: [],
+        totalPages: 0,
+        currentPage: 1,
+        totalEntries: 0,
+      };
+    }
+
+    const skip = (page - 1) * limit;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = {
+      userId: user.id,
+    };
+
+    if (query?.startsWith("TX_")) {
+      const tx = await prisma.wallet.findFirst({
+        where: { refference: query },
+      });
+
+      return {
+        transactions: tx
+          ? [
+              {
+                ...tx,
+                amount: tx.amount.toNumber(),
+                // balanceAfter: tx.balanceAfter?.toNumber() || 0,
+                createdAt: tx.createdAt.toISOString(),
+              },
+            ]
+          : [],
+        totalPages: 1,
+        currentPage: 1,
+        totalTransactions: tx ? 1 : 0,
+      };
+    }
+    // 1. Search Logic (Description, Account, Transaction Ref)
+    if (query && !query.startsWith("TX_")) {
+      where.OR = [
+        { reason: { contains: query, mode: "insensitive" } },
+        { type: { contains: query } },
+      ];
+    }
+
+    // 2. Date Range Logic
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+      if (endDate) {
+        // Set end date to end of day
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
+    }
+
+    // 3. Amount Logic
+    if (minAmount !== undefined || maxAmount !== undefined) {
+      where.amount = {};
+      if (minAmount !== undefined) where.amount.gte = minAmount;
+      if (maxAmount !== undefined) where.amount.lte = maxAmount;
+    }
+
+    // 4. Type Logic
+    if (type && type !== "ALL") {
+      where.type = type;
+    }
+
+    // 5. Account Logic
+    if (account && account !== "ALL") {
+      where.account = account;
+    }
+
+    const [entries, total] = await Promise.all([
+      prisma.wallet.findMany({
+        where,
+        // include: {
+        //   transaction: {
+        //     select: {
+        //       txn_ref: true,
+        //     },
+        //   },
+        // },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.wallet.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      entries: entries.map((entry) => ({
+        ...entry,
+        amount: entry.amount.toNumber(),
+        // balanceAfter: entry.balanceAfter?.toNumber() || 0,
+        createdAt: entry.createdAt.toISOString(),
+      })),
+      totalPages,
+      currentPage: page,
+      totalEntries: total,
+    };
+  } catch (error) {
+    console.error("Error fetching user ledger:", error);
+    return {
+      entries: [],
+      totalPages: 0,
+      currentPage: 1,
+      totalEntries: 0,
+    };
+  }
+};

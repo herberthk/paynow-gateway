@@ -77,29 +77,6 @@ declare global {
     ip?: string;
   }
 
-  // New Types for Developer Features
-  interface ApiKey {
-    id: string;
-    name: string;
-    key: string;
-    type: "PUBLIC" | "SECRET";
-    created: string;
-    lastUsed: string;
-    masked: boolean;
-    usageToday: number;
-    rateLimitRemaining: number;
-    usageHistory: { date: string; count: number }[];
-  }
-
-  interface WebhookEndpoint {
-    id: string;
-    url: string;
-    events: string[];
-    status: "ACTIVE" | "INACTIVE";
-    secret: string;
-    created: string;
-  }
-
   interface WebhookLog {
     id: string;
     endpointId: string;

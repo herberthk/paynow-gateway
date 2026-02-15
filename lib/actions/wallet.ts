@@ -220,24 +220,6 @@ export const processP2PTransfer = async (
         },
       });
 
-      // console.log("Transaction created:", transaction);
-
-      // const transaction = await prisma.transaction.create({
-      //   data: {
-      //     userId: senderId,
-      //     recipientId,
-      //     recipientName,
-      //     amount,
-      //     currency,
-      //     type: "TRANSFER",
-      //     status: "COMPLETED",
-      //     category: "Transfer",
-      //     method: "Wallet P2P Transfer",
-      //     txn_ref,
-      //     fee: fee.amount,
-      //   },
-      // });
-
       // Create ledger entries for the transfer
       // Sender: Credit Wallet (money out), Debit Transfer Out (expense)
       // await tx.ledger.create({
