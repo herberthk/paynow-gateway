@@ -3,6 +3,7 @@ const CustomTooltip = ({
   active,
   payload,
   label,
+  showCurrency = true,
 }: {
   active: boolean;
   payload: {
@@ -11,6 +12,7 @@ const CustomTooltip = ({
     color: string;
   }[];
   label: string;
+  showCurrency?: boolean;
 }) => {
   if (active && payload && payload.length) {
     return (
@@ -26,7 +28,8 @@ const CustomTooltip = ({
               {p.name}:
             </span>
             <span className="font-mono font-medium text-gray-900 dark:text-gray-200">
-              UGX {p.value.toLocaleString()}
+              {showCurrency && "UGX "}
+              {p.value.toLocaleString()}
             </span>
           </div>
         ))}

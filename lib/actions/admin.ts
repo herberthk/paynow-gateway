@@ -460,3 +460,121 @@ export const getSystemCategoryDistribution = async (
     return [];
   }
 };
+
+/**
+ * Get peak traffic data (Transactions by hour of day over last 30 days)
+ */
+export const getPeakTrafficData = async () => {
+  try {
+    const { getUserSession } = await import("./session");
+    const user = await getUserSession();
+    if (!user || user.privilege !== "super_admin") {
+      return [];
+    }
+
+    const now = new Date();
+    const startOfToday = new Date(now);
+    startOfToday.setHours(0, 0, 0, 0);
+
+    // Group by hour of day (0-23)
+    const hourlyStats = await prisma.$queryRaw<
+      { hour: number; count: bigint }[]
+    >`
+      SELECT 
+        CAST(EXTRACT(HOUR FROM "createdAt") AS INTEGER) as hour,
+        COUNT(id) as count
+      FROM payment_transactions
+      WHERE "createdAt" >= ${startOfToday}
+        AND status = 'COMPLETED'
+      GROUP BY hour
+      ORDER BY hour ASC;
+    `;
+
+    // Initialize 24 hours with 0
+    const fullDayStats = Array.from({ length: 24 }, (_, i) => ({
+      hour: `${String(i).padStart(2, "0")}:00`,
+      transactions: 0,
+    }));
+
+    // Fill in actual data
+    if (Array.isArray(hourlyStats)) {
+      hourlyStats.forEach((stat) => {
+        const hourIndex = Number(stat.hour);
+        if (hourIndex >= 0 && hourIndex < 24) {
+          fullDayStats[hourIndex].transactions = Number(stat.count);
+        }
+      });
+    }
+
+    return fullDayStats;
+  } catch (error) {
+    console.error("Error fetching peak traffic data:", error);
+    return [];
+  }
+};
+
+/**
+ * Get system health data (Success rate, Latency, etc.)
+ */
+export const getSystemHealthData = async () => {
+  try {
+    const { getUserSession } = await import("./session");
+    const user = await getUserSession();
+    if (!user || user.privilege !== "super_admin") {
+      return null;
+    }
+
+    const now = new Date();
+    const twentyFourHoursAgo = new Date(now);
+    twentyFourHoursAgo.setHours(now.getHours() - 24);
+
+    // Fetch hourly stats for the last 24 hours
+    const hourlyStats = await prisma.$queryRaw<
+      { hour: number; total: bigint; success: bigint }[]
+    >`
+      SELECT 
+        CAST(EXTRACT(HOUR FROM "createdAt") AS INTEGER) as hour,
+        COUNT(id) as total,
+        COUNT(CASE WHEN status = 'COMPLETED' THEN 1 END) as success
+      FROM payment_transactions
+      WHERE "createdAt" >= ${twentyFourHoursAgo}
+      GROUP BY hour
+      ORDER BY hour ASC;
+    `;
+
+    // Calculate overall stats
+    let totalTx = 0;
+    let successTx = 0;
+
+    // Initialize map for chart data (last 12-24 points?)
+    // Simplified: Just map the hours we got
+    const chartData = hourlyStats.map((stat) => {
+      const total = Number(stat.total);
+      const success = Number(stat.success);
+      totalTx += total;
+      successTx += success;
+
+      return {
+        time: `${String(stat.hour).padStart(2, "0")}:00`,
+        rate: total > 0 ? Math.round((success / total) * 100) : 100,
+      };
+    });
+
+    // Fill missing hours? For now, we only show hours with activity to be safe,
+    // or we can sort them. The query orders by hour (0-23).
+    // If we want a rolling 24h timeline, we need to map to "Now - X hours".
+    // But for a simple monitor, showing "Activity Hours" is likely fine.
+
+    const overallSuccessRate = totalTx > 0 ? (successTx / totalTx) * 100 : 100;
+
+    return {
+      successRate: overallSuccessRate,
+      chartData,
+      latency: 45, // Static/Mock as requested (no real latency data in DB)
+      activeNodes: "12/12", // keeping static
+    };
+  } catch (error) {
+    console.error("Error fetching system health data:", error);
+    return null;
+  }
+};

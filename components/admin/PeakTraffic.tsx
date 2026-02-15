@@ -1,4 +1,3 @@
-import { hourlyTrafficData } from "@/services/mockData";
 import {
   ResponsiveContainer,
   CartesianGrid,
@@ -8,8 +7,14 @@ import {
   Bar,
   BarChart,
 } from "recharts";
+import CustomTooltip from "../global/CustomTooltip";
 
-const PeakTraffic = () => {
+type TrafficData = {
+  hour: string;
+  transactions: number;
+};
+
+const PeakTraffic = ({ data = [] }: { data?: TrafficData[] }) => {
   return (
     <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm transition-colors">
       <h3 className="font-bold text-gray-900 dark:text-white mb-1">
@@ -20,7 +25,7 @@ const PeakTraffic = () => {
       </p>
       <div className="h-60">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={hourlyTrafficData} layout="vertical">
+          <BarChart data={data} layout="vertical">
             <CartesianGrid
               strokeDasharray="3 3"
               horizontal={true}
@@ -38,8 +43,15 @@ const PeakTraffic = () => {
               width={30}
             />
             <Tooltip
-              cursor={{ fill: "transparent" }}
-              contentStyle={{ fontSize: "12px" }}
+              content={
+                <CustomTooltip
+                  showCurrency={false}
+                  active={true}
+                  payload={[]}
+                  label=""
+                />
+              }
+              wrapperStyle={{ zIndex: 50 }}
             />
             <Bar
               dataKey="transactions"
