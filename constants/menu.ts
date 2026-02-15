@@ -46,10 +46,10 @@ export const menuItems = (userRole: Privilege) =>
           href: "/dashboard/admin/kyc",
         },
         {
-          id: "/dashboard/admin/logs",
-          label: "Audit Logs",
+          id: "/dashboard/activity-logs",
+          label: "Activity Logs",
           icon: ShieldCheck,
-          href: "/dashboard/admin/logs",
+          href: "/dashboard/activity-logs",
         },
         {
           id: "/dashboard/admin/settings",
