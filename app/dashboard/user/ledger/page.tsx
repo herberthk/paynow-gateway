@@ -1,5 +1,5 @@
 import LedgerTable from "@/components/user/LedgerTable";
-import { getUserLedger } from "@/lib/actions/ledger";
+import { getWalletLedger } from "@/lib";
 import { getUserSession } from "@/lib";
 import { redirect } from "next/navigation";
 
@@ -35,7 +35,7 @@ const LedgerPage = async (props: {
   const type = (searchParams?.type as "DEBIT" | "CREDIT" | "ALL") || undefined;
   const account = searchParams?.account;
 
-  const { entries, totalPages, totalEntries } = await getUserLedger({
+  const { entries, totalPages, totalEntries } = await getWalletLedger({
     page: currentPage,
     limit,
     query,
@@ -61,7 +61,7 @@ const LedgerPage = async (props: {
 
       <div className="flex-1 min-h-0">
         <LedgerTable
-          entries={entries}
+          entries={entries!}
           totalPages={totalPages}
           currentPage={currentPage}
           totalEntries={totalEntries}
