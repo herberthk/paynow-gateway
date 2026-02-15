@@ -390,3 +390,73 @@ export const getRevenueVolumeData = async (period: Period = "daily") => {
     return [];
   }
 };
+
+/**
+ * Get system-wide category distribution
+ * @param period - daily, weekly, or monthly
+ * @returns Top 10 categories with spending amount and count
+ */
+export const getSystemCategoryDistribution = async (
+  period: Period = "daily",
+) => {
+  try {
+    const { getUserSession } = await import("./session");
+    const { CATEGORY_COLORS } = await import("@/constants");
+    const user = await getUserSession();
+    if (!user || user.privilege !== "super_admin") {
+      return [];
+    }
+
+    const now = new Date();
+    let startDate: Date;
+
+    // Configure date range
+    if (period === "daily") {
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 6); // Last 7 days
+      startDate.setHours(0, 0, 0, 0);
+    } else if (period === "weekly") {
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 27); // Last 4 weeks
+      startDate.setHours(0, 0, 0, 0);
+    } else {
+      startDate = new Date(now);
+      startDate.setMonth(now.getMonth() - 11); // Last 12 months
+      startDate.setDate(1);
+      startDate.setHours(0, 0, 0, 0);
+    }
+
+    const stats = await prisma.transaction.groupBy({
+      by: ["category"],
+      where: {
+        status: "COMPLETED",
+        createdAt: {
+          gte: startDate,
+          lte: now,
+        },
+      },
+      _sum: {
+        amount: true,
+      },
+      _count: {
+        id: true,
+      },
+      orderBy: {
+        _sum: {
+          amount: "desc",
+        },
+      },
+      take: 10, // Top 10
+    });
+
+    return stats.map((stat, index) => ({
+      name: stat.category,
+      value: Number(stat._sum.amount),
+      count: stat._count.id,
+      color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
+    }));
+  } catch (error) {
+    console.error("Error fetching category distribution:", error);
+    return [];
+  }
+};

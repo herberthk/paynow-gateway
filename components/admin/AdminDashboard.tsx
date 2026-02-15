@@ -1,5 +1,9 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import {
+  getRevenueVolumeData,
+  getSystemCategoryDistribution,
+} from "@/lib/actions/admin";
 import RevenueVolume from "./RevenueVolume";
 import PaymentMethod from "./PaymentMethod";
 import CategoryDistribution from "./CategoryDistribution";
@@ -15,9 +19,16 @@ type FinancialData = {
   volume: number;
   previous: number;
 };
+type SystemCategoryData = {
+  name: string;
+  value: number;
+  count: number;
+  color: string;
+};
 
 const AdminDashboard: React.FC = () => {
   const [financialData, setFinancialData] = useState<FinancialData[]>([]);
+  const [categoryData, setCategoryData] = useState<SystemCategoryData[]>([]);
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
   const [loading, setLoading] = useState(true);
 
@@ -25,17 +36,15 @@ const AdminDashboard: React.FC = () => {
     const fetchRevenueData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(
-          `/api/admin/revenue-volume?period=${period}`,
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
+        const data = await getRevenueVolumeData(period);
         setFinancialData(data);
+
+        const categoryRes = await getSystemCategoryDistribution(period);
+        setCategoryData(categoryRes);
       } catch (error) {
         console.error("Error fetching revenue data:", error);
         setFinancialData([]); // Clear data on error
+        setCategoryData([]);
       } finally {
         setLoading(false);
       }
@@ -93,7 +102,7 @@ const AdminDashboard: React.FC = () => {
         <PaymentMethod />
 
         {/* Category Distribution (Donut) */}
-        <CategoryDistribution />
+        <CategoryDistribution data={categoryData} />
 
         {/* Peak Hourly Activity */}
         <PeakTraffic />
