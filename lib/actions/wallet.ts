@@ -277,6 +277,18 @@ export const processP2PTransfer = async (
             refference,
           })),
         });
+
+        // Send notification to admin
+        await tx.systemNotification.createMany({
+          data: admins.map((admin) => ({
+            fromUserId: senderId,
+            toUserId: admin.id,
+            title: "Transaction Fee",
+            message: `You received UGX ${TRANSACTION_FEE.toLocaleString()} from ${sender?.name || "Unknown"}`,
+            type: "SUCCESS",
+            path: `/dashboard/user/transactions?query=${refference}`,
+          })),
+        });
         // await tx.ledger.create({
         //   data: {
         //     transactionId: transaction.id,
