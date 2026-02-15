@@ -1,6 +1,6 @@
 import AdminUsersKYC from "@/components/admin/AdminUsersKYC";
 
-const Kyc = () => {
+const Kyc = async () => {
   return <AdminUsersKYC />;
 };
 

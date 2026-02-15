@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import bcrypt from "bcrypt";
+import { hashPassword } from "./helpers";
 const generateTxRef = (length = 8) => {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   const bytes = crypto.getRandomValues(new Uint8Array(length));
@@ -11,9 +11,6 @@ const generateTxRef = (length = 8) => {
 
   return `TX_${result}`;
 };
-
-const hashPassword = async (password: string) =>
-  await bcrypt.hash(password, 10);
 
 // Seed data for Users
 export const seedUsers = [

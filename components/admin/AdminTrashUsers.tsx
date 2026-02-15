@@ -35,7 +35,7 @@ const AdminTrashUsers = () => {
   const notify = useNotificationStore((state) => state.notify);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [isLoading, setIsLoading] = useState(false);
   // Action Modal State
   const [actionModal, setActionModal] = useState<{
     isOpen: boolean;
@@ -91,6 +91,7 @@ const AdminTrashUsers = () => {
       description:
         "Are you sure you want to restore this user? They will be moved back to the active users list.",
       onConfirm: async () => {
+        setIsLoading(true);
         const result = await restoreUser(userId);
         if (result.success) {
           setUsers(users.filter((u) => u.id !== userId));
@@ -100,6 +101,7 @@ const AdminTrashUsers = () => {
           notify("ALERT", result.message || "Failed to restore user.");
         }
         closeActionModal();
+        setIsLoading(false);
       },
     });
   };
@@ -112,6 +114,7 @@ const AdminTrashUsers = () => {
       description:
         "WARNING: This action is PERMANENT and cannot be undone. Are you sure you want to permanently delete this user and all associated data?",
       onConfirm: async () => {
+        setIsLoading(true);
         const result = await permanentlyDeleteUser(userId);
         if (result.success) {
           setUsers(users.filter((u) => u.id !== userId));
@@ -120,6 +123,7 @@ const AdminTrashUsers = () => {
         } else {
           notify("ALERT", result.message || "Failed to delete user.");
         }
+        setIsLoading(false);
         closeActionModal();
       },
     });
@@ -336,6 +340,7 @@ const AdminTrashUsers = () => {
         type={actionModal.type}
         confirmLabel="Yes, Proceed"
         cancelLabel="Cancel"
+        isLoading={isLoading}
       />
     </div>
   );

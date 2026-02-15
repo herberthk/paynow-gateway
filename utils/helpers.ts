@@ -1,6 +1,6 @@
 "use server";
 import crypto from "crypto";
-
+import bcrypt from "bcrypt";
 export const generateOTP = async (length = 6): Promise<string> =>
   Math.floor(Math.random() * 10 ** length)
     .toString()
@@ -68,6 +68,9 @@ export const generateTxRef = async (length = 8) => {
 
   return `TX_${result}`;
 };
+
+export const hashPassword = async (password: string) =>
+  await bcrypt.hash(password, 10);
 
 console.log("Transaction Reference", await generateTxRef());
 // const otp = "222886";

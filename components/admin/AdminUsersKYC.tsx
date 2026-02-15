@@ -51,6 +51,7 @@ type User = {
     balance: number;
     id: string;
   };
+  address: string | null;
   tel: string | null;
   created_at: string;
   paymentMethods?: PaymentMethod[];
@@ -64,7 +65,7 @@ const AdminUsersKYC = () => {
   const [filter, setFilter] = useState<"ALL" | "PENDING" | "VERIFIED">("ALL");
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedId, setExpandedId] = useState<number | null>(null);
-
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -79,6 +80,8 @@ const AdminUsersKYC = () => {
     name: "",
     email: "",
     privilege: "none",
+    tel: "",
+    address: "",
     status: false,
     wallet: { balance: 0, id: "" },
   });
@@ -167,6 +170,7 @@ const AdminUsersKYC = () => {
       description:
         "Are you sure you want to move this user to the trash? They will be deactivated but can be restored later.",
       onConfirm: async () => {
+        setIsLoading(true);
         const result = await deleteUser(userId);
         if (result.success) {
           setUsers((prev) => prev.filter((u) => u.id !== userId));
@@ -175,6 +179,7 @@ const AdminUsersKYC = () => {
         } else {
           notify("ALERT", result.message || "Failed to delete user.");
         }
+        setIsLoading(false);
         closeActionModal();
       },
     });
@@ -204,49 +209,65 @@ const AdminUsersKYC = () => {
     setIsModalOpen(true);
   };
 
-  const handleSaveUser = async () => {
+  const handleSaveUser = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!currentUserData.name || !currentUserData.email) {
       notify("ALERT", "Please fill in all required fields.");
       return;
     }
 
     if (modalMode === "create") {
-      const result = await createSystemUser({
-        name: currentUserData.name,
-        email: currentUserData.email,
-        privilege: currentUserData.privilege || "none",
-        status: currentUserData.status || false,
-      });
-
-      if (result.success) {
-        notify("SUCCESS", "User account created successfully.");
-        fetchUsers();
-        setIsModalOpen(false);
-      } else {
-        notify("ALERT", result.message || "Failed to create user.");
+      setIsLoading(true);
+      try {
+        const result = await createSystemUser({
+          name: currentUserData.name,
+          email: currentUserData.email,
+          privilege: currentUserData.privilege || "none",
+          status: currentUserData.status || false,
+        });
+        setIsLoading(false);
+        if (result.success) {
+          notify("SUCCESS", "User account created successfully.");
+          fetchUsers();
+          setIsModalOpen(false);
+        } else {
+          notify("ALERT", result.message || "Failed to create user.");
+        }
+      } catch (error) {
+        notify("ALERT", "Failed to create user.");
+        setIsLoading(false);
+      } finally {
+        setIsLoading(false);
       }
     } else {
       if (!currentUserData.id) return;
-      const result = await updateSystemUser(currentUserData.id, {
-        name: currentUserData.name,
-        email: currentUserData.email,
-        privilege: currentUserData.privilege,
-        status: currentUserData.status,
-      });
+      setIsLoading(true);
+      try {
+        const result = await updateSystemUser(currentUserData.id, {
+          name: currentUserData.name,
+          email: currentUserData.email,
+          privilege: currentUserData.privilege,
+          status: currentUserData.status,
+        });
 
-      if (result.success) {
-        setUsers(
-          users.map((u) =>
-            u.id === currentUserData.id
-              ? { ...(u as User), ...currentUserData }
-              : u,
-          ),
-        );
-        notify("SUCCESS", "User profile updated.");
-        fetchUsers();
-        setIsModalOpen(false);
-      } else {
-        notify("ALERT", result.message || "Failed to update user.");
+        if (result.success) {
+          setUsers(
+            users.map((u) =>
+              u.id === currentUserData.id
+                ? { ...(u as User), ...currentUserData }
+                : u,
+            ),
+          );
+          notify("SUCCESS", "User profile updated.");
+          fetchUsers();
+          setIsModalOpen(false);
+        } else {
+          notify("ALERT", result.message || "Failed to update user.");
+        }
+      } catch (error) {
+        notify("ALERT", "Failed to update user.");
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -280,12 +301,12 @@ const AdminUsersKYC = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <button
+          {/* <button
             onClick={openCreateModal}
             className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
           >
             <Plus size={16} /> Add User
-          </button>
+          </button> */}
 
           <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-1 flex">
             {["ALL", "PENDING", "VERIFIED"].map((f) => (
@@ -550,7 +571,7 @@ const AdminUsersKYC = () => {
                                         size={14}
                                         className="text-gray-400"
                                       />
-                                      Kampala, Uganda
+                                      {user.address || "N/A"}
                                     </div>
                                     <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                                       <Mail
@@ -668,6 +689,7 @@ const AdminUsersKYC = () => {
         type={actionModal.type}
         confirmLabel="Yes, Process"
         cancelLabel="Cancel"
+        isLoading={isLoading}
       />
 
       {/* Edit/Create Modal */}
@@ -686,7 +708,7 @@ const AdminUsersKYC = () => {
               </button>
             </div>
 
-            <div className="space-y-4">
+            <form onSubmit={handleSaveUser} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Full Name
@@ -700,6 +722,8 @@ const AdminUsersKYC = () => {
                       name: e.target.value,
                     })
                   }
+                  required
+                  placeholder="John Doe"
                   className="w-full bg-white dark:bg-slate-700 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 />
               </div>
@@ -716,10 +740,30 @@ const AdminUsersKYC = () => {
                       email: e.target.value,
                     })
                   }
+                  required
+                  placeholder="you@youremail.com"
                   className="w-full bg-white dark:bg-slate-700 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Phone number
+                </label>
+                <input
+                  type="text"
+                  value={currentUserData.tel!}
+                  onChange={(e) =>
+                    setCurrentUserData({
+                      ...currentUserData,
+                      tel: e.target.value,
+                    })
+                  }
+                  required
+                  placeholder="0700000000"
+                  className="w-full bg-white dark:bg-slate-700 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                />
+              </div>
+              <div className="w-full">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Role
@@ -738,24 +782,6 @@ const AdminUsersKYC = () => {
                     <option value="super_admin">Admin</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Status
-                  </label>
-                  <select
-                    value={String(currentUserData?.status)}
-                    onChange={(e) =>
-                      setCurrentUserData({
-                        ...currentUserData,
-                        status: e.target.value as never,
-                      })
-                    }
-                    className="w-full bg-white dark:bg-slate-700 text-gray-900 dark:text-white border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  >
-                    <option value="true">VERIFIED</option>
-                    <option value="false">Pending</option>
-                  </select>
-                </div>
               </div>
 
               <div className="pt-4 flex gap-3">
@@ -766,13 +792,13 @@ const AdminUsersKYC = () => {
                   Cancel
                 </button>
                 <button
-                  onClick={handleSaveUser}
+                  type="submit"
                   className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium flex items-center justify-center gap-2"
                 >
                   <Save size={16} /> Save User
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}

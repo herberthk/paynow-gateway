@@ -10,6 +10,7 @@ import {
   Banknote,
   BookOpen,
   TrendingUp,
+  Trash,
 } from "lucide-react";
 export const menuItems = (userRole: Privilege) =>
   userRole === "super_admin"
@@ -55,6 +56,12 @@ export const menuItems = (userRole: Privilege) =>
           label: "Fee Management",
           icon: Settings,
           href: "/dashboard/admin/settings",
+        },
+        {
+          id: "/dashboard/admin/kyc/trash",
+          label: "Trash",
+          icon: Trash,
+          href: "/dashboard/admin/kyc/trash",
         },
       ]
     : [
