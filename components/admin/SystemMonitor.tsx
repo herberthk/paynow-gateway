@@ -1,8 +1,21 @@
 import { Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
-import { successRateData } from "@/services/mockData";
 import { Activity } from "lucide-react";
+import CustomTooltip from "../global/CustomTooltip";
 
-const SystemMonitor = () => {
+type SystemHealthData = {
+  successRate: number;
+  latency: number;
+  activeNodes: string;
+  chartData: { time: string; rate: number }[];
+};
+
+const SystemMonitor = ({ data }: { data?: SystemHealthData | null }) => {
+  // Default values if data is missing
+  const successRate = data?.successRate ?? 100;
+  const latency = data?.latency ?? 45;
+  const activeNodes = data?.activeNodes ?? "12/12";
+  const chartData = data?.chartData ?? [];
+
   return (
     <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm transition-colors">
       <div className="flex items-center justify-between mb-6">
@@ -19,20 +32,31 @@ const SystemMonitor = () => {
       </div>
       <div className="h-40">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={successRateData}>
+          <AreaChart data={chartData}>
             <defs>
               <linearGradient id="colorRate" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
                 <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <Tooltip />
+            {/* <Tooltip /> */}
             <Area
               type="step"
               dataKey="rate"
               stroke="#10B981"
               strokeWidth={2}
               fill="url(#colorRate)"
+            />
+            <Tooltip
+              content={
+                <CustomTooltip
+                  showCurrency={false}
+                  active={true}
+                  payload={[]}
+                  label=""
+                />
+              }
+              wrapperStyle={{ zIndex: 50 }}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -41,7 +65,7 @@ const SystemMonitor = () => {
         <div className="p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
           <p className="text-xs text-gray-500 dark:text-gray-400">Latency</p>
           <p className="font-mono font-bold text-gray-900 dark:text-white">
-            45ms
+            {latency}ms
           </p>
         </div>
         <div className="p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
@@ -49,7 +73,7 @@ const SystemMonitor = () => {
             Success Rate
           </p>
           <p className="font-mono font-bold text-green-600 dark:text-green-400">
-            99.8%
+            {successRate.toFixed(1)}%
           </p>
         </div>
         <div className="p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
@@ -57,7 +81,7 @@ const SystemMonitor = () => {
             Active Nodes
           </p>
           <p className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
-            12/12
+            {activeNodes}
           </p>
         </div>
       </div>

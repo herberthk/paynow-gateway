@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import {
   getRevenueVolumeData,
   getSystemCategoryDistribution,
+  getPeakTrafficData,
+  getSystemHealthData,
 } from "@/lib/actions/admin";
 import RevenueVolume from "./RevenueVolume";
 import PaymentMethod from "./PaymentMethod";
@@ -25,10 +27,24 @@ type SystemCategoryData = {
   count: number;
   color: string;
 };
+type TrafficData = {
+  hour: string;
+  transactions: number;
+};
+type SystemHealthData = {
+  successRate: number;
+  latency: number;
+  activeNodes: string;
+  chartData: { time: string; rate: number }[];
+};
 
 const AdminDashboard: React.FC = () => {
   const [financialData, setFinancialData] = useState<FinancialData[]>([]);
   const [categoryData, setCategoryData] = useState<SystemCategoryData[]>([]);
+  const [trafficData, setTrafficData] = useState<TrafficData[]>([]);
+  const [systemHealth, setSystemHealth] = useState<SystemHealthData | null>(
+    null,
+  );
   const [period, setPeriod] = useState<"daily" | "weekly" | "monthly">("daily");
   const [loading, setLoading] = useState(true);
 
@@ -41,10 +57,18 @@ const AdminDashboard: React.FC = () => {
 
         const categoryRes = await getSystemCategoryDistribution(period);
         setCategoryData(categoryRes);
+
+        const trafficRes = await getPeakTrafficData();
+        setTrafficData(trafficRes);
+
+        const healthRes = await getSystemHealthData();
+        setSystemHealth(healthRes);
       } catch (error) {
         console.error("Error fetching revenue data:", error);
         setFinancialData([]); // Clear data on error
         setCategoryData([]);
+        setTrafficData([]);
+        setSystemHealth(null);
       } finally {
         setLoading(false);
       }
@@ -85,7 +109,6 @@ const AdminDashboard: React.FC = () => {
           ))}
         </div>
       </div>
-
       {/* Main Financial Chart */}
       {loading ? (
         <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 h-96 flex items-center justify-center">
@@ -96,7 +119,6 @@ const AdminDashboard: React.FC = () => {
       ) : (
         <RevenueVolume financialData={financialData} />
       )}
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Payment Method Health */}
         <PaymentMethod />
@@ -105,15 +127,16 @@ const AdminDashboard: React.FC = () => {
         <CategoryDistribution data={categoryData} />
 
         {/* Peak Hourly Activity */}
-        <PeakTraffic />
+        <PeakTraffic data={trafficData} />
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* TODO: Add System Monitor and Audit Trail */}
+      {/* className="grid grid-cols-1 lg:grid-cols-2 gap-6" */}
+      <div className=" w-full">
         {/* Real-time Health Monitor */}
-        <SystemMonitor />
+        <SystemMonitor data={systemHealth} />
 
         {/* Recent Audit Logs */}
-        <AuditTrail />
+        {/* <AuditTrail /> */}
       </div>
     </div>
   );
