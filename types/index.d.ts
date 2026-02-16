@@ -109,14 +109,15 @@ declare global {
   // New Types for Admin Modules
   interface Dispute {
     id: string;
-    transactionId: string;
-    user: string;
-    amount: number;
-    currency: Currency;
-    reason: string;
+    transactionRef?: string;
+    user?: User;
+    amount?: string;
+    currency?: Currency;
+    reason?: string;
     status: "OPEN" | "RESOLVED" | "REJECTED";
     date: string;
     evidence?: string;
+    type: "TRANSACTION" | "GENERAL";
   }
 
   interface Fee {

@@ -11,7 +11,7 @@ type Ticket = {
   status: "OPEN" | "RESOLVED" | "REJECTED";
   amount?: number | null;
   currency?: string | null;
-  transactionId?: string | null;
+  transactionRef?: string;
   transaction?: {
     txn_ref: string;
     amount: number;
@@ -23,68 +23,64 @@ type Ticket = {
 };
 
 type UserDisputesProps = {
-  initialTickets: Ticket[];
+  tickets: Ticket[];
 };
 
-export default function UserDisputes({ initialTickets }: UserDisputesProps) {
+const UserDisputes = ({ tickets }: UserDisputesProps) => {
   const notify = useNotificationStore((state) => state.notify);
-  const [tickets, setTickets] = useState<Ticket[]>(initialTickets);
+  // const [tickets, setTickets] = useState<Ticket[]>(initialTickets);
   const [filter, setFilter] = useState<"ALL" | "OPEN" | "RESOLVED">("ALL");
   const [searchTerm, setSearchTerm] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Partial<Dispute>>({
     reason: "",
     amount: "",
     currency: "UGX",
-    transactionId: "",
+    transactionRef: "",
     type: "GENERAL" as "TRANSACTION" | "GENERAL",
   });
 
-  const handleCreate = async () => {
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!formData.reason) {
       notify("ALERT", "Please provide a reason.");
       return;
     }
+    console.log("formData", formData);
+    try {
+      setIsLoading(true);
 
-    const res = await createTicket({
-      reason: formData.reason,
-      amount: formData.amount ? Number(formData.amount) : undefined,
-      currency: formData.currency as "UGX" | "USD",
-      transactionId: formData.transactionId || undefined,
-      type: formData.type,
-    });
-
-    if (res.success && res.data) {
+      const res = await createTicket({
+        reason: formData.reason,
+        amount: formData.amount ? Number(formData.amount) : undefined,
+        currency: formData.currency as "UGX" | "USD",
+        transactionRef: formData.transactionRef || undefined,
+        type: formData.type!,
+      });
+      console.log("res", res);
+      if (res.error) {
+        notify("ALERT", res.error || "Failed to create ticket.");
+      }
       notify("SUCCESS", "Ticket created successfully.");
       setIsCreating(false);
       setFormData({
         reason: "",
         amount: "",
         currency: "UGX",
-        transactionId: "",
+        transactionRef: "",
         type: "GENERAL",
       });
-
-      // Add the new ticket to the list
-      const newTicket: Ticket = {
-        ...res.data,
-        amount: res.data.amount ? Number(res.data.amount) : null,
-        transaction: res.data.transaction
-          ? {
-              ...res.data.transaction,
-              amount: Number(res.data.transaction.amount),
-            }
-          : null,
-        createdAt: new Date(res.data.createdAt).toISOString(),
-      };
-      setTickets([newTicket, ...tickets]);
-    } else {
-      notify("ALERT", res.error || "Failed to create ticket.");
+      setIsLoading(false);
+    } catch (error) {
+      notify("ALERT", "Failed to create ticket.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const filteredTickets = tickets.filter((t) => {
+  const filteredTickets = tickets?.filter((t) => {
     const matchesFilter = filter === "ALL" || t.status === filter;
     const matchesSearch =
       t.reason.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -142,7 +138,7 @@ export default function UserDisputes({ initialTickets }: UserDisputesProps) {
         </div>
       </div>
 
-      {filteredTickets.length === 0 ? (
+      {filteredTickets?.length === 0 ? (
         <div className="text-center py-12 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-gray-300 dark:border-slate-700">
           <div className="mx-auto w-12 h-12 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-500 mb-3">
             <CheckCircle size={24} />
@@ -153,7 +149,7 @@ export default function UserDisputes({ initialTickets }: UserDisputesProps) {
         </div>
       ) : (
         <div className="grid gap-4">
-          {filteredTickets.map((ticket) => (
+          {filteredTickets?.map((ticket) => (
             <div
               key={ticket.id}
               className="bg-white dark:bg-slate-800 p-5 rounded-xl border border-gray-200 dark:border-slate-700 hover:shadow-md transition-shadow"
@@ -229,7 +225,7 @@ export default function UserDisputes({ initialTickets }: UserDisputesProps) {
               </button>
             </div>
 
-            <div className="space-y-4">
+            <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   Type
@@ -242,6 +238,7 @@ export default function UserDisputes({ initialTickets }: UserDisputesProps) {
                       type: e.target.value as "TRANSACTION" | "GENERAL",
                     })
                   }
+                  required
                   className="w-full bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2"
                 >
                   <option value="GENERAL">General Inquiry</option>
@@ -252,19 +249,20 @@ export default function UserDisputes({ initialTickets }: UserDisputesProps) {
               {formData.type === "TRANSACTION" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Transaction ID (Optional)
+                    Transaction Reference
                   </label>
                   <input
                     type="text"
-                    value={formData.transactionId}
+                    value={formData.transactionRef}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        transactionId: e.target.value,
+                        transactionRef: e.target.value,
                       })
                     }
+                    required
                     className="w-full bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2"
-                    placeholder="Enter Transaction ID if available"
+                    placeholder="Enter Transaction Reference"
                   />
                 </div>
               )}
@@ -281,6 +279,7 @@ export default function UserDisputes({ initialTickets }: UserDisputesProps) {
                   className="w-full bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2"
                   rows={3}
                   placeholder="Describe your issue..."
+                  required
                 />
               </div>
 
@@ -305,7 +304,10 @@ export default function UserDisputes({ initialTickets }: UserDisputesProps) {
                   <select
                     value={formData.currency}
                     onChange={(e) =>
-                      setFormData({ ...formData, currency: e.target.value })
+                      setFormData({
+                        ...formData,
+                        currency: e.target.value as Currency,
+                      })
                     }
                     className="w-full bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2"
                   >
@@ -316,15 +318,19 @@ export default function UserDisputes({ initialTickets }: UserDisputesProps) {
               </div>
 
               <button
-                onClick={handleCreate}
+                type="submit"
+                disabled={isLoading}
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg mt-2 flex items-center justify-center gap-2"
               >
-                <Save size={16} /> Submit Ticket
+                {isLoading ? "Submitting..." : "Submit Ticket"}{" "}
+                <Save size={16} />
               </button>
-            </div>
+            </form>
           </div>
         </div>
       )}
     </div>
   );
-}
+};
+
+export default UserDisputes;

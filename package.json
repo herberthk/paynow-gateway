@@ -12,7 +12,8 @@
     "studio": "bunx prisma studio",
     "seed": "bun run utils/seed.ts",
     "prisma:deploy": "bunx prisma migrate deploy",
-    "email": "email dev --dir src/emails"
+    "email": "email dev --dir src/emails",
+    "reset": "bunx prisma migrate reset && bunx prisma generate && bun run seed"
   },
   "dependencies": {
     "@google/genai": "^1.31.0",
