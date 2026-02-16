@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 
-import { mockFees } from "@/services/mockData";
 import {
   Edit2,
   Plus,
@@ -14,9 +13,13 @@ import {
   Trash2,
 } from "lucide-react";
 import { useNotificationStore } from "@/store";
+import {
+  deleteTransactionFee,
+  toggleTransactionFee,
+  updateTransactionFee,
+} from "@/lib";
 
-const AdminFeeManagement: React.FC = () => {
-  const [fees, setFees] = useState<Fee[]>(mockFees);
+const AdminFeeManagement: React.FC<{ fees: Fee[] }> = ({ fees }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<number>(0);
   const notify = useNotificationStore((state) => state.notify);
@@ -44,8 +47,9 @@ const AdminFeeManagement: React.FC = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const handleToggleActive = (id: string) => {
-    setFees(fees.map((f) => (f.id === id ? { ...f, active: !f.active } : f)));
+  const handleToggleActive = async (id: string, active: boolean) => {
+    await toggleTransactionFee(id, active);
+    notify("SUCCESS", "Fee updated successfully");
   };
 
   const startEdit = (fee: Fee) => {
@@ -53,18 +57,20 @@ const AdminFeeManagement: React.FC = () => {
     setEditValue(fee.value);
   };
 
-  const saveEdit = (id: string) => {
-    setFees(
-      fees.map((f) =>
-        f.id === id
-          ? {
-              ...f,
-              value: editValue,
-              lastUpdated: new Date().toISOString().split("T")[0],
-            }
-          : f,
-      ),
-    );
+  const saveEdit = async (id: string) => {
+    console.log({ id, editValue });
+    // await updateTransactionFee(id, editValue);
+    // setFees(
+    //   fees.map((f) =>
+    //     f.id === id
+    //       ? {
+    //           ...f,
+    //           value: editValue,
+    //           lastUpdated: new Date().toISOString().split("T")[0],
+    //         }
+    //       : f,
+    //   ),
+    // );
     setEditingId(null);
     notify("SUCCESS", "Fee updated successfully");
   };
@@ -74,30 +80,30 @@ const AdminFeeManagement: React.FC = () => {
       notify("ALERT", "Please fill in all fields");
       return;
     }
-    const fee: Fee = {
-      id: `fee_${Date.now()}`,
-      name: newFee.name!,
-      type: newFee.type as "PERCENTAGE" | "FIXED",
-      value: newFee.value,
-      category: newFee.category!,
-      active: true,
-      lastUpdated: new Date().toISOString().split("T")[0],
-      currency: "UGX",
-    };
-    setFees([...fees, fee]);
-    setIsAdding(false);
-    setNewFee({
-      name: "",
-      type: "PERCENTAGE",
-      value: 0,
-      category: "PAYMENT",
-      active: true,
-    });
+    // const fee: Fee = {
+    //   id: `fee_${Date.now()}`,
+    //   name: newFee.name!,
+    //   type: newFee.type as "PERCENTAGE" | "FIXED",
+    //   value: newFee.value,
+    //   category: newFee.category!,
+    //   active: true,
+    //   lastUpdated: new Date().toISOString().split("T")[0],
+    //   currency: "UGX",
+    // };
+    // setFees([...fees, fee]);
+    // setIsAdding(false);
+    // setNewFee({
+    //   name: "",
+    //   type: "PERCENTAGE",
+    //   value: 0,
+    //   category: "PAYMENT",
+    //   active: true,
+    // });
     notify("SUCCESS", "New fee rule added");
   };
 
-  const deleteFee = (id: string) => {
-    setFees(fees.filter((f) => f.id !== id));
+  const deleteFee = async (id: string) => {
+    await deleteTransactionFee(id);
     notify("INFO", "Fee rule removed");
   };
 
@@ -144,7 +150,7 @@ const AdminFeeManagement: React.FC = () => {
                 )}
               </div>
               <button
-                onClick={() => handleToggleActive(fee.id)}
+                onClick={() => handleToggleActive(fee.id, fee.active)}
                 className={`text-2xl transition-colors ${fee.active ? "text-indigo-600 dark:text-indigo-400" : "text-gray-300 dark:text-gray-600"}`}
               >
                 {fee.active ? (

@@ -89,7 +89,6 @@ export async function getUserTickets() {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getAllTickets(filter?: {
   status?: "OPEN" | "RESOLVED" | "REJECTED" | "ALL";
   search?: string;
@@ -140,21 +139,34 @@ export async function getAllTickets(filter?: {
         },
       },
     });
-    return { success: true, data: disputes };
+
+    const tickets = disputes.map((dispute) => ({
+      ...dispute,
+      amount: dispute.amount ? Number(dispute.amount) : undefined,
+      transactionRef: dispute.transactionRef!,
+      transaction: dispute.transaction
+        ? {
+            ...dispute.transaction,
+            amount: Number(dispute.transaction.amount),
+          }
+        : null,
+      createdAt: dispute.createdAt.toISOString(),
+    }));
+    return { success: true, data: tickets };
   } catch (error) {
     console.error("Failed to fetch all tickets:", error);
     return { success: false, error: "Failed to fetch tickets" };
   }
 }
 
-export async function resolveTicket(
+export const resolveTicket = async (
   ticketId: string,
   status: "RESOLVED" | "REJECTED",
-) {
+) => {
   try {
     const user = await getUserSession();
     if (!user) throw new Error("Unauthorized");
-    if (user.privilege !== "admin" && user.privilege !== "super_admin") {
+    if (user.privilege !== "super_admin") {
       throw new Error("Forbidden: Admin access required");
     }
 
@@ -164,13 +176,12 @@ export async function resolveTicket(
     });
 
     revalidatePath("/dashboard/admin/disputes");
-    revalidatePath("/dashboard/user/disputes");
     return { success: true, data: dispute };
   } catch (error) {
     console.error("Failed to resolve ticket:", error);
     return { success: false, error: "Failed to resolve ticket" };
   }
-}
+};
 
 export async function getUserRecentTransactions() {
   try {
