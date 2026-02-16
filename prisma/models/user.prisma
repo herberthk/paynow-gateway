@@ -162,6 +162,7 @@ model Fee {
   lastUpdated DateTime    @updatedAt
   createdAt   DateTime    @default(now())
   deleted_at DateTime?
+  @@index([category,active])
   @@map("payment_fees")
 }
 
