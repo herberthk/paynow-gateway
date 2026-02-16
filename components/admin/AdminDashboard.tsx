@@ -11,7 +11,6 @@ import PaymentMethod from "./PaymentMethod";
 import CategoryDistribution from "./CategoryDistribution";
 import PeakTraffic from "./PeakTraffic";
 import SystemMonitor from "./SystemMonitor";
-import AuditTrail from "./AuditTrail";
 
 // Define a type for financial data, assuming it's an array of objects
 // You might want to define a more specific interface for FinancialData

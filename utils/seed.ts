@@ -267,7 +267,7 @@ export const seedTransactions = (
   const transactions: {
     userId: number;
     recipientId: number;
-    recipientName: string;
+    displayName: string;
     amount: number;
     currency: "UGX" | "USD";
     type: TransactionType;
@@ -293,28 +293,28 @@ export const seedTransactions = (
         random() > 0.9 ? "FAILED" : random() > 0.8 ? "PENDING" : "COMPLETED";
 
       let recipientId: number;
-      let recipientName: string;
+      let displayName: string;
 
       if (type === "PAYMENT") {
         // Payments go to merchants
         recipientId = merchantIds[Math.floor(random() * merchantIds.length)];
-        recipientName =
+        displayName =
           users.find((u) => u.id === recipientId)?.name || "Merchant";
       } else if (type === "TRANSFER") {
         // Transfers go to other regular users
         const otherUsers = regularUserIds.filter((id) => id !== userId);
         recipientId = otherUsers[Math.floor(random() * otherUsers.length)];
-        recipientName = users.find((u) => u.id === recipientId)?.name || "User";
+        displayName = users.find((u) => u.id === recipientId)?.name || "User";
       } else {
         // Deposit/Withdrawal - recipient is self
         recipientId = userId;
-        recipientName = users.find((u) => u.id === userId)?.name || "Self";
+        displayName = users.find((u) => u.id === userId)?.name || "Self";
       }
 
       transactions.push({
         userId,
         recipientId,
-        recipientName,
+        displayName,
         amount,
         currency: (random() > 0.9 ? "USD" : "UGX") as "UGX" | "USD",
         type: type as TransactionType,
@@ -531,7 +531,7 @@ export async function seedDatabase() {
                 type: "CREDIT",
                 amount: transaction.amount,
                 account: "Wallet",
-                description: `Sent to ${transaction.recipientName}`,
+                description: `Sent to ${transaction.displayName}`,
               },
             });
             await tx.ledger.create({
@@ -542,7 +542,7 @@ export async function seedDatabase() {
                 amount: transaction.amount,
                 account:
                   transaction.type === "TRANSFER" ? "Transfer Out" : "Payment",
-                description: `Sent to ${transaction.recipientName}`,
+                description: `Sent to ${transaction.displayName}`,
               },
             });
             // Recipient: Debit Wallet (money in), Credit Income
