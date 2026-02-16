@@ -26,7 +26,7 @@ type Ticket = {
     currency: string;
   } | null;
   transactionId?: string | null;
-  amount: number; // Decimal from prisma
+  amount?: number; // Decimal from prisma
   currency: string;
   reason: string;
   status: "OPEN" | "RESOLVED" | "REJECTED";
@@ -36,20 +36,19 @@ type Ticket = {
 };
 
 type AdminDisputesProps = {
-  initialDisputes: Ticket[];
+  tickets: Ticket[];
 };
 
 type FilterType = "ALL" | "OPEN" | "RESOLVED";
 const filters: FilterType[] = ["ALL", "OPEN", "RESOLVED"];
 
-const AdminDisputes = ({ initialDisputes }: AdminDisputesProps) => {
+const AdminDisputes = ({ tickets }: AdminDisputesProps) => {
   const notify = useNotificationStore((state) => state.notify);
-  const [disputes, setDisputes] = useState<Ticket[]>(
-    initialDisputes as Ticket[],
-  );
+  // const [disputes, setDisputes] = useState<Ticket[]>(tickets);
   const [filter, setFilter] = useState<FilterType>("OPEN");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDispute, setSelectedDispute] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -59,22 +58,27 @@ const AdminDisputes = ({ initialDisputes }: AdminDisputesProps) => {
     id: string,
     decision: "RESOLVED" | "REJECTED",
   ) => {
-    const res = await resolveTicket(id, decision);
-    if (res.success) {
-      setDisputes(
-        disputes.map((d) => (d.id === id ? { ...d, status: decision } : d)),
-      );
+    setIsLoading(true);
+    try {
+      const res = await resolveTicket(id, decision);
+      setIsLoading(false);
+      if (res.error) {
+        notify("ALERT", "Failed to update ticket status.");
+        return;
+      }
       setSelectedDispute(null);
       notify(
         decision === "RESOLVED" ? "SUCCESS" : "INFO",
         decision === "RESOLVED" ? "Dispute resolved." : "Dispute rejected.",
       );
-    } else {
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
       notify("ALERT", "Failed to update ticket status.");
     }
   };
 
-  const filteredDisputes = disputes.filter((d) => {
+  const filteredDisputes = tickets.filter((d) => {
     const matchesFilter = filter === "ALL" || d.status === filter;
     const matchesSearch =
       (d.user.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -278,7 +282,7 @@ const AdminDisputes = ({ initialDisputes }: AdminDisputesProps) => {
               </div>
 
               {(() => {
-                const d = disputes.find((x) => x.id === selectedDispute)!;
+                const d = tickets.find((x) => x.id === selectedDispute)!;
                 return (
                   <div className="space-y-4">
                     <div>
@@ -336,16 +340,18 @@ const AdminDisputes = ({ initialDisputes }: AdminDisputesProps) => {
                     {d.status === "OPEN" && (
                       <div className="pt-4 flex gap-3">
                         <button
+                          disabled={isLoading}
                           onClick={() => handleResolve(d.id, "REJECTED")}
                           className="flex-1 py-2 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-sm font-medium transition-colors"
                         >
-                          Reject
+                          {isLoading ? "Rejecting..." : "Reject"}
                         </button>
                         <button
+                          disabled={isLoading}
                           onClick={() => handleResolve(d.id, "RESOLVED")}
                           className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
                         >
-                          Resolve / Refund
+                          {isLoading ? "Resolving..." : "Resolve / Refund"}
                         </button>
                       </div>
                     )}

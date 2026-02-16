@@ -52,10 +52,10 @@ export const menuItems = (userRole: Privilege) =>
           href: "/dashboard/activity-logs",
         },
         {
-          id: "/dashboard/admin/settings",
+          id: "/dashboard/admin/fees",
           label: "Fee Management",
           icon: Settings,
-          href: "/dashboard/admin/settings",
+          href: "/dashboard/admin/fees",
         },
         {
           id: "/dashboard/admin/kyc/trash",
