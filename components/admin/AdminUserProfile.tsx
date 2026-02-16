@@ -26,6 +26,20 @@ import { useNotificationStore } from "@/store";
 type Props = {
   user: User;
 };
+
+interface Transaction {
+  id: string;
+  recipientName: string;
+  amount: number;
+  currency: string;
+  date: string;
+  status: "COMPLETED" | "PENDING" | "FAILED" | "DISPUTED";
+  type: "DEPOSIT" | "WITHDRAWAL" | "TRANSFER" | "PAYMENT" | "SUBSCRIPTION";
+  method: string;
+  category: string;
+  createdAt: string;
+}
+
 const AdminUserProfile: FC<Props> = ({ user }) => {
   // Find user or fallback to first user for safety
   // const initialUser = mockUsers.find((u) => u.id === "u123") || mockUsers[0];
@@ -49,7 +63,7 @@ const AdminUserProfile: FC<Props> = ({ user }) => {
 
   // Filter transactions for this user
   // In a real app, this would be an API call
-  const userTransactions = allTransactions.filter(
+  const userTransactions = (allTransactions as unknown as Transaction[]).filter(
     (t) =>
       t.recipientName === user.name ||
       t.id.includes(String(currentUser.id)) ||
@@ -262,12 +276,14 @@ const AdminUserProfile: FC<Props> = ({ user }) => {
               <div className="p-6 space-y-8">
                 {/* Financial Summary */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 p-5 rounded-xl border border-indigo-100 dark:border-indigo-800">
+                  <div className="bg-linear-to-br from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 p-5 rounded-xl border border-indigo-100 dark:border-indigo-800">
                     <p className="text-indigo-600 dark:text-indigo-400 text-sm font-semibold mb-1">
                       Wallet Balance (UGX)
                     </p>
                     <h3 className="text-3xl font-bold text-gray-900 dark:text-white">
-                      {user?.wallet?.balance.toLocaleString()}
+                      {Number(
+                        user?.wallet?.balance?.toString() || 0,
+                      ).toLocaleString()}
                     </h3>
                   </div>
                   <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-5 rounded-xl border border-emerald-100 dark:border-emerald-800">
@@ -275,7 +291,10 @@ const AdminUserProfile: FC<Props> = ({ user }) => {
                       Wallet Balance (USD)
                     </p>
                     <h3 className="text-3xl font-bold text-gray-900 dark:text-white">
-                      ${(Number(user?.wallet?.balance) / 3670).toLocaleString()}
+                      $
+                      {(
+                        Number(user?.wallet?.balance?.toString() || 0) / 3670
+                      ).toLocaleString()}
                     </h3>
                   </div>
                 </div>

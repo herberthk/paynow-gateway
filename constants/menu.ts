@@ -114,6 +114,12 @@ export const menuItems = (userRole: Privilege) =>
           href: "/dashboard/user/financial-statements/balance-sheet",
         },
         {
+          id: "/dashboard/user/disputes",
+          label: "Disputes",
+          icon: AlertCircle,
+          href: "/dashboard/user/disputes",
+        },
+        {
           id: "/dashboard/user/settings",
           label: "Settings",
           icon: Settings,

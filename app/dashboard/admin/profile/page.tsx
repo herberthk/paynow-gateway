@@ -1,4 +1,4 @@
-import AdminUserProfile from "@/components/AdminUserProfile";
+import AdminUserProfile from "@/components/admin/AdminUserProfile";
 import { getUserSession } from "@/lib";
 
 const Profile = async () => {

@@ -1,4 +1,4 @@
-import ActivityLog from "@/components/ActivityLog";
+import ActivityLog from "@/components/global/ActivityLog";
 
 const Notifications = () => {
   return <ActivityLog />;

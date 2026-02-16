@@ -24,9 +24,23 @@ import {
 } from "lucide-react";
 import { useNotificationStore } from "@/store";
 
+interface Transaction {
+  id: string;
+  recipientName: string;
+  amount: number;
+  currency: string;
+  date: string;
+  status: "COMPLETED" | "PENDING" | "FAILED" | "DISPUTED";
+  type: "DEPOSIT" | "WITHDRAWAL" | "TRANSFER" | "PAYMENT" | "SUBSCRIPTION";
+  method: string;
+  category: string;
+  createdAt: string;
+}
+
 const AdminTransactions: React.FC = () => {
-  const [transactions, setTransactions] =
-    useState<Transaction[]>(mockTransactions);
+  const [transactions, setTransactions] = useState<Transaction[]>(
+    mockTransactions as unknown as Transaction[],
+  );
   const [filter, setFilter] = useState("ALL");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
