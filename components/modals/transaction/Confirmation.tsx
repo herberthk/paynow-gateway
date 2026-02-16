@@ -6,10 +6,12 @@ export const ConfirmationModal = ({
   isTransferring,
   handleCancelTransfer,
   handleConfirmTransfer,
+  fee,
 }: {
   recipientData: RecipientUser;
   amount: string;
   isTransferring: boolean;
+  fee: number;
   handleCancelTransfer: () => void;
   handleConfirmTransfer: () => void;
 }) => {
@@ -55,7 +57,7 @@ export const ConfirmationModal = ({
             <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-slate-600">
               <span className="text-gray-600 dark:text-gray-300">Fee</span>
               <span className="font-semibold text-orange-600 dark:text-orange-400">
-                UGX 200
+                UGX {fee.toLocaleString()}
               </span>
             </div>
             <div className="flex justify-between items-center py-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg px-3 mt-2">
@@ -63,7 +65,7 @@ export const ConfirmationModal = ({
                 Total Debit
               </span>
               <span className="font-bold text-indigo-600 dark:text-indigo-400 text-lg">
-                UGX {(parseFloat(amount) + 200).toLocaleString()}
+                UGX {(parseFloat(amount) + fee).toLocaleString()}
               </span>
             </div>
           </div>
