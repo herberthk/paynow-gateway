@@ -3,23 +3,42 @@
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-export const getTransactionFee = async (type: TransactionType) => {
-  switch (type) {
-    case "TRANSFER":
-      return {
-        success: true,
-        amount: 200.0,
-      };
-    case "PAYMENT":
-      return {
-        success: true,
-        amount: 0.0,
-      };
-    default:
+type FeeProps = {
+  amount: number;
+  type: FeeCategory;
+};
+
+export const getTransactionFee = async ({ amount, type }: FeeProps) => {
+  try {
+    const fee = await prisma.fee.findUnique({
+      where: { category: type, active: true },
+      select: {
+        value: true,
+        type: true,
+      },
+    });
+    if (!fee) {
       return {
         success: false,
-        message: "Invalid transaction type",
+        message: "Fee not found",
       };
+    }
+    let TRANSACTION_FEE = 0;
+    if (fee.type === "FIXED") {
+      TRANSACTION_FEE = Number(fee.value);
+    } else if (fee.type === "PERCENTAGE") {
+      TRANSACTION_FEE = amount * Number(fee.value);
+    }
+    return {
+      success: true,
+      amount: TRANSACTION_FEE,
+    };
+  } catch (error) {
+    console.error("Failed to fetch transaction fee:", error);
+    return {
+      success: false,
+      message: "Failed to fetch transaction fee",
+    };
   }
 };
 

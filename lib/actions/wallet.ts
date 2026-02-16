@@ -130,7 +130,10 @@ export const processP2PTransfer = async (
       return {
         success: false,
         message: "User not found",
-        transaction: null,
+        amount: 0,
+        currency: "UGX",
+        refference: "",
+        fee: 0,
       };
     }
     // Validate amount
@@ -138,6 +141,10 @@ export const processP2PTransfer = async (
       return {
         success: false,
         message: "Transfer amount must be greater than 500",
+        amount: 0,
+        currency: "UGX",
+        refference: "",
+        fee: 0,
       };
     }
 
@@ -146,16 +153,23 @@ export const processP2PTransfer = async (
       return {
         success: false,
         message: "You cannot transfer money to yourself",
+        amount: 0,
+        currency: "UGX",
+        refference: "",
+        fee: 0,
       };
     }
 
     // Transaction fee
-    const fee = await getTransactionFee("TRANSFER");
+    const fee = await getTransactionFee({ amount, type: "TRANSFER" });
     if (!fee.success || !fee.amount) {
       return {
         success: false,
         message: fee.message,
-        transaction: null,
+        amount: 0,
+        currency: "UGX",
+        refference: "",
+        fee: 0,
       };
     }
 
@@ -163,10 +177,10 @@ export const processP2PTransfer = async (
     // Generate transaction reference
     const refference = await generateTxRef();
     const senderBalance = (await getWalletBalance(senderId)).balance;
+    // calculate fee based on type
+    const TRANSACTION_FEE = fee.amount;
     // Use Prisma transaction to ensure atomicity
     const result = await prisma.$transaction(async (tx) => {
-      const TRANSACTION_FEE = fee.amount;
-
       const totalDeduction = amount + TRANSACTION_FEE;
 
       // Check sufficient balance

@@ -53,6 +53,8 @@ declare global {
     volume: number;
     previous: number;
   };
+  type FeeCategory = "DEPOSIT" | "WITHDRAWAL" | "TRANSFER" | "PAYMENT";
+  type FeeType = "FIXED" | "PERCENTAGE";
 }
 
 export {};

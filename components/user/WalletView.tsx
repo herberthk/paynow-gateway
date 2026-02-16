@@ -28,6 +28,7 @@ const WalletView = ({ user, wallet }: UserProps) => {
   // Form state
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
+  const [fee, setFee] = useState(0);
 
   // Modal state
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -54,7 +55,6 @@ const WalletView = ({ user, wallet }: UserProps) => {
   const handleSendClick = async () => {
     // Reset states
     setError("");
-    // setSuccess("");
 
     // Validate inputs
     if (!recipient.trim()) {
@@ -68,7 +68,10 @@ const WalletView = ({ user, wallet }: UserProps) => {
       return;
     }
 
-    const TRANSACTION_FEE = (await getTransactionFee("TRANSFER")).amount!;
+    const TRANSACTION_FEE = (
+      await getTransactionFee({ amount: transferAmount, type: "TRANSFER" })
+    ).amount!;
+    console.log("Transaction Fee:", TRANSACTION_FEE);
     const totalRequired = transferAmount + TRANSACTION_FEE;
 
     if (totalRequired > wallet.balance) {
@@ -99,6 +102,7 @@ const WalletView = ({ user, wallet }: UserProps) => {
 
       // Show confirmation modal
       setRecipientData(result?.user);
+      setFee(TRANSACTION_FEE);
       setShowConfirmModal(true);
     } catch (err) {
       setError("An error occurred while searching for the user");
@@ -321,6 +325,7 @@ const WalletView = ({ user, wallet }: UserProps) => {
           handleCancelTransfer={handleCancelTransfer}
           handleConfirmTransfer={handleConfirmTransfer}
           isTransferring={isTransferring}
+          fee={fee}
         />
       )}
 
