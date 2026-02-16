@@ -68,7 +68,10 @@ export const deleteTransactionFee = async (id: string) => {
 // Update a transaction fee
 export const updateTransactionFee = async (id: string, value: number) => {
   try {
-    await prisma.fee.update({ where: { id }, data: { value } });
+    await prisma.fee.update({
+      where: { id },
+      data: { value },
+    });
     revalidatePath("/dashboard/admin/fees");
     return { success: true };
   } catch (error) {
@@ -103,11 +106,18 @@ export const getTransactionFeeById = async (id: string) => {
 // Add a transaction fee
 export const addTransactionFee = async (fee: Fee) => {
   try {
+    // Check if transfer type exists
+    const existingFee = await prisma.fee.findUnique({
+      where: { category: fee.category },
+    });
+    if (existingFee) {
+      return { success: false, message: "Transfer type already exists" };
+    }
     await prisma.fee.create({ data: fee });
     revalidatePath("/dashboard/admin/fees");
-    return { success: true };
+    return { success: true, message: "Fee added successfully" };
   } catch (error) {
     console.error("Failed to add transaction fee:", error);
-    return { success: false, error: "Failed to add transaction fee" };
+    return { success: false, message: "Failed to add transaction fee" };
   }
 };

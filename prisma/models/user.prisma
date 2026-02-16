@@ -155,9 +155,9 @@ model Fee {
   id          String      @id @default(uuid())
   name        String
   type        FeeType
-  value       Decimal     @db.Decimal(12, 2)
+  value       Decimal     @db.Decimal(12, 4)
   currency    Currency    @default(UGX)
-  category    FeeCategory
+  category    FeeCategory @unique @default(TRANSFER)
   active      Boolean     @default(true)
   lastUpdated DateTime    @updatedAt
   createdAt   DateTime    @default(now())
@@ -244,7 +244,6 @@ enum FeeCategory {
   WITHDRAWAL
   TRANSFER
   PAYMENT
-  API
 }
 
 enum NotificationType {

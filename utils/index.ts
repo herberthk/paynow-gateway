@@ -7,3 +7,16 @@ export const getLastMonthRange = () => {
   const end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59, 999);
   return { start, end };
 };
+
+export const formatPercentLabel = (value: string | number) => {
+  const result = Number(value) * 100;
+  return `${parseFloat(result.toFixed(2))}`;
+};
+
+export const formatCurrency = (value: string | number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "UGX",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Number(value));
