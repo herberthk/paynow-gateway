@@ -126,7 +126,7 @@ declare global {
     type: "PERCENTAGE" | "FIXED";
     value: number;
     currency?: Currency;
-    category: "DEPOSIT" | "WITHDRAWAL" | "TRANSFER" | "PAYMENT" | "API";
+    category: "DEPOSIT" | "WITHDRAWAL" | "TRANSFER" | "PAYMENT";
     active: boolean;
     lastUpdated: string;
   }

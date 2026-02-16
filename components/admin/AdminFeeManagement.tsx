@@ -14,15 +14,18 @@ import {
 } from "lucide-react";
 import { useNotificationStore } from "@/store";
 import {
+  addTransactionFee,
   deleteTransactionFee,
   toggleTransactionFee,
   updateTransactionFee,
 } from "@/lib";
+import { formatPercentLabel } from "@/utils";
 
 const AdminFeeManagement: React.FC<{ fees: Fee[] }> = ({ fees }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<number>(0);
   const notify = useNotificationStore((state) => state.notify);
+  const [isLoading, setIsLoading] = useState(false);
 
   // New Fee State
   const [isAdding, setIsAdding] = useState(false);
@@ -57,49 +60,70 @@ const AdminFeeManagement: React.FC<{ fees: Fee[] }> = ({ fees }) => {
     setEditValue(fee.value);
   };
 
-  const saveEdit = async (id: string) => {
-    console.log({ id, editValue });
-    // await updateTransactionFee(id, editValue);
-    // setFees(
-    //   fees.map((f) =>
-    //     f.id === id
-    //       ? {
-    //           ...f,
-    //           value: editValue,
-    //           lastUpdated: new Date().toISOString().split("T")[0],
-    //         }
-    //       : f,
-    //   ),
-    // );
-    setEditingId(null);
-    notify("SUCCESS", "Fee updated successfully");
+  const saveEdit = async (fee: Fee) => {
+    // Validate fee if type is percentage value should be between 0 and 1
+    if (fee.type === "PERCENTAGE") {
+      if (editValue < 0 || editValue > 1) {
+        notify("ALERT", "Percentage fee should be between 0 and 1");
+        return;
+      }
+    }
+
+    if (fee.type === "FIXED") {
+      if (editValue < 10) {
+        notify("ALERT", "Fixed fee must be greater than 10");
+        return;
+      }
+    }
+
+    try {
+      await updateTransactionFee(fee.id, editValue);
+      setEditingId(null);
+      notify("SUCCESS", "Fee updated successfully");
+    } catch (error) {
+      notify("ALERT", "Failed to update fee");
+    }
   };
 
-  const handleAddFee = () => {
+  const handleAddFee = async () => {
     if (!newFee.name || newFee.value === undefined) {
       notify("ALERT", "Please fill in all fields");
       return;
     }
-    // const fee: Fee = {
-    //   id: `fee_${Date.now()}`,
-    //   name: newFee.name!,
-    //   type: newFee.type as "PERCENTAGE" | "FIXED",
-    //   value: newFee.value,
-    //   category: newFee.category!,
-    //   active: true,
-    //   lastUpdated: new Date().toISOString().split("T")[0],
-    //   currency: "UGX",
-    // };
-    // setFees([...fees, fee]);
-    // setIsAdding(false);
-    // setNewFee({
-    //   name: "",
-    //   type: "PERCENTAGE",
-    //   value: 0,
-    //   category: "PAYMENT",
-    //   active: true,
-    // });
-    notify("SUCCESS", "New fee rule added");
+    if (newFee.type === "PERCENTAGE") {
+      if (newFee.value < 0 || newFee.value > 1) {
+        notify("ALERT", "Percentage fee should be between 0 and 1");
+        return;
+      }
+    }
+    if (newFee.type === "FIXED") {
+      if (newFee.value < 10) {
+        notify("ALERT", "Fixed fee must be greater than 10");
+        return;
+      }
+    }
+    try {
+      setIsLoading(true);
+      const res = await addTransactionFee(newFee as Fee);
+      if (!res.success) {
+        notify("ALERT", res.message);
+        setIsLoading(false);
+        return;
+      }
+      notify("SUCCESS", res.message);
+      setIsAdding(false);
+      setNewFee({
+        name: "",
+        type: "PERCENTAGE",
+        value: 0,
+        category: "PAYMENT",
+        active: true,
+      });
+      setIsLoading(false);
+    } catch (error) {
+      notify("ALERT", "Failed to add fee");
+      setIsLoading(false);
+    }
   };
 
   const deleteFee = async (id: string) => {
@@ -181,7 +205,7 @@ const AdminFeeManagement: React.FC<{ fees: Fee[] }> = ({ fees }) => {
                     autoFocus
                   />
                   <button
-                    onClick={() => saveEdit(fee.id)}
+                    onClick={() => saveEdit(fee)}
                     className="p-1.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded hover:bg-green-200 dark:hover:bg-green-900/50"
                   >
                     <Save size={14} />
@@ -199,14 +223,16 @@ const AdminFeeManagement: React.FC<{ fees: Fee[] }> = ({ fees }) => {
                     {fee.type === "FIXED" && fee.currency === "UGX"
                       ? "UGX "
                       : ""}
-                    {fee.value}
+                    {fee.type === "PERCENTAGE"
+                      ? formatPercentLabel(String(fee.value))
+                      : fee.value}
                   </span>
                   <span className="text-gray-500 dark:text-gray-400 font-medium">
                     {fee.type === "PERCENTAGE"
                       ? "%"
                       : fee.currency === "USD"
                         ? "USD"
-                        : ""}
+                        : "UGX"}
                   </span>
                 </div>
               )}
@@ -302,7 +328,7 @@ const AdminFeeManagement: React.FC<{ fees: Fee[] }> = ({ fees }) => {
                   <option value="PAYMENT">Payment</option>
                   <option value="WITHDRAWAL">Withdrawal</option>
                   <option value="TRANSFER">Transfer</option>
-                  <option value="API">API / Developer</option>
+                  <option value="DEPOSIT">Deposit</option>
                 </select>
               </div>
               <div className="flex justify-end gap-3 mt-6">
@@ -313,10 +339,11 @@ const AdminFeeManagement: React.FC<{ fees: Fee[] }> = ({ fees }) => {
                   Cancel
                 </button>
                 <button
+                  disabled={isLoading}
                   onClick={handleAddFee}
                   className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium"
                 >
-                  Create Rule
+                  {isLoading ? "Creating..." : "Create Rule"}
                 </button>
               </div>
             </div>
