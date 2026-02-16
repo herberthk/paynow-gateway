@@ -279,7 +279,7 @@ export const seedTransactions = (
   }[] = [];
 
   regularUserIds.forEach((userId) => {
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 10; i++) {
       const amount = Math.floor(random() * 500000) + 1000;
       const type =
         random() > 0.7
@@ -332,17 +332,31 @@ export const seedTransactions = (
   return transactions;
 };
 
-export const seedDisputes = (userIds: number[], transactionIds: string[]) => [
-  {
-    transactionId: transactionIds[2], // The disputed transaction (userIds[2])
-    userId: userIds[2],
-    amount: 75000,
-    currency: "UGX" as const,
-    reason: "Duplicate charge detected",
-    status: "OPEN" as const,
-    evidence: "Receipt image uploaded showing single purchase",
-  },
-];
+export const seedDisputes = (
+  userIds: number[],
+  transactions: {
+    userId: number;
+    recipientId: number;
+    txn_ref: string;
+  }[],
+) => {
+  // Find a transaction where userIds[2] is the sender or recipient
+  const userTransaction = transactions.find(
+    (t) => t.userId === userIds[2] || t.recipientId === userIds[2],
+  )!;
+
+  return [
+    {
+      userId: userIds[2],
+      amount: 75000,
+      currency: "UGX" as const,
+      reason: "Duplicate charge detected",
+      status: "OPEN" as const,
+      evidence: "Receipt image uploaded showing single purchase",
+      transactionRef: userTransaction.txn_ref,
+    },
+  ];
+};
 
 // Seed data for Fees
 export const seedFees = [
@@ -512,7 +526,7 @@ export async function seedDatabase() {
         prisma.transaction.create({ data: transaction }),
       ),
     );
-    const transactionIds = transactions.map((t) => t.id);
+
     console.log(`✅ Created ${transactions.length} transactions`);
 
     // Seed Ledger Entries for each transaction
@@ -629,7 +643,7 @@ export async function seedDatabase() {
     // Seed Disputes
     console.log("⚖️  Seeding disputes...");
     const disputes = await Promise.all(
-      seedDisputes(userIds, transactionIds).map((dispute) =>
+      seedDisputes(userIds, transactions).map((dispute) =>
         prisma.dispute.create({ data: dispute }),
       ),
     );

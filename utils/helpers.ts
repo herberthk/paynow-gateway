@@ -72,7 +72,7 @@ export const generateTxRef = async (length = 8) => {
 export const hashPassword = async (password: string) =>
   await bcrypt.hash(password, 10);
 
-console.log("Transaction Reference", await generateTxRef());
+// console.log("Transaction Reference", await generateTxRef());
 // const otp = "222886";
 // console.log("Otp", hashOTP(otp));
 // const hash = "4d75a220ec79632b861ae05290b4eccc813ee63ed96020f4aba0d12a8e5482bb";

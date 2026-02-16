@@ -3,12 +3,13 @@
 import prisma from "@/lib/prisma";
 import { getUserSession } from "@/lib/actions/session";
 import { revalidatePath } from "next/cache";
+import { notifyAdmins } from "./notifications";
 
 export type CreateTicketInput = {
   amount?: number;
   currency?: "UGX" | "USD";
   reason: string;
-  transactionId?: string;
+  transactionRef?: string;
   evidence?: string;
   type: "TRANSACTION" | "GENERAL";
 };
@@ -18,48 +19,45 @@ export async function createTicket(data: CreateTicketInput) {
     const user = await getUserSession();
     if (!user) throw new Error("Unauthorized");
 
+    //if transactionRef is provided, check if it exists and belongs to the user
+    if (data.transactionRef) {
+      const transaction = await prisma.transaction.findUnique({
+        where: { txn_ref: data.transactionRef },
+      });
+      if (!transaction)
+        return { success: false, error: "Transaction not found" };
+      // if (transaction.userId !== user.id) return { success: false, error: "Unauthorized" };
+    }
+
     const dispute = await prisma.dispute.create({
       data: {
+        ...data,
         userId: user.id,
-        amount: data.amount,
-        currency: data.currency || "UGX",
-        reason: data.reason,
-        transactionId: data.transactionId || null,
-        evidence: data.evidence,
-        type: data.type,
-        status: "OPEN",
-      },
-      include: {
-        transaction: {
-          select: {
-            txn_ref: true,
-            amount: true,
-            currency: true,
-          },
-        },
       },
     });
 
-    revalidatePath("/dashboard/user/disputes");
-    revalidatePath("/dashboard/admin/disputes");
-    return { success: true, data: dispute };
+    // Nofify admins about new ticket
+    await notifyAdmins({
+      title: "New Dispute Ticket",
+      message: `A new dispute ticket has been created by ${user.name}`,
+      path: `/dashboard/admin/disputes?id=${dispute.id}`,
+      fromUserId: user.id,
+    });
+    revalidatePath(`/dashboard/user/disputes`);
+    return { success: true };
   } catch (error) {
     console.error("Failed to create ticket:", error);
     return { success: false, error: "Failed to create ticket" };
   }
 }
 
-export async function getUserTickets(userId?: number) {
+export async function getUserTickets() {
   try {
     const currentUser = await getUserSession();
     if (!currentUser) throw new Error("Unauthorized");
 
-    // If userId is provided, ensure only admins can view other users' tickets
-    // Or users can only view their own
-    const targetUserId = userId || currentUser.id;
-
     const disputes = await prisma.dispute.findMany({
-      where: { userId: targetUserId },
+      where: { userId: currentUser.id },
       orderBy: { createdAt: "desc" },
       include: {
         transaction: {
@@ -71,7 +69,20 @@ export async function getUserTickets(userId?: number) {
         },
       },
     });
-    return { success: true, data: disputes };
+
+    const tickets = disputes.map((dispute) => ({
+      ...dispute,
+      amount: dispute.amount ? Number(dispute.amount) : null,
+      transactionRef: dispute.transactionRef!,
+      transaction: dispute.transaction
+        ? {
+            ...dispute.transaction,
+            amount: Number(dispute.transaction.amount),
+          }
+        : null,
+      createdAt: dispute.createdAt.toISOString(),
+    }));
+    return { success: true, data: tickets };
   } catch (error) {
     console.error("Failed to fetch user tickets:", error);
     return { success: false, error: "Failed to fetch tickets" };

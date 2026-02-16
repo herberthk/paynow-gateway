@@ -298,3 +298,43 @@ export const createTransferNotifications = async ({
     };
   }
 };
+
+export const notifyAdmins = async ({
+  title,
+  message,
+  path,
+  fromUserId,
+}: {
+  title: string;
+  message: string;
+  path: string;
+  fromUserId: number;
+}) => {
+  try {
+    const admins = await prisma.user.findMany({
+      where: {
+        privilege: "super_admin",
+      },
+    });
+
+    await prisma.systemNotification.createMany({
+      data: admins.map((admin) => ({
+        fromUserId,
+        toUserId: admin.id,
+        title,
+        message,
+        type: "INFO",
+        path,
+      })),
+    });
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error("Error notifying admins:", error);
+    return {
+      success: false,
+      error,
+    };
+  }
+};
