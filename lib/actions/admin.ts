@@ -11,6 +11,7 @@ export const getAdmins = async () => {
       select: {
         id: true,
         name: true,
+        email: true,
       },
     });
     return response;

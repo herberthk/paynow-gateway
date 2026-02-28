@@ -5,6 +5,7 @@ import { getUserSession } from "./session";
 import { generateTxRef } from "@/utils";
 import { getAdmins } from "./admin";
 import { getTransactionFee } from "./fee";
+import { sendAdminTransferEmail, sendTransferEmail } from "./email";
 // export const getUserWallet = async (id: number) => {
 //   const wallet = await prisma.wallet.findFirst({
 //     where: {
@@ -191,7 +192,7 @@ export const processP2PTransfer = async (
       }
       const recipient = await tx.user.findUnique({
         where: { id: recipientId },
-        select: { name: true },
+        select: { name: true, email: true },
       });
 
       // Debit sender (Amount + Fee)
@@ -353,8 +354,40 @@ export const processP2PTransfer = async (
         refference,
         fee: TRANSACTION_FEE,
         currency: "UGX",
+        recipientEmail: recipient?.email,
+        recipientName: recipient?.name,
       };
     });
+
+    if (result.success) {
+      // Send background emails
+      if (result.recipientEmail) {
+        sendTransferEmail({
+          email: result.recipientEmail,
+          userName: result.recipientName || "User",
+          amount: result.amount!,
+          senderName: sender?.name || "Unknown",
+          reference: result.refference!,
+        });
+      }
+
+      // Notify admins
+      if (TRANSACTION_FEE > 0) {
+        admins.forEach((admin) => {
+          if (admin.email) {
+            sendAdminTransferEmail({
+              email: admin.email,
+              adminName: admin.name || "Admin",
+              amount: result.amount!,
+              senderName: sender?.name || "Unknown",
+              recipientName: result.recipientName || "Unknown",
+              reference: result.refference!,
+              fee: TRANSACTION_FEE,
+            });
+          }
+        });
+      }
+    }
 
     revalidatePath("/dashboard/user/wallet");
     return result;

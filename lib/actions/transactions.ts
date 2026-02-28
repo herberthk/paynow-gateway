@@ -161,7 +161,7 @@ export const createP2PTransaction = async ({
         transaction: null,
       };
     }
-    const fee = await getTransactionFee("TRANSFER");
+    const fee = await getTransactionFee({ amount, type: "TRANSFER" });
     if (!fee.success) {
       return {
         success: false,

@@ -19,8 +19,8 @@ const AuthLayout = async ({
       session.privilege === "super_admin"
         ? "/dashboard/admin"
         : "/dashboard/user";
-    console.log("path", path);
-    console.log("session", session);
+    // console.log("path", path);
+    // console.log("session", session);
     redirect(path);
   }
 
