@@ -1,13 +1,17 @@
-import OTPEmail from "@/components/global/OtpEmail";
+import TransactionEmail from "@/components/global/TransactionEmail";
 
 // Preview component for testing
 export default function EmailPreview() {
   return (
-    <OTPEmail
-      otp="123456"
-      userName="John Doe"
-      expiryMinutes={15}
-      type="verify"
+    <TransactionEmail
+      userName="Herbert Kavuma"
+      amount={100000}
+      currency="UGX"
+      recipientName="John Doe"
+      senderName="John Doe"
+      reference="123456"
+      fee={1000}
+      type="ADMIN_NOTICE"
     />
   );
 }

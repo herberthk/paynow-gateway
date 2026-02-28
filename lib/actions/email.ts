@@ -165,4 +165,47 @@ export const sendAdminTransferEmail = async ({
   }
 };
 
+type SenderTransferEmailProps = {
+  email: string;
+  userName: string;
+  amount: number;
+  recipientName: string;
+  reference: string;
+  fee: number;
+};
+
+export const sendSenderTransferEmail = async ({
+  email,
+  userName,
+  amount,
+  recipientName,
+  reference,
+  fee,
+}: SenderTransferEmailProps) => {
+  try {
+    const emailHtml = await render(
+      TransactionEmail({
+        userName,
+        amount,
+        recipientName,
+        reference,
+        fee,
+        type: "SENDER_RECEIPT",
+      }),
+    );
+    const mailOptions = {
+      from: '"Paynow Gateway" <info@netbritz.com>',
+      to: email,
+      subject: "Transfer Receipt - Paynow Gateway",
+      html: emailHtml,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Error sending sender transfer email:", error);
+    return false;
+  }
+};
+
 // export const sendEmail = async ({ otp, email, name, expiry }: Props) => {};
