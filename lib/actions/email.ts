@@ -4,6 +4,7 @@ import nodemailer from "nodemailer";
 import prisma from "@/lib/prisma";
 import { generateOTP, hashOTP } from "@/utils";
 import OTPEmail from "@/components/global/OtpEmail";
+import TransactionEmail from "@/components/global/TransactionEmail";
 
 // type Props = {
 //   otp: string;
@@ -16,8 +17,7 @@ const SMTP_PORT = process.env.SMTP_PORT!;
 const SMTP_USER = process.env.SMTP_USER!;
 const SMTP_PASSWORD = process.env.SMTP_PASSWORD!;
 const transporter = nodemailer.createTransport({
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  //@ts-ignore
+  // @ts-ignore
   host: SMTP_HOST,
   port: SMTP_PORT,
   secure: true,
@@ -75,6 +75,92 @@ export const sendOtp = async ({ id, email, name, type = "verify" }: Props) => {
     return true;
   } catch (error) {
     console.log("error", error);
+    return false;
+  }
+};
+
+type TransferEmailProps = {
+  email: string;
+  userName: string;
+  amount: number;
+  senderName: string;
+  reference: string;
+};
+
+export const sendTransferEmail = async ({
+  email,
+  userName,
+  amount,
+  senderName,
+  reference,
+}: TransferEmailProps) => {
+  try {
+    const emailHtml = await render(
+      TransactionEmail({
+        userName,
+        amount,
+        senderName,
+        reference,
+        type: "RECEIPT",
+      }),
+    );
+    const mailOptions = {
+      from: '"Paynow Gateway" <info@netbritz.com>',
+      to: email,
+      subject: "Transfer Successful - Paynow Gateway",
+      html: emailHtml,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Error sending transfer email:", error);
+    return false;
+  }
+};
+
+type AdminTransferEmailProps = {
+  email: string;
+  adminName: string;
+  amount: number;
+  senderName: string;
+  recipientName: string;
+  reference: string;
+  fee: number;
+};
+
+export const sendAdminTransferEmail = async ({
+  email,
+  adminName,
+  amount,
+  senderName,
+  recipientName,
+  reference,
+  fee,
+}: AdminTransferEmailProps) => {
+  try {
+    const emailHtml = await render(
+      TransactionEmail({
+        userName: adminName,
+        amount,
+        senderName,
+        recipientName,
+        reference,
+        fee,
+        type: "ADMIN_NOTICE",
+      }),
+    );
+    const mailOptions = {
+      from: '"Paynow Gateway" <info@netbritz.com>',
+      to: email,
+      subject: "New Transaction Fee - Paynow Gateway",
+      html: emailHtml,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Error sending admin transfer email:", error);
     return false;
   }
 };

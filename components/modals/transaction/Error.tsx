@@ -30,11 +30,11 @@ export const ErrorModal = ({
         {/* Body */}
         <div className="p-6 space-y-4">
           {/* Error Icon */}
-          <div className="flex justify-center">
+          {/* <div className="flex justify-center">
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
               <X size={32} className="text-red-600 dark:text-red-400" />
             </div>
-          </div>
+          </div> */}
 
           {/* Error Message */}
           <div className="bg-linear-to-br from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 rounded-xl p-5 border border-red-200 dark:border-red-800">

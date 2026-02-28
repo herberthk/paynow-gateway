@@ -34,72 +34,48 @@ const OTPEmail = ({ otp, userName, expiryMinutes, type = "verify" }: Props) => {
             textAlign: "center",
           }}
         >
-          <div
+          <table
+            align="center"
+            border={0}
+            cellPadding={0}
+            cellSpacing={0}
+            role="presentation"
             style={{
-              width: "64px",
-              height: "64px",
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
-              borderRadius: "50%",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: "16px",
-              backdropFilter: "blur(10px)",
+              margin: "0 auto 16px",
+              borderCollapse: "separate",
             }}
           >
-            {/* <svg
-              width="32"
-              height="32"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M12 2L2 7L12 12L22 7L12 2Z"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M2 17L12 22L22 17"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M2 12L12 17L22 12"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg> */}
-            {/* <img
-              src={layersIcon}
-              alt="Security"
-              width="32"
-              height="32"
-              style={{ display: "block", margin: "0 auto" }}
-            /> */}
-            {/* <div
-              style={{
-                width: "2.5rem",
-                height: "2.5rem",
-                borderRadius: "0.5rem",
-                backgroundColor: "#6366f1",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: "bold",
-                color: "white",
-                fontSize: "1.25rem",
-              }}
-            >
-              P
-            </div> */}
-          </div>
+            <tbody>
+              <tr>
+                <td
+                  align="center"
+                  valign="middle"
+                  style={{
+                    height: "64px",
+                    width: "64px",
+                    backgroundColor: "rgba(255, 255, 255, 0.2)",
+                    borderRadius: "32px",
+                    textAlign: "center",
+                    verticalAlign: "middle",
+                    padding: "0",
+                  }}
+                >
+                  <span
+                    style={{
+                      color: "#ffffff",
+                      fontSize: "32px",
+                      fontWeight: "bold",
+                      lineHeight: "1",
+                      display: "inline-block",
+                      verticalAlign: "middle",
+                    }}
+                  >
+                    🔒
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
           <h1
             style={{
               color: "#ffffff",
