@@ -6,7 +6,7 @@ type Props = {
   senderName?: string;
   reference?: string;
   fee?: number;
-  type: "RECEIPT" | "ADMIN_NOTICE";
+  type: "RECEIPT" | "ADMIN_NOTICE" | "SENDER_RECEIPT";
 };
 
 const TransactionEmail = ({
@@ -20,6 +20,8 @@ const TransactionEmail = ({
   type,
 }: Props) => {
   const isReceipt = type === "RECEIPT";
+  const isSenderReceipt = type === "SENDER_RECEIPT";
+  const isAdminNotice = type === "ADMIN_NOTICE";
 
   return (
     <div
@@ -101,7 +103,11 @@ const TransactionEmail = ({
           >
             {isReceipt
               ? "Transfer Successful!"
-              : "New Transaction Fee Received"}
+              : isSenderReceipt
+                ? "Payment Sent Successfully"
+                : isAdminNotice
+                  ? "New Transaction Fee Received"
+                  : "Transaction Notification"}
           </h1>
         </div>
 
@@ -130,7 +136,15 @@ const TransactionEmail = ({
               ? `You have successfully received ${currency} ${amount.toLocaleString()} from ${
                   senderName || "a PayNow user"
                 }.`
-              : `A new transaction has been completed. A fee of ${currency} ${fee?.toLocaleString()} has been credited to your admin account.`}
+              : isSenderReceipt
+                ? `You have successfully sent ${currency} ${amount.toLocaleString()} to ${
+                    recipientName || "a PayNow user"
+                  }. The total deduction including fees is ${currency} ${(
+                    amount + (fee || 0)
+                  ).toLocaleString()}.`
+                : isAdminNotice
+                  ? `A new transaction has been completed. A fee of ${currency} ${fee?.toLocaleString()} has been credited to your admin account.`
+                  : "A transaction has been processed."}
           </p>
 
           {/* Transaction Details Box */}
@@ -203,6 +217,72 @@ const TransactionEmail = ({
                       {senderName}
                     </td>
                   </tr>
+                ) : isSenderReceipt ? (
+                  <>
+                    <tr>
+                      <td
+                        style={{
+                          padding: "8px 0",
+                          color: "#6b7280",
+                          fontSize: "14px",
+                        }}
+                      >
+                        To:
+                      </td>
+                      <td
+                        style={{
+                          padding: "8px 0",
+                          textAlign: "right",
+                          fontWeight: "600",
+                          color: "#111827",
+                        }}
+                      >
+                        {recipientName}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        style={{
+                          padding: "8px 0",
+                          color: "#6b7280",
+                          fontSize: "14px",
+                        }}
+                      >
+                        Fee:
+                      </td>
+                      <td
+                        style={{
+                          padding: "8px 0",
+                          textAlign: "right",
+                          fontWeight: "700",
+                          color: "#ef4444",
+                        }}
+                      >
+                        {currency} {fee?.toLocaleString()}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        style={{
+                          padding: "8px 0",
+                          color: "#6b7280",
+                          fontSize: "14px",
+                        }}
+                      >
+                        Total Deduction:
+                      </td>
+                      <td
+                        style={{
+                          padding: "8px 0",
+                          textAlign: "right",
+                          fontWeight: "700",
+                          color: "#111827",
+                        }}
+                      >
+                        {currency} {(amount + (fee || 0)).toLocaleString()}
+                      </td>
+                    </tr>
+                  </>
                 ) : (
                   <>
                     <tr>
@@ -321,7 +401,7 @@ const TransactionEmail = ({
             </table>
           </div>
 
-          {!isReceipt && (
+          {isAdminNotice && (
             <div
               style={{
                 backgroundColor: "#ecfdf5",

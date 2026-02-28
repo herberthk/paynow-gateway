@@ -5,7 +5,11 @@ import { getUserSession } from "./session";
 import { generateTxRef } from "@/utils";
 import { getAdmins } from "./admin";
 import { getTransactionFee } from "./fee";
-import { sendAdminTransferEmail, sendTransferEmail } from "./email";
+import {
+  sendAdminTransferEmail,
+  sendSenderTransferEmail,
+  sendTransferEmail,
+} from "./email";
 // export const getUserWallet = async (id: number) => {
 //   const wallet = await prisma.wallet.findFirst({
 //     where: {
@@ -356,6 +360,8 @@ export const processP2PTransfer = async (
         currency: "UGX",
         recipientEmail: recipient?.email,
         recipientName: recipient?.name,
+        senderEmail: sender?.email,
+        senderName: sender?.name,
       };
     });
 
@@ -366,8 +372,20 @@ export const processP2PTransfer = async (
           email: result.recipientEmail,
           userName: result.recipientName || "User",
           amount: result.amount!,
-          senderName: sender?.name || "Unknown",
+          senderName: result.senderName || "Unknown",
           reference: result.refference!,
+        });
+      }
+
+      // Notify sender
+      if (result.senderEmail) {
+        sendSenderTransferEmail({
+          email: result.senderEmail,
+          userName: result.senderName || "User",
+          amount: result.amount!,
+          recipientName: result.recipientName || "Unknown",
+          reference: result.refference!,
+          fee: TRANSACTION_FEE,
         });
       }
 
