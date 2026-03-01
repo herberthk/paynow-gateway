@@ -192,6 +192,8 @@ declare global {
     timestamp: string;
     duration: number;
   }
+
+  type ConnectionStatus = "connected" | "reconnecting" | "offline";
 }
 
 // This export is needed to make the file a module

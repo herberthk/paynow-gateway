@@ -16,6 +16,8 @@
     "reset": "bunx prisma migrate reset && bunx prisma generate && bun run seed"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.34",
+    "@ai-sdk/react": "^3.0.107",
     "@google/genai": "^1.31.0",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
@@ -25,6 +27,7 @@
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@react-email/components": "^1.0.6",
+    "ai": "^6.0.105",
     "bcrypt": "^6.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -46,6 +49,7 @@
     "recharts": "^3.5.1",
     "remark-gfm": "4",
     "tailwind-merge": "^3.4.0",
+    "zod": "^4.3.6",
     "zustand": "^5.0.10"
   },
   "devDependencies": {
