@@ -15,6 +15,7 @@ import { findUserByEmailOrPhone } from "@/lib/actions/users";
 import { processP2PTransfer } from "@/lib/actions/wallet";
 import { ErrorModal, ConfirmationModal, SuccessModal } from "../modals";
 import { getTransactionFee } from "@/lib";
+import { USD_TO_UGX_EXCHANGE_RATE } from "@/constants";
 
 type UserProps = {
   user: User;
@@ -186,7 +187,7 @@ const WalletView = ({ user, wallet }: UserProps) => {
 
             <p className="text-indigo-100 font-medium mb-1 mt-6">USD Balance</p>
             <h3 className="text-2xl font-bold">
-              $ {(Number(wallet.balance) / 3650).toLocaleString()}
+              $ {(Number(wallet.balance) / USD_TO_UGX_EXCHANGE_RATE).toFixed(2)}
             </h3>
           </div>
           <div className="mt-6 flex gap-3 relative z-10">

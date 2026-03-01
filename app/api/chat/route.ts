@@ -13,6 +13,7 @@ import { getDashboardStats } from "@/lib/actions/dashboard";
 import { getAnalyticsData } from "@/lib/actions/analytics";
 import { getUserSession } from "@/lib";
 import { getTransactionByReference } from "@/lib/actions/transactions";
+import { USD_TO_UGX_EXCHANGE_RATE } from "@/constants";
 
 export const maxDuration = 30;
 
@@ -32,8 +33,7 @@ export const POST = async (req: Request) => {
     stopWhen: stepCountIs(10),
     tools: {
       getWalletBalance: tool({
-        description:
-          "Get the current wallet balance for the logged-in user. Returns the total available balance, if user asks in USD, convert to USD using the current exchange rate which is 1 USD = 3700 UGX",
+        description: `Get the current wallet balance for the logged-in user. Returns the total available balance, if user asks in USD, convert to USD using the current exchange rate which is 1 USD = ${USD_TO_UGX_EXCHANGE_RATE} UGX`,
         inputSchema: z.object({}),
         execute: async () => {
           try {
