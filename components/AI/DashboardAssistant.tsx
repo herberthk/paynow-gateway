@@ -101,10 +101,8 @@ const DashboardAssistant: React.FC = () => {
   const [text, setText] = useState("");
   const [connectionStatus, setConnectionStatus] =
     useState<ConnectionStatus>("connected");
-  const [showOnlineBadge, setShowOnlineBadge] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const retryIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     messages,
@@ -120,7 +118,7 @@ const DashboardAssistant: React.FC = () => {
         parts: [
           {
             type: "text",
-            text: "Hello! I am your PayNow Analytics Assistant. I have access to your dashboard data. Ask me about **revenue trends**, **recent transactions**, or **anything about your finances**.",
+            text: "Hello! I am your PayNow Assistant. I have access to your data. Ask me about anything about your finances.",
           },
         ],
       },
@@ -168,38 +166,49 @@ const DashboardAssistant: React.FC = () => {
 
   // Connectivity listener
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setConnectionStatus(navigator.onLine ? "connected" : "offline");
-
     const handleOnline = () => {
-      setConnectionStatus("reconnecting");
-      setTimeout(() => {
-        setConnectionStatus("connected");
-        setShowOnlineBadge(true);
-        setTimeout(() => setShowOnlineBadge(false), 3000);
-      }, 1500);
+      setConnectionStatus((prev) => {
+        if (prev !== "offline") return prev;
+
+        setTimeout(() => {
+          setConnectionStatus("connected");
+        }, 1500);
+
+        return "reconnecting";
+      });
     };
 
     const handleOffline = () => {
-      setConnectionStatus("offline");
-      setShowOnlineBadge(false);
+      setConnectionStatus((prev) => {
+        if (prev === "offline") return prev;
+
+        return "offline";
+      });
+    };
+
+    const checkConnectivity = () => {
+      if (navigator.onLine) {
+        handleOnline();
+      } else {
+        handleOffline();
+      }
     };
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    if (connectionStatus === "offline") {
-      retryIntervalRef.current = setInterval(() => {
-        if (navigator.onLine) handleOnline();
-      }, 5000);
-    }
+    // Periodic check every 2 seconds (the "best" approach for reliability)
+    const interval = setInterval(checkConnectivity, 2000);
+
+    // Initial check
+    checkConnectivity();
 
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
-      if (retryIntervalRef.current) clearInterval(retryIntervalRef.current);
+      clearInterval(interval);
     };
-  }, [connectionStatus]);
+  }, []);
 
   const handleSend = async () => {
     if (connectionStatus === "offline" || isLoading || !text.trim()) return;
@@ -233,7 +242,7 @@ const DashboardAssistant: React.FC = () => {
 
       {/* Chat Interface */}
       <div
-        className={`fixed bottom-18 right-4 w-96 max-w-[calc(100vw-3rem)] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 z-40 flex flex-col transition-all duration-300 origin-bottom-right ${
+        className={`fixed bottom-18 right-4 w-full md:w-100 max-w-[calc(100vw-3rem)] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-slate-700 z-40 flex flex-col transition-all duration-300 origin-bottom-right ${
           isOpen
             ? "opacity-100 scale-100 translate-y-0"
             : "opacity-0 scale-95 translate-y-4 pointer-events-none"

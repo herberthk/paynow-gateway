@@ -12,6 +12,7 @@ import { getWalletBalance } from "@/lib/actions/wallet";
 import { getDashboardStats } from "@/lib/actions/dashboard";
 import { getAnalyticsData } from "@/lib/actions/analytics";
 import { getUserSession } from "@/lib";
+import { getTransactionByReference } from "@/lib/actions/transactions";
 
 export const maxDuration = 30;
 
@@ -32,7 +33,7 @@ export const POST = async (req: Request) => {
     tools: {
       getWalletBalance: tool({
         description:
-          "Get the current wallet balance for the logged-in user. Returns the total available balance.",
+          "Get the current wallet balance for the logged-in user. Returns the total available balance, if user asks in USD, convert to USD using the current exchange rate which is 1 USD = 3700 UGX",
         inputSchema: z.object({}),
         execute: async () => {
           try {
@@ -185,6 +186,30 @@ export const POST = async (req: Request) => {
             return {
               error: "Failed to get user profile, please try again later",
             };
+          }
+        },
+      }),
+
+      getTransactionByRef: tool({
+        description:
+          "Get details of a specific transaction using its reference (txn_ref).",
+        inputSchema: z.object({
+          ref: z.string().describe("The transaction reference (e.g., TX_...)"),
+        }),
+        execute: async ({ ref }) => {
+          try {
+            const result = await getTransactionByReference(ref);
+            if (!result || "error" in result) {
+              return {
+                error:
+                  (result as { error: string })?.error ||
+                  "Transaction not found.",
+              };
+            }
+            return result;
+          } catch (error) {
+            console.error("Error in getTransactionByRef tool:", error);
+            return { error: "Failed to fetch transaction details." };
           }
         },
       }),

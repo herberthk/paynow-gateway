@@ -235,3 +235,36 @@ export const updateTransaction = async (
     return null;
   }
 };
+
+export const getTransactionByReference = async (txn_ref: string) => {
+  try {
+    const user = await getUserSession();
+    if (!user) return { error: "User not authenticated" };
+
+    const transaction = await prisma.transaction.findUnique({
+      where: { txn_ref: txn_ref },
+    });
+
+    if (!transaction)
+      return { error: `Transaction with reference ${txn_ref} not found.` };
+
+    // Security check: Ensure the user is either the sender, recipient, or admin
+    const isOwner =
+      transaction.userId === user.id || transaction.recipientId === user.id;
+    const isAdmin = user.privilege === "super_admin";
+
+    if (!isOwner && !isAdmin) {
+      return { error: "Not authorized to access this information" };
+    }
+
+    return {
+      ...transaction,
+      amount: transaction.amount.toNumber(),
+      fee: transaction.fee.toNumber(),
+      createdAt: transaction.createdAt.toISOString(),
+    };
+  } catch (error) {
+    console.error("Error fetching transaction by reference:", error);
+    return { error: "An error occurred while fetching the transaction." };
+  }
+};
