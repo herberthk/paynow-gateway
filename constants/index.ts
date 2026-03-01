@@ -9,3 +9,5 @@ export const CATEGORY_COLORS = [
   "#3b82f6", // Blue
   "#8b5cf6", // Violet
 ];
+
+export const USD_TO_UGX_EXCHANGE_RATE = 3700;
