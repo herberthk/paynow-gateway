@@ -123,7 +123,7 @@ const LoginPage = () => {
         </button>
       </form>
 
-      <div className="mt-8 text-center">
+      {/* <div className="mt-8 text-center">
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Don&apos;t have an account?
           <Link
@@ -133,7 +133,7 @@ const LoginPage = () => {
             Sign up
           </Link>
         </p>
-      </div>
+      </div> */}
     </div>
   );
 };

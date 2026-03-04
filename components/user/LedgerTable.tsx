@@ -34,7 +34,7 @@ type LedgerEntry = {
 
 const LedgerTable: React.FC<LedgerTableProps> = ({
   entries,
-  limit,
+  // limit,
   totalPages = 1,
   currentPage = 1,
   totalEntries = 0,

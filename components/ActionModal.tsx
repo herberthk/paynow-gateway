@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { X, AlertTriangle, CheckCircle, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle, Trash2 } from "lucide-react";
 
 interface ActionModalProps {
   isOpen: boolean;

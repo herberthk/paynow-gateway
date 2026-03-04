@@ -2,9 +2,9 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, ArrowRight, Lock } from "lucide-react";
 import { useNotificationStore } from "@/store";
-import { adminUser, currentUser } from "@/services/mockData";
+// import { adminUser, currentUser } from "@/services/mockData";
 import { useRouter } from "nextjs-toploader/app";
-import { createSession } from "@/lib";
+// import { createSession } from "@/lib";
 import Link from "next/link";
 
 const Signup = () => {
@@ -35,13 +35,13 @@ const Signup = () => {
   // console.log("selectedRole", selectedRole);
   const handleLogin = async (role: UserRole, name: string) => {
     // Select the correct base user object based on role
-    const baseUser = role === "ADMIN" ? adminUser : currentUser;
+    // const baseUser = role === "ADMIN" ? adminUser : currentUser;
 
     // Update the name for personalization
-    const loggedInUser = { ...baseUser, name };
+    // const loggedInUser = { ...baseUser, name };
 
     // setCurrentUser(loggedInUser);
-    await createSession(loggedInUser);
+    // await createSession(loggedInUser);
     // setIsAuthenticated(true);
 
     // Set default tab based on role

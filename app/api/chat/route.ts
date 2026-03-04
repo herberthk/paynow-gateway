@@ -235,3 +235,15 @@ Instructions:
 6. If you don't have enough data to answer, say so honestly.
 7. Always call the appropriate tool(s) before answering — never guess or make up data.`;
 }
+
+// Optimized Prisma query
+// const transactions = await prisma.transaction.findMany({
+//   where: {
+//     OR: [{ userId }, { recipientId: userId }],
+//     status: "COMPLETED",
+//     ...(type !== "ALL" && { type }),
+//   },
+//   orderBy: { createdAt: "desc" },
+//   take: limit,
+//   include: { sender: true, recipient: true },
+// });

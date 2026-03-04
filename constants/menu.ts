@@ -9,7 +9,7 @@ import {
   AlertCircle,
   Banknote,
   BookOpen,
-  TrendingUp,
+  // TrendingUp,
   Trash,
 } from "lucide-react";
 export const menuItems = (userRole: Privilege) =>
@@ -101,18 +101,18 @@ export const menuItems = (userRole: Privilege) =>
           icon: BookOpen,
           href: "/dashboard/user/ledger",
         },
-        {
-          id: "/dashboard/user/financial-statements/income-statement",
-          label: "Income Statement",
-          icon: TrendingUp,
-          href: "/dashboard/user/financial-statements/income-statement",
-        },
-        {
-          id: "/dashboard/user/financial-statements/balance-sheet",
-          label: "Balance Sheet",
-          icon: Wallet,
-          href: "/dashboard/user/financial-statements/balance-sheet",
-        },
+        // {
+        //   id: "/dashboard/user/financial-statements/income-statement",
+        //   label: "Income Statement",
+        //   icon: TrendingUp,
+        //   href: "/dashboard/user/financial-statements/income-statement",
+        // },
+        // {
+        //   id: "/dashboard/user/financial-statements/balance-sheet",
+        //   label: "Balance Sheet",
+        //   icon: Wallet,
+        //   href: "/dashboard/user/financial-statements/balance-sheet",
+        // },
         {
           id: "/dashboard/user/disputes",
           label: "Disputes",

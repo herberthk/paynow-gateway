@@ -1,18 +1,18 @@
 // const UserRole = typeof UserRole.USER
-export const currentUser: User = {
-  id: Number("u123"),
-  name: "Alex Mukasa",
-  email: "alex.m@example.com",
-  privilege: "super_admin",
-  status: false,
-  created_at: "2023-01-15",
-  wallet: {
-    balance: 2540000,
-    id: "ret54",
-    // balanceUSD: 1250,
-    // linkedMethods: [],
-  },
-};
+// export const currentUser: User = {
+//   id: Number("u123"),
+//   name: "Alex Mukasa",
+//   email: "alex.m@example.com",
+//   privilege: "super_admin",
+//   status: false,
+//   created_at: "2023-01-15",
+//   wallet: {
+//     balance: 2540000,
+//     id: "ret54",
+//     // balanceUSD: 1250,
+//     // linkedMethods: [],
+//   },
+// };
 
 export const linkedMethods = [
   {
@@ -24,52 +24,52 @@ export const linkedMethods = [
   { id: "m2", type: "CARD", name: "Visa Debit", detail: "**** 4242" },
 ];
 
-export const adminUser: User = {
-  ...currentUser,
-  name: "Admin User",
-  // role: "ADMIN",
-};
+// export const adminUser: User = {
+//   ...currentUser,
+//   name: "Admin User",
+//   // role: "ADMIN",
+// };
 
 // Expanded User List for Admin
-export const mockUsers: User[] = [
-  currentUser,
-  {
-    id: Number("u124"),
-    name: "Sarah N",
-    email: "sarah.n@example.com",
-    privilege: "admin",
-    status: false,
-    created_at: "2023-10-20",
-    wallet: { balance: 0, id: "trt" },
-  },
-  {
-    id: Number("u125"),
-    name: "John Doe",
-    email: "john.d@company.com",
-    privilege: "admin",
-    status: true,
-    created_at: "2023-10-22",
-    wallet: { balance: 5000, id: "657t" },
-  },
-  {
-    id: Number("u126"),
-    name: "Tech Solutions Ltd",
-    email: "billing@techsol.com",
-    privilege: "super_admin",
-    status: true,
-    created_at: "2023-05-10",
-    wallet: { balance: 15000000, id: "trt56" },
-  },
-  {
-    id: Number("u127"),
-    name: "Grace K",
-    email: "grace.k@example.com",
-    privilege: "admin",
-    status: true,
-    created_at: "2023-09-01",
-    wallet: { balance: 12000, id: "tytrd" },
-  },
-];
+// export const mockUsers: User[] = [
+//   currentUser,
+//   {
+//     id: Number("u124"),
+//     name: "Sarah N",
+//     email: "sarah.n@example.com",
+//     privilege: "admin",
+//     status: false,
+//     created_at: "2023-10-20",
+//     wallet: { balance: 0, id: "trt" },
+//   },
+//   {
+//     id: Number("u125"),
+//     name: "John Doe",
+//     email: "john.d@company.com",
+//     privilege: "admin",
+//     status: true,
+//     created_at: "2023-10-22",
+//     wallet: { balance: 5000, id: "657t" },
+//   },
+//   {
+//     id: Number("u126"),
+//     name: "Tech Solutions Ltd",
+//     email: "billing@techsol.com",
+//     privilege: "super_admin",
+//     status: true,
+//     created_at: "2023-05-10",
+//     wallet: { balance: 15000000, id: "trt56" },
+//   },
+//   {
+//     id: Number("u127"),
+//     name: "Grace K",
+//     email: "grace.k@example.com",
+//     privilege: "admin",
+//     status: true,
+//     created_at: "2023-09-01",
+//     wallet: { balance: 12000, id: "tytrd" },
+//   },
+// ];
 
 // Helper to generate additional mock transactions
 // Using seeded random to ensure consistent data between server and client
@@ -81,145 +81,145 @@ const seededRandom = (seed: number) => {
   };
 };
 
-const generateMockTransactions = (count: number): Transaction[] => {
-  const categories = [
-    "Transport",
-    "Rent",
-    "Utilities",
-    "Entertainment",
-    "Groceries",
-    "Shopping",
-    "Dining",
-    "Business",
-  ];
-  const methods = [
-    "MTN MoMo",
-    "Airtel Money",
-    "Visa **** 4242",
-    "Mastercard **** 8899",
-    "Wallet Transfer",
-  ];
-  const recipients = [
-    "Uber",
-    "Jumia Food",
-    "Shell Station",
-    "National Water",
-    "Umeme Ltd",
-    "Netflix",
-    "Shoprite",
-    "KFC",
-    "Cafe Javas",
-    "Total Energies",
-  ];
+// const generateMockTransactions = (count: number): Transaction[] => {
+//   const categories = [
+//     "Transport",
+//     "Rent",
+//     "Utilities",
+//     "Entertainment",
+//     "Groceries",
+//     "Shopping",
+//     "Dining",
+//     "Business",
+//   ];
+//   const methods = [
+//     "MTN MoMo",
+//     "Airtel Money",
+//     "Visa **** 4242",
+//     "Mastercard **** 8899",
+//     "Wallet Transfer",
+//   ];
+//   const recipients = [
+//     "Uber",
+//     "Jumia Food",
+//     "Shell Station",
+//     "National Water",
+//     "Umeme Ltd",
+//     "Netflix",
+//     "Shoprite",
+//     "KFC",
+//     "Cafe Javas",
+//     "Total Energies",
+//   ];
 
-  const random = seededRandom(12345); // Fixed seed for consistency
+//   const random = seededRandom(12345); // Fixed seed for consistency
 
-  return Array.from({ length: count }).map((_, i) => ({
-    id: `tx_gen_${i}`,
-    date: new Date(
-      new Date("2024-01-01").getTime() -
-        Math.floor(random() * 60) * 24 * 60 * 60 * 1000,
-    ).toISOString(),
-    amount: Math.floor(random() * 200000) + 5000,
-    currency: random() > 0.9 ? "USD" : "UGX",
-    type: random() > 0.7 ? "PAYMENT" : random() > 0.5 ? "DEPOSIT" : "TRANSFER",
-    status: random() > 0.9 ? "FAILED" : "COMPLETED",
-    recipient: recipients[Math.floor(random() * recipients.length)],
-    category: categories[Math.floor(random() * categories.length)],
-    method: methods[Math.floor(random() * methods.length)],
-    fee: 200,
-    txn_ref: "txn_ref_123",
-    createdAt: new Date().toISOString(),
-    recipientId: 1,
-    userId: 1,
-    recipientName: "John Doe",
-  }));
-};
+//   return Array.from({ length: count }).map((_, i) => ({
+//     id: `tx_gen_${i}`,
+//     date: new Date(
+//       new Date("2024-01-01").getTime() -
+//         Math.floor(random() * 60) * 24 * 60 * 60 * 1000,
+//     ).toISOString(),
+//     amount: Math.floor(random() * 200000) + 5000,
+//     currency: random() > 0.9 ? "USD" : "UGX",
+//     type: random() > 0.7 ? "PAYMENT" : random() > 0.5 ? "DEPOSIT" : "TRANSFER",
+//     status: random() > 0.9 ? "FAILED" : "COMPLETED",
+//     recipient: recipients[Math.floor(random() * recipients.length)],
+//     category: categories[Math.floor(random() * categories.length)],
+//     method: methods[Math.floor(random() * methods.length)],
+//     fee: 200,
+//     txn_ref: "txn_ref_123",
+//     createdAt: new Date().toISOString(),
+//     recipientId: 1,
+//     userId: 1,
+//     recipientName: "John Doe",
+//   }));
+// };
 
-const initialTransactions: Transaction[] = [
-  {
-    id: "tx_001",
-    createdAt: "2023-10-25T10:30:00",
-    amount: 50000,
-    currency: "UGX",
-    type: "PAYMENT",
-    status: "COMPLETED",
-    displayName: "Global Bus Co.",
-    category: "Transport",
-    method: "MTN MoMo",
-    fee: 200,
-    txn_ref: "txn_ref_123",
-    recipientId: 1,
-    userId: 1,
-  },
-  {
-    id: "tx_002",
-    createdAt: "2023-10-24T14:15:00",
-    amount: 1500000,
-    currency: "UGX",
-    type: "PAYMENT",
-    status: "COMPLETED",
-    displayName: "Kampala Heights Apts",
-    category: "Rent",
-    method: "Visa **** 4242",
-    fee: 200,
-    txn_ref: "txn_ref_123",
-    recipientId: 1,
-    userId: 1,
-  },
-  {
-    id: "tx_003",
-    createdAt: "2023-10-23T09:00:00",
-    amount: 50,
-    currency: "USD",
-    type: "SUBSCRIPTION",
-    status: "COMPLETED",
-    displayName: "Netflix Services",
-    category: "Entertainment",
-    method: "Direct Wallet",
-    fee: 200,
-    txn_ref: "txn_ref_123",
-    recipientId: 1,
-    userId: 1,
-  },
-  {
-    id: "tx_004",
-    createdAt: "2023-10-22T16:45:00",
-    amount: 200000,
-    currency: "UGX",
-    type: "WITHDRAWAL",
-    status: "PENDING",
-    displayName: "John Doe",
-    category: "Withdrawal",
-    method: "Wallet Transfer",
-    fee: 200,
-    txn_ref: "txn_ref_123",
-    recipientId: 1,
-    userId: 1,
-  },
-  {
-    id: "tx_005",
-    createdAt: "2023-10-21T11:20:00",
-    amount: 500000,
-    currency: "UGX",
-    type: "TRANSFER",
-    status: "DISPUTED",
-    displayName: "John Doe",
-    category: "P2P",
-    method: "Wallet Transfer",
-    fee: 200,
-    txn_ref: "txn_ref_123",
-    recipientId: 1,
-    userId: 1,
-  },
-];
+// const initialTransactions: Transaction[] = [
+//   {
+//     id: "tx_001",
+//     createdAt: "2023-10-25T10:30:00",
+//     amount: 50000,
+//     currency: "UGX",
+//     type: "PAYMENT",
+//     status: "COMPLETED",
+//     displayName: "Global Bus Co.",
+//     category: "Transport",
+//     method: "MTN MoMo",
+//     fee: 200,
+//     txn_ref: "txn_ref_123",
+//     recipientId: 1,
+//     userId: 1,
+//   },
+//   {
+//     id: "tx_002",
+//     createdAt: "2023-10-24T14:15:00",
+//     amount: 1500000,
+//     currency: "UGX",
+//     type: "PAYMENT",
+//     status: "COMPLETED",
+//     displayName: "Kampala Heights Apts",
+//     category: "Rent",
+//     method: "Visa **** 4242",
+//     fee: 200,
+//     txn_ref: "txn_ref_123",
+//     recipientId: 1,
+//     userId: 1,
+//   },
+//   {
+//     id: "tx_003",
+//     createdAt: "2023-10-23T09:00:00",
+//     amount: 50,
+//     currency: "USD",
+//     type: "SUBSCRIPTION",
+//     status: "COMPLETED",
+//     displayName: "Netflix Services",
+//     category: "Entertainment",
+//     method: "Direct Wallet",
+//     fee: 200,
+//     txn_ref: "txn_ref_123",
+//     recipientId: 1,
+//     userId: 1,
+//   },
+//   {
+//     id: "tx_004",
+//     createdAt: "2023-10-22T16:45:00",
+//     amount: 200000,
+//     currency: "UGX",
+//     type: "WITHDRAWAL",
+//     status: "PENDING",
+//     displayName: "John Doe",
+//     category: "Withdrawal",
+//     method: "Wallet Transfer",
+//     fee: 200,
+//     txn_ref: "txn_ref_123",
+//     recipientId: 1,
+//     userId: 1,
+//   },
+//   {
+//     id: "tx_005",
+//     createdAt: "2023-10-21T11:20:00",
+//     amount: 500000,
+//     currency: "UGX",
+//     type: "TRANSFER",
+//     status: "DISPUTED",
+//     displayName: "John Doe",
+//     category: "P2P",
+//     method: "Wallet Transfer",
+//     fee: 200,
+//     txn_ref: "txn_ref_123",
+//     recipientId: 1,
+//     userId: 1,
+//   },
+// ];
 
-export const transactions: Transaction[] = [
-  ...initialTransactions,
-  ...generateMockTransactions(45),
-].sort(
-  (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-);
+// export const transactions: Transaction[] = [
+//   ...initialTransactions,
+//   ...generateMockTransactions(45),
+// ].sort(
+//   (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+// );
 
 // Enhanced Revenue Data for Composed Charts (Admin)
 export const revenueData = [
@@ -431,80 +431,80 @@ export const mockWebhookLogs: WebhookLog[] = [
   },
 ];
 
-export const mockDisputes: Dispute[] = [
-  {
-    id: "dp_001",
-    transactionId: "tx_005",
-    user: "John Doe",
-    amount: 500000,
-    currency: "UGX",
-    reason: "Duplicate charge detected",
-    status: "OPEN",
-    date: "2023-10-21",
-    evidence: "Receipt image uploaded",
-  },
-  {
-    id: "dp_002",
-    transactionId: "tx_882",
-    user: "Sarah N",
-    amount: 150000,
-    currency: "UGX",
-    reason: "Service not received",
-    status: "OPEN",
-    date: "2023-10-20",
-  },
-  {
-    id: "dp_003",
-    transactionId: "tx_771",
-    user: "Alex Mukasa",
-    amount: 25,
-    currency: "USD",
-    reason: "Unauthorized transaction",
-    status: "RESOLVED",
-    date: "2023-10-18",
-  },
-];
+// export const mockDisputes: Dispute[] = [
+//   {
+//     id: "dp_001",
+//     transactionId: "tx_005",
+//     user: "John Doe",
+//     amount: 500000,
+//     currency: "UGX",
+//     reason: "Duplicate charge detected",
+//     status: "OPEN",
+//     date: "2023-10-21",
+//     evidence: "Receipt image uploaded",
+//   },
+//   {
+//     id: "dp_002",
+//     transactionId: "tx_882",
+//     user: "Sarah N",
+//     amount: 150000,
+//     currency: "UGX",
+//     reason: "Service not received",
+//     status: "OPEN",
+//     date: "2023-10-20",
+//   },
+//   {
+//     id: "dp_003",
+//     transactionId: "tx_771",
+//     user: "Alex Mukasa",
+//     amount: 25,
+//     currency: "USD",
+//     reason: "Unauthorized transaction",
+//     status: "RESOLVED",
+//     date: "2023-10-18",
+//   },
+// ];
 
-export const mockFees: Fee[] = [
-  {
-    id: "fee_1",
-    name: "Mobile Money Withdrawal",
-    type: "PERCENTAGE",
-    value: 1.5,
-    category: "WITHDRAWAL",
-    active: true,
-    lastUpdated: "2023-09-01",
-  },
-  {
-    id: "fee_2",
-    name: "Card Payment Processing",
-    type: "PERCENTAGE",
-    value: 2.9,
-    category: "PAYMENT",
-    active: true,
-    lastUpdated: "2023-08-15",
-  },
-  {
-    id: "fee_3",
-    name: "Wallet Transfer (P2P)",
-    type: "FIXED",
-    value: 500,
-    currency: "UGX",
-    category: "TRANSFER",
-    active: true,
-    lastUpdated: "2023-01-10",
-  },
-  {
-    id: "fee_4",
-    name: "API Call Overage",
-    type: "FIXED",
-    value: 10,
-    currency: "UGX",
-    category: "API",
-    active: false,
-    lastUpdated: "2023-05-20",
-  },
-];
+// export const mockFees: Fee[] = [
+//   {
+//     id: "fee_1",
+//     name: "Mobile Money Withdrawal",
+//     type: "PERCENTAGE",
+//     value: 1.5,
+//     category: "WITHDRAWAL",
+//     active: true,
+//     lastUpdated: "2023-09-01",
+//   },
+//   {
+//     id: "fee_2",
+//     name: "Card Payment Processing",
+//     type: "PERCENTAGE",
+//     value: 2.9,
+//     category: "PAYMENT",
+//     active: true,
+//     lastUpdated: "2023-08-15",
+//   },
+//   {
+//     id: "fee_3",
+//     name: "Wallet Transfer (P2P)",
+//     type: "FIXED",
+//     value: 500,
+//     currency: "UGX",
+//     category: "TRANSFER",
+//     active: true,
+//     lastUpdated: "2023-01-10",
+//   },
+//   {
+//     id: "fee_4",
+//     name: "API Call Overage",
+//     type: "FIXED",
+//     value: 10,
+//     currency: "UGX",
+//     category: "API",
+//     active: false,
+//     lastUpdated: "2023-05-20",
+//   },
+// ];
 
 // Helper to generate notifications
 const generateNotifications = (count: number): SystemNotification[] => {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Calendar, Download, TrendingUp } from "lucide-react";
 import { generateIncomeStatementPDF } from "@/utils/pdf-generator";
