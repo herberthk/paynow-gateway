@@ -279,7 +279,7 @@ export const generateTransactionReceiptPDF = (tx: Transaction) => {
     head: [["Detail", "Value"]],
     body: [
       ["Transaction Type", tx.type],
-      ["Recipient", tx.recipientName],
+      ["Recipient", tx.displayName],
       ["Payment Method", tx.method],
       ["Category", tx.category],
       ["Transaction Reference", tx.txn_ref || "-"],

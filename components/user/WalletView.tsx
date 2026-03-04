@@ -24,7 +24,7 @@ type UserProps = {
 
 const WalletView = ({ user, wallet }: UserProps) => {
   const openPaymentModal = useAppStore((state) => state.openPaymentModal);
-  const transactionAmout = useTransactionStore((state) => state.amount);
+  // const transactionAmout = useTransactionStore((state) => state.amount);
   const setTransactionAmout = useTransactionStore((state) => state.setAmount);
   // Form state
   const [recipient, setRecipient] = useState("");

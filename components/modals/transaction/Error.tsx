@@ -1,4 +1,4 @@
-import { AlertCircle, X, Send } from "lucide-react";
+import { AlertCircle, Send } from "lucide-react";
 
 export const ErrorModal = ({
   error,

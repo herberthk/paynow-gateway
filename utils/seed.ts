@@ -652,6 +652,7 @@ export async function seedDatabase() {
     // Seed Fees
     console.log("💵 Seeding fees...");
     const fees = await Promise.all(
+      // @ts-ignore
       seedFees.map((fee) => prisma.fee.create({ data: fee })),
     );
     console.log(`✅ Created ${fees.length} fees`);
