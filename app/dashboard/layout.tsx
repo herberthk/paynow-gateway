@@ -1,4 +1,4 @@
-// import DashboardAssistant from "@/components/AI/DashboardAssistant";
+import DashboardAssistant from "@/components/AI/DashboardAssistant";
 import Header from "@/components/global/Header";
 import PaymentModal from "@/components/global/PaymentModal";
 import Sidebar from "@/components/global/Sidebar";
@@ -34,7 +34,7 @@ const RootLayout = async ({
       <PaymentModal />
 
       {/* AI Assistant - Always available for logged in users */}
-      {/* <DashboardAssistant /> */}
+      <DashboardAssistant />
     </div>
   );
 };
