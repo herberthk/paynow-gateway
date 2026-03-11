@@ -1,3 +1,6 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import {
   AreaChart,
   Area,
@@ -58,9 +61,50 @@ const CustomTooltip = ({
 
 interface DashboardChartsProps {
   analyticsData: AnalyticsData;
+  userId: number; // pass this down to refetch data
 }
-const DashboardCharts = ({ analyticsData }: DashboardChartsProps) => {
-  const { cashFlow, categories, totalIncome, totalSpent } = analyticsData;
+
+import { getDashboardAnalyticsData } from "@/lib/actions/analytics";
+import type { DashboardPeriod } from "@/lib/actions/analytics";
+import { Loader2 } from "lucide-react";
+
+const DashboardCharts = ({
+  analyticsData: initialData,
+  userId,
+}: DashboardChartsProps) => {
+  // State for both charts
+  const [data, setData] = useState<AnalyticsData>(initialData);
+  const [period, setPeriod] = useState<DashboardPeriod>("7days");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Skip initial fetch since we have initialData
+    let isMounted = true;
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const result = await getDashboardAnalyticsData(userId, period);
+        if (isMounted) setData(result);
+      } catch (error) {
+        console.error(
+          "Failed to fetch dashboard data for period",
+          period,
+          error,
+        );
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [period, userId]);
+
+  const { cashFlow, categories, totalIncome, totalSpent } = data;
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Spending Trend Chart */}
@@ -72,14 +116,25 @@ const DashboardCharts = ({ analyticsData }: DashboardChartsProps) => {
             </div>
             <div>
               <h3 className="font-bold text-gray-900 dark:text-white">
-                Weekly Cash Flow
+                Cash Flow
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Income vs Spending (Last 7 Days)
+                Income vs Spending
               </p>
             </div>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value as DashboardPeriod)}
+              className="bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+            >
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="7days">Last 7 Days</option>
+              <option value="30days">Last 30 Days</option>
+              <option value="all">All Time</option>
+            </select>
             <div className="text-right">
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Total Income
@@ -99,7 +154,12 @@ const DashboardCharts = ({ analyticsData }: DashboardChartsProps) => {
           </div>
         </div>
 
-        <div className="h-64">
+        <div className="h-64 relative">
+          {loading && (
+            <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 flex items-center justify-center z-10 rounded-lg">
+              <Loader2 className="animate-spin text-indigo-500 w-8 h-8" />
+            </div>
+          )}
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={cashFlow}
@@ -179,11 +239,29 @@ const DashboardCharts = ({ analyticsData }: DashboardChartsProps) => {
             Expenditure
           </h3>
         </div>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-          Top 3 spending categories (Last 7 days)
-        </p>
+        <div className="flex justify-between items-center mb-6">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Top 3 spending categories
+          </p>
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value as DashboardPeriod)}
+            className="bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+          >
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="7days">Last 7 Days</option>
+            <option value="30days">Last 30 Days</option>
+            <option value="all">All Time</option>
+          </select>
+        </div>
 
         <div className="flex-1 min-h-[200px] relative">
+          {loading && (
+            <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 flex items-center justify-center z-10 rounded-lg">
+              <Loader2 className="animate-spin text-purple-500 w-8 h-8" />
+            </div>
+          )}
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
@@ -216,10 +294,12 @@ const DashboardCharts = ({ analyticsData }: DashboardChartsProps) => {
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none z-1">
             <span className="block text-xl font-bold text-gray-900 dark:text-white">
               {millify(
-                Math.round(
-                  categories.reduce((acc, curr) => acc + curr.value, 0) /
-                    categories.length,
-                ),
+                categories.length > 0
+                  ? Math.round(
+                      categories.reduce((acc, curr) => acc + curr.value, 0) /
+                        categories.length,
+                    )
+                  : 0,
               )}
             </span>
             <span className="block text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide">

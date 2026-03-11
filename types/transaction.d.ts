@@ -20,6 +20,7 @@ declare global {
   };
 
   type AnalyticsProps = {
+    userId: number;
     cashFlowData: { name: string; income: number; spend: number }[];
     categoryData: { name: string; value: number; color: string }[];
     incomeCategoryData: { name: string; value: number; color: string }[];

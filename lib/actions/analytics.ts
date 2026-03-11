@@ -5,13 +5,45 @@ import prisma from "@/lib/prisma";
 
 export const getAnalyticsData = async (
   userId: number,
+  period: DashboardPeriod = "30days"
 ): Promise<AnalyticsData> => {
   try {
     const now = new Date();
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(now.getDate() - 30);
+    const startDate = new Date();
+    let endDate = new Date();
+    let daysToIterate = 29; // Default for 30 days (0 to 29)
 
-    // Fetch all completed transactions relevant to the user in the last 30 days
+    switch (period) {
+      case "today":
+        startDate.setHours(0, 0, 0, 0);
+        daysToIterate = 0;
+        break;
+      case "yesterday":
+        startDate.setDate(now.getDate() - 1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(startDate);
+        endDate.setHours(23, 59, 59, 999);
+        daysToIterate = 0;
+        break;
+      case "7days":
+        startDate.setDate(now.getDate() - 6);
+        daysToIterate = 6;
+        break;
+      case "30days":
+        startDate.setDate(now.getDate() - 29);
+        daysToIterate = 29;
+        break;
+      case "all":
+        startDate.setFullYear(now.getFullYear() - 1);
+        daysToIterate = 365;
+        break;
+      default:
+        startDate.setDate(now.getDate() - 29);
+        daysToIterate = 29;
+        break;
+    }
+
+    // Fetch all completed transactions relevant to the user in the specified period
     const transactions = await prisma.transaction.findMany({
       where: {
         OR: [
@@ -20,8 +52,8 @@ export const getAnalyticsData = async (
         ],
         status: "COMPLETED",
         createdAt: {
-          gte: thirtyDaysAgo,
-          lte: now,
+          gte: startDate,
+          lte: period === "yesterday" ? endDate : now,
         },
       },
       orderBy: {
@@ -42,15 +74,17 @@ export const getAnalyticsData = async (
     let totalIncome = 0;
     let totalSpent = 0;
 
-    // Initialize map for the last 30 days to ensure continuity in the chart
-    for (let i = 0; i <= 30; i++) {
-      const d = new Date(thirtyDaysAgo);
-      d.setDate(d.getDate() + i);
-      const dateKey = d.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      }); // e.g., "Jan 1"
-      cashFlowMap.set(dateKey, { income: 0, spend: 0 });
+    // Initialize map for the period to ensure continuity in the chart
+    if (period !== "all") {
+      for (let i = 0; i <= daysToIterate; i++) {
+        const d = new Date(startDate);
+        d.setDate(d.getDate() + i);
+        const dateKey = d.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }); // e.g., "Jan 1"
+        cashFlowMap.set(dateKey, { income: 0, spend: 0 });
+      }
     }
 
     // 2. Process Category Data (Group by Category)
@@ -150,15 +184,48 @@ export const getAnalyticsData = async (
   }
 };
 
+export type DashboardPeriod = "today" | "yesterday" | "7days" | "30days" | "all";
+
 export const getDashboardAnalyticsData = async (
   userId: number,
+  period: DashboardPeriod = "7days"
 ): Promise<AnalyticsData> => {
   try {
     const now = new Date();
     const startDate = new Date();
-    startDate.setDate(now.getDate() - 6);
+    let endDate = new Date();
+    let daysToIterate = 6; // Default for 7 days (0 to 6)
 
-    // Fetch all completed transactions relevant to the user in the last 7 days
+    switch (period) {
+      case "today":
+        startDate.setHours(0, 0, 0, 0);
+        daysToIterate = 0; // Only today
+        break;
+      case "yesterday":
+        startDate.setDate(now.getDate() - 1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(startDate);
+        endDate.setHours(23, 59, 59, 999);
+        daysToIterate = 0; // Only yesterday
+        break;
+      case "30days":
+        startDate.setDate(now.getDate() - 29);
+        daysToIterate = 29;
+        break;
+      case "all":
+        // For 'all', we might want to just fetch everything, but we need a sensible start date for the chart if we want continuous days.
+        // Let's set it to 1 year ago for the chart continuous fill, or just rely on the data.
+        startDate.setFullYear(now.getFullYear() - 1); 
+        daysToIterate = 365;
+        break;
+      case "7days":
+      default:
+        startDate.setDate(now.getDate() - 6);
+        daysToIterate = 6;
+        break;
+    }
+
+    // Fetch all completed transactions relevant to the user in the specified period
     const transactions = await prisma.transaction.findMany({
       where: {
         OR: [
@@ -168,7 +235,7 @@ export const getDashboardAnalyticsData = async (
         status: "COMPLETED",
         createdAt: {
           gte: startDate,
-          lte: now,
+          lte: period === "yesterday" ? endDate : now,
         },
       },
       orderBy: {
@@ -189,15 +256,17 @@ export const getDashboardAnalyticsData = async (
     let totalIncome = 0;
     let totalSpent = 0;
 
-    // Initialize map for the last 7 days to ensure continuity in the chart
-    for (let i = 0; i <= 6; i++) {
-      const d = new Date(startDate);
-      d.setDate(d.getDate() + i);
-      const dateKey = d.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      }); // e.g., "Jan 1"
-      cashFlowMap.set(dateKey, { income: 0, spend: 0 });
+    // Initialize map for the period to ensure continuity in the chart (skip for 'all' to avoid max constraints, or limit it)
+    if (period !== "all") {
+      for (let i = 0; i <= daysToIterate; i++) {
+        const d = new Date(startDate);
+        d.setDate(d.getDate() + i);
+        const dateKey = d.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }); // e.g., "Jan 1"
+        cashFlowMap.set(dateKey, { income: 0, spend: 0 });
+      }
     }
 
     // 2. Process Category Data (Group by Category)

@@ -63,7 +63,7 @@ const UserDashboard = ({
         ))}
       </div>
 
-      <DashboardCharts analyticsData={analyticsData} />
+      <DashboardCharts analyticsData={analyticsData} userId={user.id} />
 
       <div>
         <TransactionTable

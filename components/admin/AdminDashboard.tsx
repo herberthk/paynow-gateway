@@ -11,6 +11,8 @@ import PaymentMethod from "./PaymentMethod";
 import CategoryDistribution from "./CategoryDistribution";
 import PeakTraffic from "./PeakTraffic";
 import SystemMonitor from "./SystemMonitor";
+// import AuditTrail from "./AuditTrail";
+import AdminIncome from "./AdminIncome";
 
 // Define a type for financial data, assuming it's an array of objects
 // You might want to define a more specific interface for FinancialData
@@ -129,13 +131,13 @@ const AdminDashboard: React.FC = () => {
         <PeakTraffic data={trafficData} />
       </div>
       {/* TODO: Add System Monitor and Audit Trail */}
-      {/* className="grid grid-cols-1 lg:grid-cols-2 gap-6" */}
-      <div className=" w-full">
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Real-time Health Monitor */}
         <SystemMonitor data={systemHealth} />
 
-        {/* Recent Audit Logs */}
-        {/* <AuditTrail /> */}
+        {/* Admin income */}
+        <AdminIncome />
       </div>
     </div>
   );
