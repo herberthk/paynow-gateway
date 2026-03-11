@@ -959,3 +959,122 @@ export const permanentlyDeleteUser = async (userId: number) => {
     return { success: false, message: "Failed to delete user permanently" };
   }
 };
+
+export type AdminIncomeCategory = {
+  name: string;
+  value: number;
+  color?: string;
+};
+
+export type TimePeriodFilter = "today" | "week" | "month" | "all";
+
+/**
+ * Get Admin Income Breakdown by Reason/Category
+ * Fetches CREDIT transactions from the super admin's wallet
+ */
+export const getAdminIncomeBreakdown = async (
+  period: TimePeriodFilter = "month",
+): Promise<AdminIncomeCategory[]> => {
+  try {
+    const { getUserSession } = await import("./session");
+    const admin = await getUserSession();
+
+    // Safety check: Ensure the user is a super admin
+    if (!admin || admin.privilege !== "super_admin") {
+      return [];
+    }
+
+    const { CATEGORY_COLORS } = await import("@/constants");
+
+    // Build the date filter based on the period
+    let dateFilter = {};
+    const now = new Date();
+
+    switch (period) {
+      case "today": {
+        const startOfToday = new Date(now);
+        startOfToday.setHours(0, 0, 0, 0);
+        dateFilter = { gte: startOfToday };
+        break;
+      }
+      case "week": {
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - 7);
+        dateFilter = { gte: startOfWeek };
+        break;
+      }
+      case "month": {
+        const startOfMonth = new Date(now);
+        startOfMonth.setDate(now.getDate() - 30);
+        dateFilter = { gte: startOfMonth };
+        break;
+      }
+      case "all":
+      default:
+        // No date filter for 'all'
+        dateFilter = {};
+        break;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const whereClause: any = {
+      userId: admin.id,
+      type: "CREDIT",
+    };
+
+    // Only apply date filter if it's not empty
+    if (Object.keys(dateFilter).length > 0) {
+      whereClause.createdAt = dateFilter;
+    }
+
+    // Fetch credits from the admin's wallet
+    const credits = await prisma.wallet.findMany({
+      where: whereClause,
+      select: {
+        amount: true,
+        reason: true,
+      },
+    });
+
+    // Group the credits by a normalized reason
+    const categorizedIncome = new Map<string, number>();
+
+    credits.forEach((credit) => {
+      const amount = Number(credit.amount) || 0;
+      let reason = credit.reason || "Other";
+
+      // Normalize common reasons mapping to categories
+      if (reason.toLowerCase().includes("transaction fee")) {
+        reason = "Transaction Fees";
+      } else if (reason.includes("Received")) {
+        reason = "Direct Transfers";
+      } else if (reason.toLowerCase().includes("initial")) {
+        reason = "Initial Balance";
+      } else {
+        // Fallback for unexpected reasons
+        reason = "Miscellaneous";
+      }
+
+      categorizedIncome.set(
+        reason,
+        (categorizedIncome.get(reason) || 0) + amount,
+      );
+    });
+
+    // Format for Recharts and assign colors
+    const results: AdminIncomeCategory[] = Array.from(
+      categorizedIncome.entries(),
+    )
+      .map(([name, value], index) => ({
+        name,
+        value,
+        color: CATEGORY_COLORS[index % CATEGORY_COLORS.length] || "#8884d8", // Fallback color
+      }))
+      .sort((a, b) => b.value - a.value); // Sort highest to lowest
+
+    return results;
+  } catch (error) {
+    console.error("Error fetching admin income breakdown:", error);
+    return [];
+  }
+};

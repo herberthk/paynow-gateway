@@ -23,23 +23,87 @@ import {
 } from "lucide-react";
 import millify from "millify";
 import CustomTooltip from "../global/CustomTooltip";
+import { useState, useEffect } from "react";
+import {
+  getAnalyticsData,
+  type DashboardPeriod,
+} from "@/lib/actions/analytics";
+import { Loader2 } from "lucide-react";
 
 const UserAnalytics: React.FC<AnalyticsProps> = ({
-  cashFlowData,
-  categoryData,
-  incomeCategoryData,
-  totalIncome,
-  totalSpent,
+  userId,
+  cashFlowData: initialCashFlow,
+  categoryData: initialCategory,
+  incomeCategoryData: initialIncomeCategory,
+  totalIncome: initialTotalIncome,
+  totalSpent: initialTotalSpent,
 }) => {
+  const [period, setPeriod] = useState<DashboardPeriod>("30days");
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState({
+    cashFlow: initialCashFlow,
+    categories: initialCategory,
+    incomeCategories: initialIncomeCategory,
+    totalIncome: initialTotalIncome,
+    totalSpent: initialTotalSpent,
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const result = await getAnalyticsData(userId, period);
+        if (isMounted) {
+          setData({
+            cashFlow: result.cashFlow,
+            categories: result.categories,
+            incomeCategories: result.incomeCategories,
+            totalIncome: result.totalIncome,
+            totalSpent: result.totalSpent,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch analytics data:", error);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchData();
+    return () => {
+      isMounted = false;
+    };
+  }, [period, userId]);
+
+  const {
+    cashFlow: cashFlowData,
+    categories: categoryData,
+    incomeCategories: incomeCategoryData,
+    totalIncome,
+    totalSpent,
+  } = data;
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
           Financial Insights
         </h2>
-        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-          <Calendar size={16} />
-          <span>Last 30 Days</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <Calendar size={16} />
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value as DashboardPeriod)}
+              className="bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+            >
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="7days">Last 7 Days</option>
+              <option value="30days">Last 30 Days</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -57,7 +121,7 @@ const UserAnalytics: React.FC<AnalyticsProps> = ({
                   Cash Flow Analysis
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Income vs Spending (Last 30 Days)
+                  Income vs Spending
                 </p>
               </div>
             </div>
@@ -81,7 +145,12 @@ const UserAnalytics: React.FC<AnalyticsProps> = ({
             </div>
           </div>
 
-          <div className="h-80">
+          <div className="h-80 relative">
+            {loading && (
+              <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 flex items-center justify-center z-10 rounded-lg">
+                <Loader2 className="animate-spin text-indigo-500 w-8 h-8" />
+              </div>
+            )}
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={cashFlowData}>
                 <defs>
@@ -154,11 +223,29 @@ const UserAnalytics: React.FC<AnalyticsProps> = ({
               Income Sources
             </h3>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-            Top income categories (Last 30 days)
-          </p>
+          <div className="flex justify-between items-center mb-6">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Top income categories
+            </p>
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value as DashboardPeriod)}
+              className="bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+            >
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="7days">Last 7 Days</option>
+              <option value="30days">Last 30 Days</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
 
           <div className="flex-1 min-h-[200px] relative">
+            {loading && (
+              <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 flex items-center justify-center z-10 rounded-lg">
+                <Loader2 className="animate-spin text-green-500 w-8 h-8" />
+              </div>
+            )}
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -248,9 +335,25 @@ const UserAnalytics: React.FC<AnalyticsProps> = ({
             <h3 className="font-bold text-gray-900 dark:text-white">
               Expenditure
             </h3>
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value as DashboardPeriod)}
+              className="bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+            >
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="7days">Last 7 Days</option>
+              <option value="30days">Last 30 Days</option>
+              <option value="all">All Time</option>
+            </select>
           </div>
 
-          <div className="min-h-64 grid grid-cols-1 lg:grid-cols-2 gap-2">
+          <div className="min-h-64 grid grid-cols-1 lg:grid-cols-2 gap-2 relative">
+            {loading && (
+              <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 flex items-center justify-center z-10 rounded-lg">
+                <Loader2 className="animate-spin text-purple-500 w-8 h-8" />
+              </div>
+            )}
             <div className="flex-1 relative">
               <ResponsiveContainer width="100%" minHeight={200}>
                 <PieChart>
@@ -344,9 +447,25 @@ const UserAnalytics: React.FC<AnalyticsProps> = ({
             <h3 className="font-bold text-gray-900 dark:text-white">
               Activity Volume
             </h3>
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value as DashboardPeriod)}
+              className="bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+            >
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="7days">Last 7 Days</option>
+              <option value="30days">Last 30 Days</option>
+              <option value="all">All Time</option>
+            </select>
           </div>
 
-          <div className="h-64">
+          <div className="h-64 relative">
+            {loading && (
+              <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 flex items-center justify-center z-10 rounded-lg">
+                <Loader2 className="animate-spin text-orange-500 w-8 h-8" />
+              </div>
+            )}
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={cashFlowData}>
                 <CartesianGrid

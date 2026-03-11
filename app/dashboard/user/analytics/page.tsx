@@ -10,6 +10,7 @@ const Analytics = async () => {
 
   return (
     <UserAnalytics
+      userId={user.id}
       cashFlowData={analyticsData.cashFlow}
       categoryData={analyticsData.categories}
       incomeCategoryData={analyticsData.incomeCategories}
