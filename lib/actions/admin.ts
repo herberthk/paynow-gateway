@@ -399,7 +399,7 @@ export const getRevenueVolumeData = async (period: Period = "daily") => {
  * @returns Top 10 categories with spending amount and count
  */
 export const getSystemCategoryDistribution = async (
-  period: Period = "daily",
+  period: TimePeriodFilter = "month",
 ) => {
   try {
     const { getUserSession } = await import("./session");
@@ -410,33 +410,43 @@ export const getSystemCategoryDistribution = async (
     }
 
     const now = new Date();
-    let startDate: Date;
+    let startDate: Date | undefined;
 
     // Configure date range
-    if (period === "daily") {
-      startDate = new Date(now);
-      startDate.setDate(now.getDate() - 6); // Last 7 days
-      startDate.setHours(0, 0, 0, 0);
-    } else if (period === "weekly") {
-      startDate = new Date(now);
-      startDate.setDate(now.getDate() - 27); // Last 4 weeks
-      startDate.setHours(0, 0, 0, 0);
-    } else {
-      startDate = new Date(now);
-      startDate.setMonth(now.getMonth() - 11); // Last 12 months
-      startDate.setDate(1);
-      startDate.setHours(0, 0, 0, 0);
+    switch (period) {
+      case "today":
+        startDate = new Date(now);
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case "week":
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case "month":
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 30);
+        break;
+      case "all":
+      default:
+        startDate = undefined;
+        break;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const whereClause: any = {
+      status: "COMPLETED",
+    };
+
+    if (startDate) {
+      whereClause.createdAt = {
+        gte: startDate,
+        lte: now,
+      };
     }
 
     const stats = await prisma.transaction.groupBy({
       by: ["category"],
-      where: {
-        status: "COMPLETED",
-        createdAt: {
-          gte: startDate,
-          lte: now,
-        },
-      },
+      where: whereClause,
       _sum: {
         amount: true,
       },

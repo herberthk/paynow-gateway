@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import {
   getRevenueVolumeData,
-  getSystemCategoryDistribution,
   getPeakTrafficData,
   getSystemHealthData,
 } from "@/lib/actions/admin";
@@ -22,12 +21,6 @@ type FinancialData = {
   volume: number;
   previous: number;
 };
-type SystemCategoryData = {
-  name: string;
-  value: number;
-  count: number;
-  color: string;
-};
 type TrafficData = {
   hour: string;
   transactions: number;
@@ -41,7 +34,6 @@ type SystemHealthData = {
 
 const AdminDashboard: React.FC = () => {
   const [financialData, setFinancialData] = useState<FinancialData[]>([]);
-  const [categoryData, setCategoryData] = useState<SystemCategoryData[]>([]);
   const [trafficData, setTrafficData] = useState<TrafficData[]>([]);
   const [systemHealth, setSystemHealth] = useState<SystemHealthData | null>(
     null,
@@ -56,9 +48,6 @@ const AdminDashboard: React.FC = () => {
         const data = await getRevenueVolumeData(period);
         setFinancialData(data);
 
-        const categoryRes = await getSystemCategoryDistribution(period);
-        setCategoryData(categoryRes);
-
         const trafficRes = await getPeakTrafficData();
         setTrafficData(trafficRes);
 
@@ -67,7 +56,6 @@ const AdminDashboard: React.FC = () => {
       } catch (error) {
         console.error("Error fetching revenue data:", error);
         setFinancialData([]); // Clear data on error
-        setCategoryData([]);
         setTrafficData([]);
         setSystemHealth(null);
       } finally {
@@ -125,7 +113,7 @@ const AdminDashboard: React.FC = () => {
         <PaymentMethod />
 
         {/* Category Distribution (Donut) */}
-        <CategoryDistribution data={categoryData} />
+        <CategoryDistribution />
 
         {/* Peak Hourly Activity */}
         <PeakTraffic data={trafficData} />
