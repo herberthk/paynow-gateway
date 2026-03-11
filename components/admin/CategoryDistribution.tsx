@@ -1,6 +1,10 @@
-"use client";
+import { useState, useEffect } from "react";
 import { ResponsiveContainer, Pie, Tooltip, Cell, PieChart } from "recharts";
 import CustomTooltip from "@/components/global/CustomTooltip";
+import { getSystemCategoryDistribution } from "@/lib/actions/admin";
+import type { TimePeriodFilter } from "@/lib/actions/admin";
+import { Loader2 } from "lucide-react";
+
 type CategoryData = {
   name: string;
   value: number;
@@ -8,15 +12,56 @@ type CategoryData = {
   color: string;
 };
 
-const CategoryDistribution = ({ data = [] }: { data?: CategoryData[] }) => {
+const CategoryDistribution = ({ data: initialData = [] }: { data?: CategoryData[] }) => {
+  const [data, setData] = useState<CategoryData[]>(initialData);
+  const [period, setPeriod] = useState<TimePeriodFilter>("month");
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Skip initial fetch if data is provided and we are on default period "month"
+    // However, the parent might still be fetching with a different period logic. 
+    // To be safe and independent, we fetch when period changes.
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const result = await getSystemCategoryDistribution(period);
+        setData(result as CategoryData[]);
+      } catch (error) {
+        console.error("Failed to fetch category distribution:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [period]);
+
   const totalCount = data.reduce((acc, curr) => acc + curr.count, 0);
 
   return (
-    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm transition-colors">
-      <h3 className="font-bold text-gray-900 dark:text-white mb-4">
-        Spending Categories
-      </h3>
-      <div className="h-48 relative">
+    <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm transition-colors flex flex-col h-full">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="font-bold text-gray-900 dark:text-white">
+          Spending Categories
+        </h3>
+        <select
+          value={period}
+          onChange={(e) => setPeriod(e.target.value as TimePeriodFilter)}
+          className="bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-300 rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
+        >
+          <option value="today">Today</option>
+          <option value="week">Last 7 Days</option>
+          <option value="month">Last 30 Days</option>
+          <option value="all">All Time</option>
+        </select>
+      </div>
+      
+      <div className="h-48 relative flex-1">
+        {loading && (
+          <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 flex items-center justify-center z-10 rounded-lg">
+            <Loader2 className="animate-spin text-indigo-500 w-6 h-6" />
+          </div>
+        )}
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
