@@ -556,24 +556,30 @@ export const getTransactionVolumeBreakdown = async (
       ? `AND "createdAt" >= '${startDate.toISOString()}' AND "createdAt" <= '${now.toISOString()}'`
       : "";
 
-    // Query ALL wallet entries (CREDIT + DEBIT), grouped by reason category.
+    // Query ALL wallet entries (CREDIT + DEBIT), grouped by reason keyword.
     // The total matches the "Transaction volume" stat card which sums all wallet amounts.
     const results = await prisma.$queryRawUnsafe<
       { category: string; total_amount: number; entry_count: number }[]
     >(`
       SELECT 
-        COALESCE(
-          NULLIF(TRIM(SPLIT_PART(reason, 'UGX', 1)), ''),
-          SUBSTRING(COALESCE(reason, 'Uncategorized') FROM 1 FOR 30)
-        ) AS category,
+        CASE
+          WHEN reason ILIKE '%Transfered%' THEN 'Transfer'
+          WHEN reason ILIKE '%Withdrawal%' THEN 'Withdrawal'
+          WHEN reason ILIKE '%Deposit%' THEN 'Deposit'
+          WHEN reason ILIKE '%Payment%' THEN 'Payment'
+          WHEN reason ILIKE '%Refund%' THEN 'Refund'
+          WHEN reason ILIKE '%Transaction fee%' THEN 'Transaction Fee'
+          WHEN reason ILIKE '%Primary wallet%' THEN 'Primary Wallet'
+          WHEN reason ILIKE '%Received%' THEN 'Received'
+          ELSE 'Other'
+        END AS category,
         COALESCE(SUM(amount), 0) AS total_amount,
         COUNT(id)::int AS entry_count
       FROM payment_wallets
       WHERE 1=1
         ${dateFilter}
       GROUP BY category
-      ORDER BY total_amount DESC
-      LIMIT 10;
+      ORDER BY total_amount DESC;
     `);
 
     return results.map((row, index) => ({
@@ -1141,63 +1147,47 @@ export const getAdminIncomeBreakdown = async (
         break;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const whereClause: any = {
-      userId: admin.id,
-      type: "CREDIT",
-    };
+    // Build the date filter for raw sql
+    const dateQueryFilter =
+      Object.keys(dateFilter).length > 0
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          `AND "createdAt" >= '${(dateFilter as any).gte.toISOString()}' AND "createdAt" <= '${now.toISOString()}'`
+        : "";
 
-    // Only apply date filter if it's not empty
-    if (Object.keys(dateFilter).length > 0) {
-      whereClause.createdAt = dateFilter;
-    }
-
-    // Fetch credits from the admin's wallet
-    const credits = await prisma.wallet.findMany({
-      where: whereClause,
-      select: {
-        amount: true,
-        reason: true,
-      },
-    });
-
-    // Group the credits by a normalized reason
-    const categorizedIncome = new Map<string, number>();
-
-    credits.forEach((credit) => {
-      const amount = Number(credit.amount) || 0;
-      let reason = credit.reason || "Other";
-
-      // Normalize common reasons mapping to categories
-      if (reason.toLowerCase().includes("transaction fee")) {
-        reason = "Transaction Fees";
-      } else if (reason.includes("Received")) {
-        reason = "Direct Transfers";
-      } else if (reason.toLowerCase().includes("initial")) {
-        reason = "Initial Balance";
-      } else {
-        // Fallback for unexpected reasons
-        reason = "Miscellaneous";
-      }
-
-      categorizedIncome.set(
-        reason,
-        (categorizedIncome.get(reason) || 0) + amount,
-      );
-    });
+    const results = await prisma.$queryRawUnsafe<
+      { category: string; total_amount: number; entry_count: number }[]
+    >(`
+      SELECT 
+        CASE
+          WHEN reason ILIKE '%Transfered%' THEN 'Transfer'
+          WHEN reason ILIKE '%Withdrawal%' THEN 'Withdrawal'
+          WHEN reason ILIKE '%Deposit%' THEN 'Deposit'
+          WHEN reason ILIKE '%Payment%' THEN 'Payment'
+          WHEN reason ILIKE '%Refund%' THEN 'Refund'
+          WHEN reason ILIKE '%Transaction fee%' THEN 'Transaction Fee'
+          WHEN reason ILIKE '%Primary wallet%' THEN 'Primary Wallet'
+          WHEN reason ILIKE '%Received%' THEN 'Received'
+          ELSE 'Other'
+        END AS category,
+        COALESCE(SUM(amount), 0) AS total_amount,
+        COUNT(id)::int AS entry_count
+      FROM payment_wallets
+      WHERE "userId" = ${admin.id} AND type = 'CREDIT'
+        ${dateQueryFilter}
+      GROUP BY category
+      ORDER BY total_amount DESC;
+    `);
 
     // Format for Recharts and assign colors
-    const results: AdminIncomeCategory[] = Array.from(
-      categorizedIncome.entries(),
-    )
-      .map(([name, value], index) => ({
-        name,
-        value,
+    const formattedResults: AdminIncomeCategory[] = results.map(
+      (row, index) => ({
+        name: String(row.category),
+        value: Number(row.total_amount),
         color: CATEGORY_COLORS[index % CATEGORY_COLORS.length] || "#8884d8", // Fallback color
-      }))
-      .sort((a, b) => b.value - a.value); // Sort highest to lowest
+      }),
+    );
 
-    return results;
+    return formattedResults;
   } catch (error) {
     console.error("Error fetching admin income breakdown:", error);
     return [];
