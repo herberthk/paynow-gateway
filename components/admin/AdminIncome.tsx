@@ -10,7 +10,10 @@ import {
   Legend,
 } from "recharts";
 import { getAdminIncomeBreakdown } from "@/lib/actions/admin";
-import type { AdminIncomeCategory, TimePeriodFilter } from "@/lib/actions/admin";
+import type {
+  AdminIncomeCategory,
+  TimePeriodFilter,
+} from "@/lib/actions/admin";
 import { Loader2, DollarSign } from "lucide-react";
 
 const AdminIncome = () => {
@@ -25,7 +28,7 @@ const AdminIncome = () => {
       try {
         const result = await getAdminIncomeBreakdown(period);
         setData(result);
-        
+
         // Calculate total income for the selected period
         const total = result.reduce((sum, item) => sum + item.value, 0);
         setTotalIncome(total);
@@ -73,7 +76,7 @@ const AdminIncome = () => {
             Revenue breakdown by category
           </p>
         </div>
-        
+
         <select
           value={period}
           onChange={(e) => setPeriod(e.target.value as TimePeriodFilter)}
@@ -116,9 +119,12 @@ const AdminIncome = () => {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend 
-                    verticalAlign="bottom" 
+                  <Tooltip
+                    wrapperStyle={{ zIndex: 50 }}
+                    content={<CustomTooltip />}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
                     height={36}
                     iconType="circle"
                     formatter={(value) => (
@@ -130,15 +136,17 @@ const AdminIncome = () => {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            
+
             {/* Center Total Overlay (Optional, enhances UI) */}
             <div className="absolute top-[40%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Total</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                Total
+              </p>
               <p className="hidden sm:block text-sm font-bold text-gray-900 dark:text-white truncate max-w-[80px]">
-                {totalIncome >= 1000000 
-                  ? `${(totalIncome / 1000000).toFixed(1)}M` 
-                  : totalIncome >= 1000 
-                    ? `${(totalIncome / 1000).toFixed(1)}k` 
+                {totalIncome >= 1000000
+                  ? `${(totalIncome / 1000000).toFixed(1)}M`
+                  : totalIncome >= 1000
+                    ? `${(totalIncome / 1000).toFixed(1)}k`
                     : totalIncome}
               </p>
             </div>

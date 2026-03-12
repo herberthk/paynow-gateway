@@ -4,6 +4,7 @@ import CustomTooltip from "@/components/global/CustomTooltip";
 import { getSystemCategoryDistribution } from "@/lib/actions/admin";
 import type { TimePeriodFilter } from "@/lib/actions/admin";
 import { Loader2 } from "lucide-react";
+import millify from "millify";
 
 type CategoryData = {
   name: string;
@@ -12,14 +13,18 @@ type CategoryData = {
   color: string;
 };
 
-const CategoryDistribution = ({ data: initialData = [] }: { data?: CategoryData[] }) => {
+const CategoryDistribution = ({
+  data: initialData = [],
+}: {
+  data?: CategoryData[];
+}) => {
   const [data, setData] = useState<CategoryData[]>(initialData);
   const [period, setPeriod] = useState<TimePeriodFilter>("month");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Skip initial fetch if data is provided and we are on default period "month"
-    // However, the parent might still be fetching with a different period logic. 
+    // However, the parent might still be fetching with a different period logic.
     // To be safe and independent, we fetch when period changes.
     const fetchData = async () => {
       setLoading(true);
@@ -55,7 +60,7 @@ const CategoryDistribution = ({ data: initialData = [] }: { data?: CategoryData[
           <option value="all">All Time</option>
         </select>
       </div>
-      
+
       <div className="h-48 relative flex-1">
         {loading && (
           <div className="absolute inset-0 bg-white/50 dark:bg-slate-800/50 flex items-center justify-center z-10 rounded-lg">
@@ -89,12 +94,10 @@ const CategoryDistribution = ({ data: initialData = [] }: { data?: CategoryData[
         </ResponsiveContainer>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
           <span className="block text-2xl font-bold text-gray-900 dark:text-white">
-            {totalCount >= 1000
-              ? `${(totalCount / 1000).toFixed(1)}k`
-              : totalCount}
+            {millify(data.reduce((acc, curr) => acc + curr.value, 0))}
           </span>
           <span className="block text-xs text-gray-500 dark:text-gray-400">
-            Transactions
+            Total
           </span>
         </div>
       </div>
