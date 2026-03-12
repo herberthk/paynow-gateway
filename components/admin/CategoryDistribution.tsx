@@ -87,7 +87,14 @@ const CategoryDistribution = ({
               ))}
             </Pie>
             <Tooltip
-              content={<CustomTooltip active={true} payload={[]} label="" />}
+              content={
+                <CustomTooltip
+                  active={true}
+                  payload={[]}
+                  label=""
+                  total={totalVolume}
+                />
+              }
               wrapperStyle={{ zIndex: 50 }}
             />
           </PieChart>
