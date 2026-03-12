@@ -3,10 +3,12 @@ import { ArrowUpRight, Users, Briefcase, AlertCircle } from "lucide-react";
 import StatCard from "./StatCard";
 
 interface StatCardsProps {
-  totalRevenue?: number;
+  totalVolume?: number;
+  netRevenue?: number;
   totalUsers?: number;
   activeDisputes?: number;
-  pendingTransactions?: number;
+  volumeTrend?: "up" | "down";
+  volumeTrendValue?: string;
   revenueTrend?: "up" | "down";
   revenueTrendValue?: string;
   usersTrend?: "up" | "down";
@@ -14,10 +16,12 @@ interface StatCardsProps {
 }
 
 const StatCards = ({
-  totalRevenue,
+  totalVolume,
+  netRevenue,
   totalUsers,
   activeDisputes,
-  pendingTransactions,
+  volumeTrend,
+  volumeTrendValue,
   revenueTrend,
   revenueTrendValue,
   usersTrend,
@@ -26,10 +30,22 @@ const StatCards = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard
+        title="Overall transaction volume"
+        value={
+          totalVolume !== undefined
+            ? `UGX ${totalVolume.toLocaleString()}`
+            : "Loading..."
+        }
+        icon={ArrowUpRight}
+        color="purple"
+        trend={volumeTrend}
+        trendValue={volumeTrendValue}
+      />
+      <StatCard
         title="Total Revenue"
         value={
-          totalRevenue !== undefined
-            ? `UGX ${totalRevenue.toLocaleString()}`
+          netRevenue !== undefined
+            ? `UGX ${netRevenue.toLocaleString()}`
             : "Loading..."
         }
         icon={Briefcase}
@@ -57,16 +73,6 @@ const StatCards = ({
         icon={AlertCircle}
         color="orange"
         subValue="Requires Attention"
-      />
-      <StatCard
-        title="Pending Transactions"
-        value={
-          pendingTransactions !== undefined
-            ? pendingTransactions.toLocaleString()
-            : "Loading..."
-        }
-        icon={ArrowUpRight}
-        color="purple"
       />
     </div>
   );

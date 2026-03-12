@@ -66,17 +66,21 @@ export const getAdminDashboardStats = async () => {
     const now = new Date();
     const oneWeekAgo = new Date(now);
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const twoWeeksAgo = new Date(now);
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
 
     // Fetch all stats in parallel
     const [
       totalRevenue,
       totalUsers,
       activeDisputes,
-      pendingTransactions,
+      totalTxVolume,
       previousWeekRevenue,
       previousWeekUsers,
+      thisWeekTxVolume,
+      lastWeekTxVolume,
     ] = await Promise.all([
-      // Total Revenue: Sum of all wallet balances for super admin
+      // Total Revenue: Sum of all wallet balances for super admin (CREDIT - DEBIT)
       getWalletBalance(user.id),
       // Total Users: Count all users
       prisma.user.count(),
@@ -84,16 +88,31 @@ export const getAdminDashboardStats = async () => {
       prisma.dispute.count({
         where: { status: "OPEN" },
       }),
-      // Pending Transactions: Count pending transactions
-      prisma.transaction.count({
-        where: { status: "PENDING" },
-      }),
+      // Overall transaction volume: Sum of all wallet CREDITs + DEBITs system-wide
+      prisma.$queryRaw<{ volume: number }[]>`
+        SELECT COALESCE(SUM(amount), 0) AS volume
+        FROM payment_wallets;
+      `,
       // Previous week revenue (wallets created before one week ago)
       getWalletBalanceBeforeDate(user.id, oneWeekAgo),
       // Previous week users (users created before one week ago)
       prisma.user.count({
         where: { created_at: { lt: oneWeekAgo } },
       }),
+      // This week's volume (wallet entries from the last 7 days)
+      prisma.$queryRaw<{ volume: number }[]>`
+        SELECT COALESCE(SUM(amount), 0) AS volume
+        FROM payment_wallets
+        WHERE "createdAt" >= ${oneWeekAgo}
+          AND "createdAt" <= ${now};
+      `,
+      // Last week's volume (wallet entries from 14 to 7 days ago)
+      prisma.$queryRaw<{ volume: number }[]>`
+        SELECT COALESCE(SUM(amount), 0) AS volume
+        FROM payment_wallets
+        WHERE "createdAt" >= ${twoWeeksAgo}
+          AND "createdAt" < ${oneWeekAgo};
+      `,
     ]);
 
     const currentRevenue = totalRevenue?.balance || 0;
@@ -102,13 +121,20 @@ export const getAdminDashboardStats = async () => {
     const revenuePercentChange =
       previousRevenue > 0 ? (revenueDiff / previousRevenue) * 100 : 0;
 
+    const currentVolume = Number(totalTxVolume?.[0]?.volume) || 0;
+    const thisWeekVol = Number(thisWeekTxVolume?.[0]?.volume) || 0;
+    const lastWeekVol = Number(lastWeekTxVolume?.[0]?.volume) || 0;
+    const volumeDiff = thisWeekVol - lastWeekVol;
+    const volumePercentChange =
+      lastWeekVol > 0 ? (volumeDiff / lastWeekVol) * 100 : 0;
+
     const usersDiff = totalUsers - previousWeekUsers;
 
     return {
       totalRevenue: currentRevenue,
       totalUsers,
       activeDisputes,
-      pendingTransactions,
+      totalTxVolume: currentVolume,
       revenueTrend: {
         value: revenuePercentChange,
         direction: revenueDiff >= 0 ? "up" : "down",
@@ -118,6 +144,11 @@ export const getAdminDashboardStats = async () => {
         value: usersDiff,
         direction: usersDiff >= 0 ? "up" : "down",
         label: `${usersDiff >= 0 ? "+" : ""}${usersDiff} this week`,
+      },
+      volumeTrend: {
+        value: volumePercentChange,
+        direction: volumeDiff >= 0 ? "up" : "down",
+        label: `${volumeDiff >= 0 ? "+" : ""}${volumePercentChange.toFixed(1)}%`,
       },
     };
   } catch (error) {

@@ -11,10 +11,14 @@ const AdminDashboardPage = async () => {
         Admin Overview
       </h2>
       <StatCards
-        totalRevenue={stats?.totalRevenue}
+        totalVolume={stats?.totalTxVolume}
+        netRevenue={stats?.totalRevenue}
         totalUsers={stats?.totalUsers}
         activeDisputes={stats?.activeDisputes}
-        pendingTransactions={stats?.pendingTransactions}
+        volumeTrend={
+          stats?.volumeTrend?.direction as "up" | "down" | undefined
+        }
+        volumeTrendValue={stats?.volumeTrend?.label}
         revenueTrend={
           stats?.revenueTrend?.direction as "up" | "down" | undefined
         }
