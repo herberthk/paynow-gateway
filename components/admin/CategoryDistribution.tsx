@@ -41,7 +41,7 @@ const CategoryDistribution = ({
     fetchData();
   }, [period]);
 
-  const totalCount = data.reduce((acc, curr) => acc + curr.count, 0);
+  const totalVolume = data.reduce((acc, curr) => acc + curr.value, 0);
 
   return (
     <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm transition-colors flex flex-col h-full">
@@ -94,7 +94,7 @@ const CategoryDistribution = ({
         </ResponsiveContainer>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
           <span className="block text-2xl font-bold text-gray-900 dark:text-white">
-            {millify(data.reduce((acc, curr) => acc + curr.value, 0))}
+            {millify(totalVolume)}
           </span>
           <span className="block text-xs text-gray-500 dark:text-gray-400">
             Total

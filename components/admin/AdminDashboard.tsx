@@ -6,12 +6,13 @@ import {
   getSystemHealthData,
 } from "@/lib/actions/admin";
 import RevenueVolume from "./RevenueVolume";
-import PaymentMethod from "./PaymentMethod";
+// import PaymentMethod from "./PaymentMethod";
 import CategoryDistribution from "./CategoryDistribution";
 import PeakTraffic from "./PeakTraffic";
 import SystemMonitor from "./SystemMonitor";
 // import AuditTrail from "./AuditTrail";
 import AdminIncome from "./AdminIncome";
+import OveralSpendingCategories from "./OveralSpendingCategories";
 
 // Define a type for financial data, assuming it's an array of objects
 // You might want to define a more specific interface for FinancialData
@@ -109,8 +110,8 @@ const AdminDashboard: React.FC = () => {
         <RevenueVolume financialData={financialData} />
       )}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Payment Method Health */}
-        <PaymentMethod />
+        {/* Overall Spending Categories */}
+        <OveralSpendingCategories />
 
         {/* Category Distribution (Donut) */}
         <CategoryDistribution />

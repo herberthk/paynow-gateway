@@ -504,6 +504,90 @@ export const getSystemCategoryDistribution = async (
   }
 };
 
+export type VolumeBreakdownData = {
+  name: string;
+  value: number;
+  count: number;
+  color: string;
+};
+
+/**
+ * Get system-wide transaction volume breakdown from all wallet entries (CREDIT + DEBIT)
+ * Groups by the reason prefix (text before "UGX") to form categories
+ * The total of all categories matches the "Transaction volume" stat card
+ * @param period - time period filter
+ * @returns Top 10 volume categories with amount, count and color
+ */
+export const getTransactionVolumeBreakdown = async (
+  period: TimePeriodFilter = "month",
+): Promise<VolumeBreakdownData[]> => {
+  try {
+    const { getUserSession } = await import("./session");
+    const { CATEGORY_COLORS } = await import("@/constants");
+    const user = await getUserSession();
+    if (!user || user.privilege !== "super_admin") {
+      return [];
+    }
+
+    const now = new Date();
+    let startDate: Date | undefined;
+
+    switch (period) {
+      case "today":
+        startDate = new Date(now);
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case "week":
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case "month":
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 30);
+        break;
+      case "all":
+      default:
+        startDate = undefined;
+        break;
+    }
+
+    // Build the date filter clause for the raw query
+    const dateFilter = startDate
+      ? `AND "createdAt" >= '${startDate.toISOString()}' AND "createdAt" <= '${now.toISOString()}'`
+      : "";
+
+    // Query ALL wallet entries (CREDIT + DEBIT), grouped by reason category.
+    // The total matches the "Transaction volume" stat card which sums all wallet amounts.
+    const results = await prisma.$queryRawUnsafe<
+      { category: string; total_amount: number; entry_count: number }[]
+    >(`
+      SELECT 
+        COALESCE(
+          NULLIF(TRIM(SPLIT_PART(reason, 'UGX', 1)), ''),
+          SUBSTRING(COALESCE(reason, 'Uncategorized') FROM 1 FOR 30)
+        ) AS category,
+        COALESCE(SUM(amount), 0) AS total_amount,
+        COUNT(id)::int AS entry_count
+      FROM payment_wallets
+      WHERE 1=1
+        ${dateFilter}
+      GROUP BY category
+      ORDER BY total_amount DESC
+      LIMIT 10;
+    `);
+
+    return results.map((row, index) => ({
+      name: String(row.category).trim(),
+      value: Number(row.total_amount),
+      count: Number(row.entry_count),
+      color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
+    }));
+  } catch (error) {
+    console.error("Error fetching transaction volume breakdown:", error);
+    return [];
+  }
+};
+
 /**
  * Get peak traffic data (Transactions by hour of day over last 30 days)
  */
