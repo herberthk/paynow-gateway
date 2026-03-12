@@ -92,7 +92,12 @@ const OveralSpendingCategories = () => {
                 </Pie>
                 <Tooltip
                   content={
-                    <CustomTooltip active={true} payload={[]} label="" />
+                    <CustomTooltip
+                      active={true}
+                      payload={[]}
+                      label=""
+                      total={totalVolume}
+                    />
                   }
                   wrapperStyle={{ zIndex: 50 }}
                 />
