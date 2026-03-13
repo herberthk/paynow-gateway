@@ -69,9 +69,12 @@ const WalletView = ({ user, wallet }: UserProps) => {
       return;
     }
 
-    const TRANSACTION_FEE = (
-      await getTransactionFee({ amount: transferAmount, type: "TRANSFER" })
-    ).amount!;
+    const isAdmin = user.privilege === "super_admin";
+
+    const TRANSACTION_FEE = isAdmin
+      ? 0
+      : (await getTransactionFee({ amount: transferAmount, type: "TRANSFER" }))
+          .amount!;
     console.log("Transaction Fee:", TRANSACTION_FEE);
     const totalRequired = transferAmount + TRANSACTION_FEE;
 
