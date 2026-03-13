@@ -22,6 +22,12 @@ export const menuItems = (userRole: Privilege) =>
           href: "/dashboard/admin",
         },
         {
+          id: "/dashboard/admin/wallet",
+          label: "Wallet",
+          icon: LayoutDashboard,
+          href: "/dashboard/admin/wallet",
+        },
+        {
           id: "/dashboard/admin/transactions",
           label: "Transactions",
           icon: Banknote,

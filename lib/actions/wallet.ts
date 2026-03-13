@@ -183,7 +183,8 @@ export const processP2PTransfer = async (
     const refference = await generateTxRef();
     const senderBalance = (await getWalletBalance(senderId)).balance;
     // calculate fee based on type
-    const TRANSACTION_FEE = fee.amount;
+    const isAdmin = sender?.privilege === "super_admin";
+    const TRANSACTION_FEE = isAdmin ? 0 : fee.amount;
     // Use Prisma transaction to ensure atomicity
     const result = await prisma.$transaction(async (tx) => {
       const totalDeduction = amount + TRANSACTION_FEE;
