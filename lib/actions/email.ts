@@ -6,12 +6,6 @@ import { generateOTP, hashOTP } from "@/utils";
 import OTPEmail from "@/components/global/OtpEmail";
 import TransactionEmail from "@/components/global/TransactionEmail";
 
-// type Props = {
-//   otp: string;
-//   email: string;
-//   name: string;
-//   expiry: number;
-// };
 const SMTP_HOST = process.env.SMTP_HOST!;
 const SMTP_PORT = process.env.SMTP_PORT!;
 const SMTP_USER = process.env.SMTP_USER!;
@@ -62,7 +56,7 @@ export const sendOtp = async ({ id, email, name, type = "verify" }: Props) => {
       OTPEmail({ otp, userName: name, expiryMinutes: 15, type }),
     );
     const mailOptions = {
-      from: '"Paynow Gateway" <info@netbritz.com>',
+      from: '"Paynow Gateway" <support@connectappbiz.com>',
       to: email,
       subject: "Paynow Gateway",
       html: emailHtml,
@@ -74,7 +68,7 @@ export const sendOtp = async ({ id, email, name, type = "verify" }: Props) => {
     console.log("Email sent: " + info.accepted);
     return true;
   } catch (error) {
-    console.log("error", error);
+    console.log("Can not send email", error);
     return false;
   }
 };
@@ -105,7 +99,7 @@ export const sendTransferEmail = async ({
       }),
     );
     const mailOptions = {
-      from: '"Paynow Gateway" <info@netbritz.com>',
+      from: '"Paynow Gateway" <support@connectappbiz.com>',
       to: email,
       subject: "Transfer Successful - Paynow Gateway",
       html: emailHtml,
@@ -151,7 +145,7 @@ export const sendAdminTransferEmail = async ({
       }),
     );
     const mailOptions = {
-      from: '"Paynow Gateway" <info@netbritz.com>',
+      from: '"Paynow Gateway" <support@connectappbiz.com>',
       to: email,
       subject: "New Transaction Fee - Paynow Gateway",
       html: emailHtml,
@@ -194,7 +188,7 @@ export const sendSenderTransferEmail = async ({
       }),
     );
     const mailOptions = {
-      from: '"Paynow Gateway" <info@netbritz.com>',
+      from: '"Paynow Gateway" <support@connectappbiz.com>',
       to: email,
       subject: "Transfer Receipt - Paynow Gateway",
       html: emailHtml,
