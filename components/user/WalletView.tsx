@@ -16,6 +16,7 @@ import { processP2PTransfer } from "@/lib/actions/wallet";
 import { ErrorModal, ConfirmationModal, SuccessModal } from "../modals";
 import { getTransactionFee } from "@/lib";
 import { USD_TO_UGX_EXCHANGE_RATE } from "@/constants";
+import PaymentModal from "../global/PaymentModal";
 
 type UserProps = {
   user: User;
@@ -171,6 +172,8 @@ const WalletView = ({ user, wallet }: UserProps) => {
 
   return (
     <div className="space-y-6">
+      {/* Payment Modal */}
+      <PaymentModal user={user} />
       {/* Error Modal */}
       {error && <ErrorModal error={error} onClose={() => setError("")} />}
 
