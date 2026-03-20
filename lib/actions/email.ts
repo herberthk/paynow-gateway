@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { generateOTP, hashOTP } from "@/utils";
 import OTPEmail from "@/components/global/OtpEmail";
 import TransactionEmail from "@/components/global/TransactionEmail";
+import DepositEmail from "@/components/global/DepositEmail";
 
 const SMTP_HOST = process.env.SMTP_HOST!;
 const SMTP_PORT = process.env.SMTP_PORT!;
@@ -198,6 +199,85 @@ export const sendSenderTransferEmail = async ({
     return true;
   } catch (error) {
     console.error("Error sending sender transfer email:", error);
+    return false;
+  }
+};
+
+type DepositEmailProps = {
+  email: string;
+  userName: string;
+  amount: number;
+  reference: string;
+  method?: string;
+  fee?: number;
+};
+
+export const sendDepositEmail = async ({
+  email,
+  userName,
+  amount,
+  reference,
+  method = "Mobile Money",
+  fee = 0,
+}: DepositEmailProps) => {
+  try {
+    const emailHtml = await render(
+      DepositEmail({
+        userName,
+        amount,
+        reference,
+        method,
+        fee,
+        role: "USER_CONFIRMATION",
+      }),
+    );
+
+    const mailOptions = {
+      from: '"Paynow Gateway" <support@connectappbiz.com>',
+      to: email,
+      subject: `Deposit Confirmation - ${reference}`,
+      html: emailHtml,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Error sending deposit email:", error);
+    return false;
+  }
+};
+
+export const sendAdminDepositNoticeEmail = async ({
+  email,
+  userName,
+  amount,
+  reference,
+  method = "Mobile Money",
+  fee = 0,
+}: DepositEmailProps) => {
+  try {
+    const emailHtml = await render(
+      DepositEmail({
+        userName, // User who made the deposit
+        amount,
+        reference,
+        method,
+        fee,
+        role: "ADMIN_NOTICE",
+      }),
+    );
+
+    const mailOptions = {
+      from: '"Paynow Gateway" <support@connectappbiz.com>',
+      to: email,
+      subject: `New Deposit Notification - ${reference}`,
+      html: emailHtml,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Error sending admin deposit notification:", error);
     return false;
   }
 };

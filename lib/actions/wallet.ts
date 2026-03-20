@@ -7,9 +7,148 @@ import { getAdmins } from "./admin";
 import { getTransactionFee } from "./fee";
 import {
   sendAdminTransferEmail,
+  sendDepositEmail,
+  sendAdminDepositNoticeEmail,
   sendSenderTransferEmail,
   sendTransferEmail,
 } from "./email";
+
+/**
+ * Process Mobile Money deposit for a user
+ * @param userId - User ID
+ * @param amount - Amount to deposit
+ * @returns Success/error status
+ */
+export const processMobileMoneyDeposit = async (
+  userId: number,
+  amount: number,
+) => {
+  try {
+    const user = await getUserSession();
+    if (!user) {
+      return { success: false, message: "Unauthorized" };
+    }
+
+    if (amount < 500) {
+      return {
+        success: false,
+        message: "Minimum deposit amount is UGX 500",
+      };
+    }
+
+    const refference = await generateTxRef();
+    const feeResult = await getTransactionFee({ amount, type: "DEPOSIT" });
+    const fee = feeResult.success ? feeResult.amount || 0 : 0;
+
+    const admins = await getAdmins();
+
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Credit user wallet
+      await tx.wallet.create({
+        data: {
+          userId,
+          amount,
+          type: "CREDIT",
+          reason: "Mobile Money Deposit",
+          refference,
+        },
+      });
+
+      // 2. Credit transaction fee to all admins
+      if (fee > 0 && admins.length > 0) {
+        await tx.wallet.createMany({
+          data: admins.map((admin) => ({
+            userId: admin.id,
+            amount: fee,
+            type: "CREDIT",
+            reason: `Transaction fee from deposit: ${refference}`,
+            refference,
+          })),
+        });
+
+        // Send notification to admins
+        await tx.systemNotification.createMany({
+          data: admins.map((admin) => ({
+            fromUserId: userId,
+            toUserId: admin.id,
+            title: "New Deposit Fee",
+            message: `You received a transaction fee of UGX ${fee.toLocaleString()} from a deposit.`,
+            type: "SUCCESS",
+            path: `/dashboard/user/transactions?query=${refference}`,
+          })),
+        });
+      }
+
+      // 3. Create transaction record
+      await tx.transaction.create({
+        data: {
+          userId,
+          recipientId: userId,
+          displayName: user.name || "System",
+          amount,
+          currency: "UGX",
+          type: "DEPOSIT",
+          status: "COMPLETED",
+          category: "Deposit",
+          method: "Mobile Money",
+          txn_ref: refference,
+          fee,
+          reason: "Mobile Money Deposit",
+        },
+      });
+
+      // 4. System Notification for user
+      await tx.systemNotification.create({
+        data: {
+          fromUserId: userId,
+          toUserId: userId,
+          title: "Deposit Successful",
+          message: `Your deposit of UGX ${amount.toLocaleString()} has been processed successfully.`,
+          type: "SUCCESS",
+          path: `/dashboard/user/transactions?query=${refference}`,
+        },
+      });
+
+      return { success: true, refference, message: "Deposit Successful!" };
+    });
+
+    if (result.success) {
+      // Send background email to user
+      if (user.email) {
+        sendDepositEmail({
+          email: user.email,
+          userName: user.name || "User",
+          amount,
+          reference: result.refference,
+          fee,
+        });
+      }
+
+      // Send background email to admins
+      admins.forEach((admin) => {
+        if (admin.email) {
+          sendAdminDepositNoticeEmail({
+            email: admin.email,
+            userName: user.name || "User",
+            amount,
+            reference: result.refference,
+            fee,
+          });
+        }
+      });
+    }
+
+    revalidatePath("/dashboard/user/wallet");
+    return result;
+  } catch (error) {
+    console.error("Error processing deposit:", error);
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Deposit failed",
+    };
+  }
+};
+
 // export const getUserWallet = async (id: number) => {
 //   const wallet = await prisma.wallet.findFirst({
 //     where: {

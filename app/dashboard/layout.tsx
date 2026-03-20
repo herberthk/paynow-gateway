@@ -1,6 +1,5 @@
 import DashboardAssistant from "@/components/AI/DashboardAssistant";
 import Header from "@/components/global/Header";
-import PaymentModal from "@/components/global/PaymentModal";
 import Sidebar from "@/components/global/Sidebar";
 import { getUserSession } from "@/lib";
 import type { Metadata } from "next";
@@ -30,8 +29,6 @@ const RootLayout = async ({
           <div className="max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
-
-      <PaymentModal />
 
       {/* AI Assistant - Always available for logged in users */}
       <DashboardAssistant />
