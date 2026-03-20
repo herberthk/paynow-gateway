@@ -1,5 +1,6 @@
 type Props = {
   userName?: string;
+  adminName?: string;
   amount: number;
   fee?: number;
   currency?: string;
@@ -10,6 +11,7 @@ type Props = {
 
 const DepositEmail = ({
   userName,
+  adminName,
   amount,
   fee = 0,
   currency = "UGX",
@@ -46,28 +48,48 @@ const DepositEmail = ({
             textAlign: "center",
           }}
         >
-          <div
+          <table
+            align="center"
+            border={0}
+            cellPadding={0}
+            cellSpacing={0}
+            role="presentation"
             style={{
               margin: "0 auto 16px",
-              height: "64px",
-              width: "64px",
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
-              borderRadius: "32px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              borderCollapse: "separate",
             }}
           >
-            <span
-              style={{
-                color: "#ffffff",
-                fontSize: "32px",
-                fontWeight: "bold",
-              }}
-            >
-              ✓
-            </span>
-          </div>
+            <tbody>
+              <tr>
+                <td
+                  align="center"
+                  valign="middle"
+                  style={{
+                    height: "64px",
+                    width: "64px",
+                    backgroundColor: "rgba(255, 255, 255, 0.2)",
+                    borderRadius: "32px",
+                    textAlign: "center",
+                    verticalAlign: "middle",
+                    padding: "0",
+                  }}
+                >
+                  <span
+                    style={{
+                      color: "#ffffff",
+                      fontSize: "32px",
+                      fontWeight: "bold",
+                      lineHeight: "1",
+                      display: "inline-block",
+                      verticalAlign: "middle",
+                    }}
+                  >
+                    ✓
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
           <h1
             style={{
               color: "#ffffff",
@@ -89,7 +111,7 @@ const DepositEmail = ({
               margin: "0 0 24px 0",
             }}
           >
-            Hi <strong>{isUser ? userName : "Admin"}</strong>,
+            Hi <strong>{isUser ? userName : adminName}</strong>,
           </p>
 
           <p
