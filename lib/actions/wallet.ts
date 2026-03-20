@@ -22,7 +22,7 @@ import {
 export const processMobileMoneyDeposit = async (
   userId: number,
   amount: number,
-) => {
+): Promise<{ success: boolean; refference?: string; message: string }> => {
   try {
     const user = await getUserSession();
     if (!user) {
@@ -130,6 +130,7 @@ export const processMobileMoneyDeposit = async (
           sendAdminDepositNoticeEmail({
             email: admin.email,
             userName: user.name || "User",
+            adminName: admin.name || "Admin",
             amount,
             reference: result.refference,
             fee,

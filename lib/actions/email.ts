@@ -206,6 +206,7 @@ export const sendSenderTransferEmail = async ({
 type DepositEmailProps = {
   email: string;
   userName: string;
+  adminName?: string;
   amount: number;
   reference: string;
   method?: string;
@@ -250,6 +251,7 @@ export const sendDepositEmail = async ({
 export const sendAdminDepositNoticeEmail = async ({
   email,
   userName,
+  adminName,
   amount,
   reference,
   method = "Mobile Money",
@@ -259,6 +261,7 @@ export const sendAdminDepositNoticeEmail = async ({
     const emailHtml = await render(
       DepositEmail({
         userName, // User who made the deposit
+        adminName,
         amount,
         reference,
         method,

@@ -19,9 +19,10 @@ import { getTransactionFee } from "@/lib/actions/fee";
 
 type PaymentModalProps = {
   user: User;
+  walletBalance: number;
 };
 
-const PaymentModal = ({ user }: PaymentModalProps) => {
+const PaymentModal = ({ user, walletBalance }: PaymentModalProps) => {
   const notify = useNotificationStore((state) => state.notify);
   const [selectedMethod, setSelectedMethod] = useState<string>("momo");
   const [step, setStep] = useState(1); // 1: Input, 2: Review, 3: Success
@@ -64,6 +65,16 @@ const PaymentModal = ({ user }: PaymentModalProps) => {
     }
   };
 
+  const handleCloseModal = () => {
+    closePaymentModal();
+    setStep(1);
+    setAmount("");
+    setFee(0);
+    setTxRef("");
+    setError(null);
+    setIsLoading(false);
+  };
+
   const handleDeposit = async () => {
     const depositAmount = parseFloat(amount);
     setIsLoading(true);
@@ -71,7 +82,7 @@ const PaymentModal = ({ user }: PaymentModalProps) => {
 
     try {
       const result = await processMobileMoneyDeposit(user.id, depositAmount);
-      console.log("result", result);
+      // console.log("result", result);
       if (result.success) {
         setTxRef(result?.refference || "");
         setStep(3);
@@ -303,13 +314,13 @@ const PaymentModal = ({ user }: PaymentModalProps) => {
                     New Balance
                   </span>
                   <span className="text-green-600 dark:text-green-400 font-bold">
-                    Updated
+                    UGX {(walletBalance + amount).toLocaleString()}
                   </span>
                 </div>
               </div>
 
               <button
-                onClick={closePaymentModal}
+                onClick={handleCloseModal}
                 className="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-bold py-4 rounded-2xl transition-all hover:opacity-90 active:scale-95"
               >
                 Done

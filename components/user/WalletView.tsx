@@ -173,7 +173,7 @@ const WalletView = ({ user, wallet }: UserProps) => {
   return (
     <div className="space-y-6">
       {/* Payment Modal */}
-      <PaymentModal user={user} />
+      <PaymentModal user={user} walletBalance={wallet.balance} />
       {/* Error Modal */}
       {error && <ErrorModal error={error} onClose={() => setError("")} />}
 
