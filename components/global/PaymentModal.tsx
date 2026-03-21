@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, type Dispatch, type FC, type SetStateAction } from "react";
 import {
   X,
   Smartphone,
@@ -22,6 +22,47 @@ type PaymentModalProps = {
   walletBalance: number;
 };
 
+type SelectMethodProps = {
+  selectedMethod: string;
+  setSelectedMethod: Dispatch<SetStateAction<string>>;
+  paymentModal: globalThis.PaymentModalProps;
+};
+
+const SelectMethod: FC<SelectMethodProps> = ({
+  selectedMethod,
+  setSelectedMethod,
+  paymentModal,
+}) => (
+  <div className="grid grid-cols-2 gap-3 mb-6">
+    {[
+      { id: "momo", name: "Mobile Money", icon: Smartphone },
+      { id: "card", name: "Card", icon: CreditCard },
+      { id: "ussd", name: "USSD", icon: Banknote },
+      {
+        id: "qr",
+        name: "QR Code",
+        icon: QrCode,
+        hidden: paymentModal.type === "withdraw",
+      },
+    ]
+      .filter((m) => !m.hidden)
+      .map((method) => (
+        <button
+          key={method.id}
+          onClick={() => setSelectedMethod(method.id)}
+          className={`p-3 border rounded-xl flex flex-col items-center gap-2 transition-all duration-200 ${
+            selectedMethod === method.id
+              ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500/20"
+              : "border-gray-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500 text-gray-600 dark:text-gray-300 bg-white dark:bg-slate-800"
+          }`}
+        >
+          <method.icon size={20} />
+          <span className="font-semibold text-xs">{method.name}</span>
+        </button>
+      ))}
+  </div>
+);
+
 const PaymentModal = ({ user, walletBalance }: PaymentModalProps) => {
   const notify = useNotificationStore((state) => state.notify);
   const [selectedMethod, setSelectedMethod] = useState<string>("momo");
@@ -31,6 +72,7 @@ const PaymentModal = ({ user, walletBalance }: PaymentModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [txRef, setTxRef] = useState<string>("");
+  const [newWalletBalance, setNewWalletBalance] = useState<number>(0);
 
   const paymentModal = useAppStore((state) => state.paymentModal);
   const closePaymentModal = useAppStore((state) => state.closePaymentModal);
@@ -46,7 +88,6 @@ const PaymentModal = ({ user, walletBalance }: PaymentModalProps) => {
 
     setIsLoading(true);
     setError(null);
-
     try {
       const feeResult = await getTransactionFee({
         amount: depositAmount,
@@ -90,6 +131,8 @@ const PaymentModal = ({ user, walletBalance }: PaymentModalProps) => {
           "SUCCESS",
           `Deposit of UGX ${depositAmount.toLocaleString()} successful!`,
         );
+        setNewWalletBalance(walletBalance + depositAmount);
+        console.log("newWalletBalance", newWalletBalance.toLocaleString());
       } else {
         setError(result.message || "Deposit failed. Please try again.");
       }
@@ -102,37 +145,6 @@ const PaymentModal = ({ user, walletBalance }: PaymentModalProps) => {
 
   const title =
     paymentModal.type === "deposit" ? "Top Up Wallet" : "Withdraw Funds";
-
-  const renderMethodSelect = () => (
-    <div className="grid grid-cols-2 gap-3 mb-6">
-      {[
-        { id: "momo", name: "Mobile Money", icon: Smartphone },
-        { id: "card", name: "Card", icon: CreditCard },
-        { id: "ussd", name: "USSD", icon: Banknote },
-        {
-          id: "qr",
-          name: "QR Code",
-          icon: QrCode,
-          hidden: paymentModal.type === "withdraw",
-        },
-      ]
-        .filter((m) => !m.hidden)
-        .map((method) => (
-          <button
-            key={method.id}
-            onClick={() => setSelectedMethod(method.id)}
-            className={`p-3 border rounded-xl flex flex-col items-center gap-2 transition-all duration-200 ${
-              selectedMethod === method.id
-                ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500/20"
-                : "border-gray-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500 text-gray-600 dark:text-gray-300 bg-white dark:bg-slate-800"
-            }`}
-          >
-            <method.icon size={20} />
-            <span className="font-semibold text-xs">{method.name}</span>
-          </button>
-        ))}
-    </div>
-  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
@@ -167,7 +179,11 @@ const PaymentModal = ({ user, walletBalance }: PaymentModalProps) => {
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
                 Choose your preferred method:
               </p>
-              {renderMethodSelect()}
+              <SelectMethod
+                selectedMethod={selectedMethod}
+                setSelectedMethod={setSelectedMethod}
+                paymentModal={paymentModal}
+              />
 
               <div className="mb-6">
                 <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
@@ -303,10 +319,18 @@ const PaymentModal = ({ user, walletBalance }: PaymentModalProps) => {
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-500 dark:text-gray-400">
-                    Total Charged
+                    Amount Deposited
                   </span>
                   <span className="font-bold text-gray-900 dark:text-white">
-                    UGX {(parseFloat(amount) + fee).toLocaleString()}
+                    UGX {parseFloat(amount).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500 dark:text-gray-400">
+                    Fee Charged
+                  </span>
+                  <span className="font-bold text-gray-900 dark:text-white">
+                    UGX {fee.toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
@@ -314,7 +338,7 @@ const PaymentModal = ({ user, walletBalance }: PaymentModalProps) => {
                     New Balance
                   </span>
                   <span className="text-green-600 dark:text-green-400 font-bold">
-                    UGX {(walletBalance + amount).toLocaleString()}
+                    UGX {newWalletBalance.toLocaleString()}
                   </span>
                 </div>
               </div>
