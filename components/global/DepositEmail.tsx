@@ -6,6 +6,7 @@ type Props = {
   currency?: string;
   reference?: string;
   method?: string;
+  receiptUrl?: string;
   role: "USER_CONFIRMATION" | "ADMIN_NOTICE";
 };
 
@@ -17,6 +18,7 @@ const DepositEmail = ({
   currency = "UGX",
   reference,
   method = "Mobile Money",
+  receiptUrl,
   role,
 }: Props) => {
   const isUser = role === "USER_CONFIRMATION";
@@ -224,6 +226,24 @@ const DepositEmail = ({
                     {reference}
                   </td>
                 </tr>
+                {receiptUrl && (
+                  <tr>
+                    <td style={labelStyle}>Receipt:</td>
+                    <td style={valueStyle}>
+                      <a
+                        href={receiptUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "#667eea",
+                          textDecoration: "underline",
+                        }}
+                      >
+                        View Stripe Receipt
+                      </a>
+                    </td>
+                  </tr>
+                )}
                 <tr>
                   <td style={labelStyle}>Date:</td>
                   <td style={valueStyle}>

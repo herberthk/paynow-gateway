@@ -8,6 +8,7 @@ import {
   Smartphone,
   Loader2,
 } from "lucide-react";
+import Link from "next/link";
 import { useAppStore, useTransactionStore } from "@/store";
 import { linkedMethods } from "@/services/mockData";
 import { useEffect, useState } from "react";
@@ -197,12 +198,12 @@ const WalletView = ({ user, wallet }: UserProps) => {
             </h3>
           </div>
           <div className="mt-6 flex gap-3 relative z-10">
-            <button
-              onClick={() => openPaymentModal("deposit")}
+            <Link
+              href="/dashboard/user/wallet/topup"
               className="flex-1 bg-white/20 hover:bg-white/30 backdrop-blur-sm py-2 px-4 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2"
             >
               <PlusCircle size={16} /> Top Up
-            </button>
+            </Link>
             <button
               onClick={() => openPaymentModal("withdraw")}
               className="flex-1 bg-white/20 hover:bg-white/30 backdrop-blur-sm py-2 px-4 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2"

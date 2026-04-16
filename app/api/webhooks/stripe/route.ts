@@ -34,12 +34,20 @@ export async function POST(req: Request) {
 
     if (type === "wallet_topup") {
       try {
+        // Extract receipt_url if available (User mentioned it's in the object)
+        // Usually it's in latest_charge or charges array
+        const receiptUrl =
+          session.receipt_url ||
+          session.charges?.data?.[0]?.receipt_url ||
+          session.latest_charge?.receipt_url;
+
         await finalizeDeposit({
           userId: parseInt(userId),
-          amount: session.amount / 100, // Stripe amount is multiplied by 100 for UGX
+          amount: session.amount / 100,
           refference: transactionReference,
           method: "Card (Stripe)",
           reason: "Card Top-up via Stripe",
+          receiptUrl,
         });
 
         console.log(

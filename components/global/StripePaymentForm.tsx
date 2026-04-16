@@ -43,7 +43,7 @@ export const StripePaymentForm = ({
       redirect: "if_required", // We handle the success state manually if no redirect is needed
       confirmParams: {
         // Return URL is required even if redirect is if_required
-        return_url: `${window.location.origin}/dashboard/user/wallet?status=success&ref=${transactionReference}`,
+        return_url: `${window.location.origin}/dashboard/user/wallet/topup/success?ref=${transactionReference}`,
       },
     });
 

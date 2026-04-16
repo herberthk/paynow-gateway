@@ -112,6 +112,7 @@ model Transaction {
   category  String
   method    String
   reason     String?
+  receiptUrl String?
   fee       Decimal           @db.Decimal(12, 2) @default(0.00)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
