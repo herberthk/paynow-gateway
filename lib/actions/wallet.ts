@@ -23,12 +23,14 @@ export const finalizeDeposit = async ({
   refference,
   method,
   reason,
+  receiptUrl,
 }: {
   userId: number;
   amount: number;
   refference: string;
   method: string;
   reason: string;
+  receiptUrl?: string;
 }): Promise<{ success: boolean; refference: string; message: string }> => {
   try {
     const user = await prisma.user.findUnique({
@@ -95,6 +97,7 @@ export const finalizeDeposit = async ({
           txn_ref: refference,
           fee,
           reason,
+          receiptUrl,
         },
       });
 
@@ -119,6 +122,7 @@ export const finalizeDeposit = async ({
         amount,
         reference: refference,
         fee,
+        receiptUrl,
       });
     }
 
@@ -131,6 +135,7 @@ export const finalizeDeposit = async ({
           amount,
           reference: refference,
           fee,
+          receiptUrl,
         });
       }
     });
@@ -174,7 +179,7 @@ export const processMobileMoneyDeposit = async (
     // For now, we simulate success and finalize the deposit
 
     return await finalizeDeposit({
-      userId,
+      userId: user.id,
       amount,
       refference,
       method: "Mobile Money",
@@ -655,5 +660,34 @@ export const creditAdminWallet = async ({
   } catch (error) {
     console.error("Error crediting admin wallet:", error);
     return null;
+  }
+};
+
+/**
+ * Fetch transaction details by reference
+ */
+export const getTransactionByRef = async (ref: string) => {
+  try {
+    const session = await getUserSession();
+    if (!session) throw new Error("Unauthorized");
+
+    const transaction = await prisma.transaction.findUnique({
+      where: { txn_ref: ref },
+    });
+
+    if (!transaction) return { success: false, message: "Transaction not found" };
+
+    // Security check: Ensure the transaction belongs to the user
+    if (transaction.userId !== session.id && transaction.recipientId !== session.id) {
+      return { success: false, message: "Unauthorized access to transaction" };
+    }
+
+    return {
+      success: true,
+      transaction: JSON.parse(JSON.stringify(transaction)),
+    };
+  } catch (error) {
+    console.error("Error fetching transaction:", error);
+    return { success: false, message: "Failed to fetch transaction" };
   }
 };

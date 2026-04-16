@@ -211,6 +211,7 @@ type DepositEmailProps = {
   reference: string;
   method?: string;
   fee?: number;
+  receiptUrl?: string;
 };
 
 export const sendDepositEmail = async ({
@@ -220,6 +221,7 @@ export const sendDepositEmail = async ({
   reference,
   method = "Mobile Money",
   fee = 0,
+  receiptUrl,
 }: DepositEmailProps) => {
   try {
     const emailHtml = await render(
@@ -229,6 +231,7 @@ export const sendDepositEmail = async ({
         reference,
         method,
         fee,
+        receiptUrl,
         role: "USER_CONFIRMATION",
       }),
     );
@@ -256,6 +259,7 @@ export const sendAdminDepositNoticeEmail = async ({
   reference,
   method = "Mobile Money",
   fee = 0,
+  receiptUrl,
 }: DepositEmailProps) => {
   try {
     const emailHtml = await render(
@@ -266,6 +270,7 @@ export const sendAdminDepositNoticeEmail = async ({
         reference,
         method,
         fee,
+        receiptUrl,
         role: "ADMIN_NOTICE",
       }),
     );
