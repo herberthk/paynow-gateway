@@ -1356,7 +1356,7 @@ export function ParallaxHero() {
         style={{
           position: "absolute",
           inset: "-30%",
-          backgroundImage: "url(/hero.jpg)",
+          // backgroundImage: "url('https://example.com/hero.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
