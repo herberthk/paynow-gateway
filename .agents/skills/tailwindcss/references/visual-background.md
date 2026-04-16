@@ -26,10 +26,14 @@ Color palette follows theme (red, orange, amber, yellow, lime, green, emerald, t
 
 ```html
 <div class="bg-gradient-to-r from-blue-500 to-purple-600">Linear gradient</div>
-<div class="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">Multi-stop</div>
+<div class="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500">
+  Multi-stop
+</div>
 
-<div class="bg-[url('/img/hero.jpg')]">Image</div>
-<div class="bg-[url('/img/hero.jpg')] bg-cover bg-center">Image with size/position</div>
+<div class="bg-[url('https://example.com/hero.jpg')]">Image</div>
+<div class="bg-[url('https://example.com/hero.jpg')] bg-cover bg-center">
+  Image with size/position
+</div>
 ```
 
 Gradient directions: `to-t`, `to-tr`, `to-r`, `to-br`, `to-b`, `to-bl`, `to-l`, `to-tl`.
@@ -65,7 +69,7 @@ Gradient directions: `to-t`, `to-tr`, `to-r`, `to-br`, `to-b`, `to-bl`, `to-l`, 
 
 - Colors: `bg-{color}-{shade}`, opacity `/50`, arbitrary `bg-[#hex]`
 - Gradients: `bg-gradient-to-{dir}`, `from-*`, `via-*`, `to-*`
-- Image: `bg-[url('...')]`, `bg-cover`, `bg-center`, etc.
+- Image: `bg-[url('https://example.com/hero.jpg')]`, `bg-cover`, `bg-center`, etc.
 - Size: `bg-auto`, `bg-cover`, `bg-contain`
 - Position: `bg-center`, `bg-top`, `bg-[position:...]`
 
