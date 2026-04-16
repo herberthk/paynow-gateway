@@ -14,42 +14,43 @@ import {
 } from "./email";
 
 /**
- * Process Mobile Money deposit for a user
- * @param userId - User ID
- * @param amount - Amount to deposit
- * @returns Success/error status
+ * Core logic to finalize a deposit in the database
+ * Used by different payment providers (Mobile Money, Stripe,etc)
  */
-export const processMobileMoneyDeposit = async (
-  userId: number,
-  amount: number,
-): Promise<{ success: boolean; refference?: string; message: string }> => {
+export const finalizeDeposit = async ({
+  userId,
+  amount,
+  refference,
+  method,
+  reason,
+}: {
+  userId: number;
+  amount: number;
+  refference: string;
+  method: string;
+  reason: string;
+}): Promise<{ success: boolean; refference: string; message: string }> => {
   try {
-    const user = await getUserSession();
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
     if (!user) {
-      return { success: false, message: "Unauthorized" };
+      throw new Error("User not found during deposit finalization");
     }
 
-    if (amount < 500) {
-      return {
-        success: false,
-        message: "Minimum deposit amount is UGX 500",
-      };
-    }
-
-    const refference = await generateTxRef();
     const feeResult = await getTransactionFee({ amount, type: "DEPOSIT" });
     const fee = feeResult.success ? feeResult.amount || 0 : 0;
-
     const admins = await getAdmins();
 
-    const result = await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       // 1. Credit user wallet
       await tx.wallet.create({
         data: {
           userId,
           amount,
           type: "CREDIT",
-          reason: "Mobile Money Deposit",
+          reason,
           refference,
         },
       });
@@ -90,10 +91,10 @@ export const processMobileMoneyDeposit = async (
           type: "DEPOSIT",
           status: "COMPLETED",
           category: "Deposit",
-          method: "Mobile Money",
+          method,
           txn_ref: refference,
           fee,
-          reason: "Mobile Money Deposit",
+          reason,
         },
       });
 
@@ -108,39 +109,77 @@ export const processMobileMoneyDeposit = async (
           path: `/dashboard/user/transactions?query=${refference}`,
         },
       });
-
-      return { success: true, refference, message: "Deposit Successful!" };
     });
 
-    if (result.success) {
-      // Send background email to user
-      if (user.email) {
-        sendDepositEmail({
-          email: user.email,
-          userName: user.name || "User",
-          amount,
-          reference: result.refference,
-          fee,
-        });
-      }
-
-      // Send background email to admins
-      admins.forEach((admin) => {
-        if (admin.email) {
-          sendAdminDepositNoticeEmail({
-            email: admin.email,
-            userName: user.name || "User",
-            adminName: admin.name || "Admin",
-            amount,
-            reference: result.refference,
-            fee,
-          });
-        }
+    // Send emails in background
+    if (user.email) {
+      sendDepositEmail({
+        email: user.email,
+        userName: user.name || "User",
+        amount,
+        reference: refference,
+        fee,
       });
     }
 
+    admins.forEach((admin) => {
+      if (admin.email) {
+        sendAdminDepositNoticeEmail({
+          email: admin.email,
+          userName: user.name || "User",
+          adminName: admin.name || "Admin",
+          amount,
+          reference: refference,
+          fee,
+        });
+      }
+    });
+
     revalidatePath("/dashboard/user/wallet");
-    return result;
+    revalidatePath("/dashboard/user/transactions");
+
+    return { success: true, refference, message: "Deposit Successful!" };
+  } catch (error) {
+    console.error("Error finalizing deposit:", error);
+    throw error;
+  }
+};
+
+/**
+ * Process Mobile Money deposit for a user
+ * @param userId - User ID
+ * @param amount - Amount to deposit
+ * @returns Success/error status
+ */
+export const processMobileMoneyDeposit = async (
+  userId: number,
+  amount: number,
+): Promise<{ success: boolean; refference?: string; message: string }> => {
+  try {
+    const user = await getUserSession();
+    if (!user) {
+      return { success: false, message: "Unauthorized" };
+    }
+
+    if (amount < 500) {
+      return {
+        success: false,
+        message: "Minimum deposit amount is UGX 500",
+      };
+    }
+
+    const refference = await generateTxRef();
+
+    // In a real mobile money flow, you would call an API here
+    // For now, we simulate success and finalize the deposit
+
+    return await finalizeDeposit({
+      userId,
+      amount,
+      refference,
+      method: "Mobile Money",
+      reason: "Mobile Money Deposit",
+    });
   } catch (error) {
     console.error("Error processing deposit:", error);
     return {

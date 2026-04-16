@@ -1,0 +1,12 @@
+Basic Success Scenarios
+For a standard successful payment with no extra verification required, use:
+Visa: 4242 4242 4242 4242
+Mastercard: 5555 5555 5555 4444
+American Express: 3782 822463 10005
+
+Failure & Error Scenarios
+Use these to check how your server and webhooks handle errors:
+Generic Decline: 4000 0000 0000 0002
+Insufficient Funds: 4000 0000 0000 9995
+Expired Card: 4000 0000 0000 0069
+Incorrect CVC: 4000 0000 0000 0127

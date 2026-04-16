@@ -16,6 +16,11 @@ import {
 import { useAppStore, useNotificationStore } from "@/store";
 import { processMobileMoneyDeposit } from "@/lib/actions/wallet";
 import { getTransactionFee } from "@/lib/actions/fee";
+import { createPaymentIntent } from "@/lib/actions/stripe";
+import { Elements } from "@stripe/react-stripe-js";
+import { getStripe } from "@/lib/stripe-client";
+import { StripePaymentForm } from "./StripePaymentForm";
+import type { Appearance } from "@stripe/stripe-js";
 
 type PaymentModalProps = {
   user: User;
@@ -37,7 +42,7 @@ const SelectMethod: FC<SelectMethodProps> = ({
     {[
       { id: "momo", name: "Mobile Money", icon: Smartphone },
       { id: "card", name: "Card", icon: CreditCard },
-      { id: "ussd", name: "USSD", icon: Banknote },
+      // { id: "ussd", name: "USSD", icon: Banknote },
       {
         id: "qr",
         name: "QR Code",
@@ -73,6 +78,8 @@ const PaymentModal = ({ user, walletBalance }: PaymentModalProps) => {
   const [error, setError] = useState<string | null>(null);
   const [txRef, setTxRef] = useState<string>("");
   const [newWalletBalance, setNewWalletBalance] = useState<number>(0);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [stripePromise] = useState(() => getStripe());
 
   const paymentModal = useAppStore((state) => state.paymentModal);
   const closePaymentModal = useAppStore((state) => state.closePaymentModal);
@@ -81,26 +88,44 @@ const PaymentModal = ({ user, walletBalance }: PaymentModalProps) => {
 
   const handleContinueToReview = async () => {
     const depositAmount = parseFloat(amount);
-    if (isNaN(depositAmount) || depositAmount < 500) {
-      setError("Please enter a valid amount (minimum UGX 500).");
+
+    // Custom validation for Card deposits (Stripe minimums)
+    const minAmount = selectedMethod === "card" ? 5000 : 500;
+
+    if (isNaN(depositAmount) || depositAmount < minAmount) {
+      setError(
+        `Please enter a valid amount (minimum UGX ${minAmount.toLocaleString()}).`,
+      );
       return;
     }
 
     setIsLoading(true);
     setError(null);
     try {
+      // 1. Calculate Fee
       const feeResult = await getTransactionFee({
         amount: depositAmount,
         type: "DEPOSIT",
       });
-      if (feeResult.success) {
-        setFee(feeResult.amount || 0);
-        setStep(2);
-      } else {
+
+      if (!feeResult.success) {
         setError(feeResult.message || "Could not calculate fee.");
+        return;
       }
-    } catch {
-      setError("Failed to fetch transaction fee.");
+
+      setFee(feeResult.amount || 0);
+
+      // 2. If Card, initialize Stripe Payment Intent
+      if (selectedMethod === "card") {
+        const stripeResult = await createPaymentIntent(depositAmount);
+        setClientSecret(stripeResult.clientSecret || null);
+        setTxRef(stripeResult.transactionReference || "");
+      }
+
+      setStep(2);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      setError(err?.message || "Failed to initialize payment process.");
     } finally {
       setIsLoading(false);
     }
@@ -227,69 +252,117 @@ const PaymentModal = ({ user, walletBalance }: PaymentModalProps) => {
             </div>
           ) : step === 2 ? (
             <div className="animate-in slide-in-from-right-4 duration-300">
-              <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl p-6 mb-6 border border-indigo-100 dark:border-indigo-900/30">
-                <div className="text-center mb-6">
-                  <p className="text-indigo-600 dark:text-indigo-400 text-sm font-bold uppercase tracking-wider mb-1">
-                    Total to Pay
-                  </p>
-                  <p className="text-4xl font-black text-gray-900 dark:text-white">
-                    UGX {(parseFloat(amount) + fee).toLocaleString()}
-                  </p>
-                </div>
+              {selectedMethod === "card" && clientSecret ? (
+                <Elements
+                  stripe={stripePromise}
+                  options={{
+                    clientSecret,
+                    appearance: {
+                      theme: "night",
+                      variables: {
+                        colorPrimary: "#4f46e5", // Indigo-600
+                        colorBackground: "#0f172a", // Slate-900
+                        colorText: "#ffffff",
+                        colorDanger: "#ef4444",
+                        fontFamily: "Inter, system-ui, sans-serif",
+                        spacingUnit: "4px",
+                        borderRadius: "12px",
+                      },
+                      rules: {
+                        ".Input": {
+                          border: "1px solid #1e293b", // Slate-800
+                          backgroundColor: "#1e293b",
+                        },
+                        ".Tab": {
+                          border: "1px solid #1e293b",
+                        },
+                      },
+                    } as Appearance,
+                  }}
+                >
+                  <StripePaymentForm
+                    amount={parseFloat(amount)}
+                    transactionReference={txRef}
+                    onCancel={() => setStep(1)}
+                    onSuccess={(reference) => {
+                      setTxRef(reference);
+                      setNewWalletBalance(walletBalance + parseFloat(amount));
+                      setStep(3);
+                      notify(
+                        "SUCCESS",
+                        `Deposit of UGX ${parseFloat(amount).toLocaleString()} successful!`,
+                      );
+                    }}
+                  />
+                </Elements>
+              ) : (
+                <>
+                  <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl p-6 mb-6 border border-indigo-100 dark:border-indigo-900/30">
+                    <div className="text-center mb-6">
+                      <p className="text-indigo-600 dark:text-indigo-400 text-sm font-bold uppercase tracking-wider mb-1">
+                        Total to Pay
+                      </p>
+                      <p className="text-4xl font-black text-gray-900 dark:text-white">
+                        UGX {(parseFloat(amount) + fee).toLocaleString()}
+                      </p>
+                    </div>
 
-                <div className="space-y-3 border-t border-indigo-100 dark:border-indigo-900/30 pt-4">
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">
-                      Deposit Amount
-                    </span>
-                    <span className="font-bold text-gray-900 dark:text-white">
-                      UGX {parseFloat(amount).toLocaleString()}
-                    </span>
+                    <div className="space-y-3 border-t border-indigo-100 dark:border-indigo-900/30 pt-4">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-500 dark:text-gray-400">
+                          Deposit Amount
+                        </span>
+                        <span className="font-bold text-gray-900 dark:text-white">
+                          UGX {parseFloat(amount).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                          Transaction Fee{" "}
+                          <Info size={14} className="text-indigo-400" />
+                        </span>
+                        <span className="font-bold text-indigo-600 dark:text-indigo-400">
+                          + UGX {fee.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-sm pt-2 border-t border-indigo-100/50 dark:border-indigo-900/10">
+                        <span className="text-gray-500 dark:text-gray-400 font-medium">
+                          Payment Method
+                        </span>
+                        <span className="font-bold text-gray-900 dark:text-white capitalize">
+                          {selectedMethod === "momo"
+                            ? "Mobile Money"
+                            : selectedMethod}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                      Transaction Fee{" "}
-                      <Info size={14} className="text-indigo-400" />
-                    </span>
-                    <span className="font-bold text-indigo-600 dark:text-indigo-400">
-                      + UGX {fee.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center text-sm pt-2 border-t border-indigo-100/50 dark:border-indigo-900/10">
-                    <span className="text-gray-500 dark:text-gray-400 font-medium">
-                      Payment Method
-                    </span>
-                    <span className="font-bold text-gray-900 dark:text-white capitalize">
-                      {selectedMethod === "momo"
-                        ? "Mobile Money"
-                        : selectedMethod}
-                    </span>
-                  </div>
-                </div>
-              </div>
 
-              <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-100 dark:border-amber-900/30 mb-6">
-                <Smartphone
-                  className="text-amber-600 dark:text-amber-500 shrink-0 mt-0.5"
-                  size={18}
-                />
-                <p className="text-xs text-amber-800 dark:text-amber-400 leading-relaxed">
-                  After clicking confirm, please have your phone nearby. You
-                  will receive a secure prompt to enter your Mobile Money PIN.
-                </p>
-              </div>
+                  <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-100 dark:border-amber-900/30 mb-6">
+                    <Smartphone
+                      className="text-amber-600 dark:text-amber-500 shrink-0 mt-0.5"
+                      size={18}
+                    />
+                    <p className="text-xs text-amber-800 dark:text-amber-400 leading-relaxed">
+                      After clicking confirm, please have your phone nearby. You
+                      will receive a secure prompt to enter your Mobile Money
+                      PIN.
+                    </p>
+                  </div>
 
-              <button
-                onClick={handleDeposit}
-                disabled={isLoading}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 active:scale-95"
-              >
-                {isLoading ? (
-                  <Loader2 size={24} className="animate-spin" />
-                ) : (
-                  "Confirm and Pay"
-                )}
-              </button>
+                  <button
+                    onClick={handleDeposit}
+                    disabled={isLoading}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 active:scale-95"
+                  >
+                    {isLoading ? (
+                      <Loader2 size={24} className="animate-spin" />
+                    ) : (
+                      "Confirm and Pay"
+                    )}
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             <div className="text-center py-4 animate-in zoom-in duration-500">
