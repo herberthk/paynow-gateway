@@ -406,7 +406,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                                 </span>
                                 <span className="font-bold text-indigo-600 dark:text-indigo-400">
                                   {tx.currency}{" "}
-                                  {(tx.amount * 1.01).toLocaleString()}
+                                  {(tx.amount + tx.fee).toLocaleString()}
                                 </span>
                               </div>
                             </div>

@@ -36,10 +36,8 @@ export async function POST(req: Request) {
       try {
         // Extract receipt_url if available (User mentioned it's in the object)
         // Usually it's in latest_charge or charges array
-        const receiptUrl =
-          session.receipt_url ||
-          session.charges?.data?.[0]?.receipt_url ||
-          session.latest_charge?.receipt_url;
+        const receiptUrl = session.receipt_url;
+        console.log("Reciept url", receiptUrl);
 
         await finalizeDeposit({
           userId: parseInt(userId),

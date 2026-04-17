@@ -28,6 +28,7 @@ declare global {
     txn_ref?: string;
     fee: number;
     reason?: string;
+    receiptUrl?: string;
   }
 
   interface Wallet {

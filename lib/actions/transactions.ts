@@ -55,6 +55,7 @@ export const getTransactions = async ({
                 fee: tx.fee.toNumber(),
                 displayName: tx.displayName!,
                 reason: tx.reason!,
+                receiptUrl: tx.receiptUrl!,
               },
             ]
           : [],
@@ -109,6 +110,7 @@ export const getTransactions = async ({
       fee: tx.fee.toNumber(),
       displayName: tx.displayName!,
       reason: tx.reason!,
+      receiptUrl: tx.receiptUrl!,
     }));
 
     return {
