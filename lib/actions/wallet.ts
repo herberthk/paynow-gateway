@@ -157,7 +157,6 @@ export const finalizeDeposit = async ({
  * @returns Success/error status
  */
 export const processMobileMoneyDeposit = async (
-  userId: number,
   amount: number,
 ): Promise<{ success: boolean; refference?: string; message: string }> => {
   try {
@@ -675,10 +674,14 @@ export const getTransactionByRef = async (ref: string) => {
       where: { txn_ref: ref },
     });
 
-    if (!transaction) return { success: false, message: "Transaction not found" };
+    if (!transaction)
+      return { success: false, message: "Transaction not found" };
 
     // Security check: Ensure the transaction belongs to the user
-    if (transaction.userId !== session.id && transaction.recipientId !== session.id) {
+    if (
+      transaction.userId !== session.id &&
+      transaction.recipientId !== session.id
+    ) {
       return { success: false, message: "Unauthorized access to transaction" };
     }
 

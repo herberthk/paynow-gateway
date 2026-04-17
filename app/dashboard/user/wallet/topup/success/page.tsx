@@ -4,8 +4,6 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   CheckCircle2,
-  ArrowLeft,
-  ExternalLink,
   Download,
   Calendar,
   Hash,

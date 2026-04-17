@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Smartphone,
@@ -20,7 +20,6 @@ import { Elements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe-client";
 import { StripePaymentForm } from "@/components/global/StripePaymentForm";
 import type { Appearance } from "@stripe/stripe-js";
-import Link from "next/link";
 
 export default function TopUpPage() {
   const router = useRouter();
@@ -82,7 +81,7 @@ export default function TopUpPage() {
     setError(null);
     try {
       // In a real app, we'd get the user ID from the session on the server
-      const result = await processMobileMoneyDeposit(0, parseFloat(amount));
+      const result = await processMobileMoneyDeposit(parseFloat(amount));
 
       if (result.success) {
         router.push(
