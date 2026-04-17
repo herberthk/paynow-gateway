@@ -4,7 +4,6 @@ import {
   X,
   Smartphone,
   CreditCard,
-  Banknote,
   QrCode,
   Loader2,
   AlertCircle,
@@ -68,7 +67,7 @@ const SelectMethod: FC<SelectMethodProps> = ({
   </div>
 );
 
-const PaymentModal = ({ user, walletBalance }: PaymentModalProps) => {
+const PaymentModal = ({ walletBalance }: PaymentModalProps) => {
   const notify = useNotificationStore((state) => state.notify);
   const [selectedMethod, setSelectedMethod] = useState<string>("momo");
   const [step, setStep] = useState(1); // 1: Input, 2: Review, 3: Success
@@ -147,7 +146,7 @@ const PaymentModal = ({ user, walletBalance }: PaymentModalProps) => {
     setError(null);
 
     try {
-      const result = await processMobileMoneyDeposit(user.id, depositAmount);
+      const result = await processMobileMoneyDeposit(depositAmount);
       // console.log("result", result);
       if (result.success) {
         setTxRef(result?.refference || "");
