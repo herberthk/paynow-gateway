@@ -21,7 +21,7 @@ import { getStripe } from "@/lib/stripe-client";
 import { StripePaymentForm } from "@/components/global/StripePaymentForm";
 import type { Appearance } from "@stripe/stripe-js";
 
-export default function TopUpPage() {
+export default function TopupForm() {
   const router = useRouter();
 
   const [selectedMethod, setSelectedMethod] = useState<string>("momo");
@@ -80,7 +80,6 @@ export default function TopUpPage() {
     setIsLoading(true);
     setError(null);
     try {
-      // In a real app, we'd get the user ID from the session on the server
       const result = await processMobileMoneyDeposit(parseFloat(amount));
 
       if (result.success) {

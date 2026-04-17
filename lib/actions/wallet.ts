@@ -123,6 +123,7 @@ export const finalizeDeposit = async ({
         reference: refference,
         fee,
         receiptUrl,
+        method,
       });
     }
 
@@ -136,6 +137,7 @@ export const finalizeDeposit = async ({
           reference: refference,
           fee,
           receiptUrl,
+          method,
         });
       }
     });
@@ -687,7 +689,16 @@ export const getTransactionByRef = async (ref: string) => {
 
     return {
       success: true,
-      transaction: JSON.parse(JSON.stringify(transaction)),
+      transaction: {
+        ...transaction,
+        amount: transaction.amount.toNumber(),
+        fee: transaction.fee.toNumber(),
+        createdAt: transaction.createdAt.toISOString(),
+        updatedAt: transaction.updatedAt.toISOString(),
+        receiptUrl: transaction.receiptUrl!,
+        displayName: transaction.displayName!,
+        reason: transaction.reason!,
+      },
     };
   } catch (error) {
     console.error("Error fetching transaction:", error);
