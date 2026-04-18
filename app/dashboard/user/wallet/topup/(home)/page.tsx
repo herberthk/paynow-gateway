@@ -1,5 +1,7 @@
 import TopupForm from "@/components/user/TopupForm";
 
-export default async function TopUpPage() {
+const TopUpPage = async () => {
   return <TopupForm />;
-}
+};
+
+export default TopUpPage;

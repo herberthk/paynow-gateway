@@ -61,7 +61,10 @@ const TopupForm = () => {
 
       if (selectedMethod === "card") {
         const totalAmount = depositAmount + (feeResult?.amount || 0);
-        const stripeResult = await createPaymentIntent(totalAmount, depositAmount);
+        const stripeResult = await createPaymentIntent(
+          totalAmount,
+          depositAmount,
+        );
         setClientSecret(stripeResult.clientSecret || null);
         setTxRef(stripeResult.transactionReference || "");
         setStep(2);
@@ -85,7 +88,7 @@ const TopupForm = () => {
 
       if (result.success) {
         router.push(
-          `/dashboard/user/wallet/topup/success?ref=${result.refference}&amount=${amount}&method=Mobile Money&fee=${fee}`,
+          `/dashboard/user/wallet/topup/success?ref=${result.refference}`,
         );
       } else {
         setError(result.message || "Mobile Money payment failed");
