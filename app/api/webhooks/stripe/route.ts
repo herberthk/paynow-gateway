@@ -31,7 +31,7 @@ export async function POST(req: Request) {
   const session = event.data.object as any;
   const receiptUrl = session.receipt_url as string;
   if (event.type === "payment_intent.succeeded") {
-    const { userId, transactionReference, type } = session.metadata;
+    const { userId, transactionReference, type, baseAmount } = session.metadata;
 
     if (type === "wallet_topup") {
       try {
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
         console.log("Reciept url", receiptUrl);
         await finalizeDeposit({
           userId: parseInt(userId),
-          amount: session.amount / 100,
+          amount: parseFloat(baseAmount), // Use the base amount from metadata
           refference: transactionReference,
           method: "Card (Stripe)",
           reason: "Card Top-up via Stripe",

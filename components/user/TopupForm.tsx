@@ -61,7 +61,7 @@ const TopupForm = () => {
 
       if (selectedMethod === "card") {
         const totalAmount = depositAmount + (feeResult?.amount || 0);
-        const stripeResult = await createPaymentIntent(totalAmount);
+        const stripeResult = await createPaymentIntent(totalAmount, depositAmount);
         setClientSecret(stripeResult.clientSecret || null);
         setTxRef(stripeResult.transactionReference || "");
         setStep(2);
