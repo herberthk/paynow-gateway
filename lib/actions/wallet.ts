@@ -612,6 +612,7 @@ type CreateWalletTransaction = {
   reason: string;
   userId: number;
 };
+
 export const createWalletTransaction = async ({
   refference,
   amount,
