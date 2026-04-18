@@ -21,7 +21,7 @@ import { getStripe } from "@/lib/stripe-client";
 import { StripePaymentForm } from "@/components/global/StripePaymentForm";
 import type { Appearance } from "@stripe/stripe-js";
 
-export default function TopupForm() {
+const TopupForm = () => {
   const router = useRouter();
 
   const [selectedMethod, setSelectedMethod] = useState<string>("momo");
@@ -60,7 +60,8 @@ export default function TopupForm() {
       setFee(feeResult.amount || 0);
 
       if (selectedMethod === "card") {
-        const stripeResult = await createPaymentIntent(depositAmount);
+        const totalAmount = depositAmount + (feeResult?.amount || 0);
+        const stripeResult = await createPaymentIntent(totalAmount);
         setClientSecret(stripeResult.clientSecret || null);
         setTxRef(stripeResult.transactionReference || "");
         setStep(2);
@@ -306,7 +307,7 @@ export default function TopupForm() {
                         onCancel={() => setStep(1)}
                         onSuccess={(reference) => {
                           router.push(
-                            `/dashboard/user/wallet/topup/success?ref=${reference}&amount=${amount}&method=Card&fee=${fee}`,
+                            `/dashboard/user/wallet/topup/success?ref=${reference}`,
                           );
                         }}
                       />
@@ -439,4 +440,6 @@ export default function TopupForm() {
       </div>
     </div>
   );
-}
+};
+
+export default TopupForm;

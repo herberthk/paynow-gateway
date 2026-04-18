@@ -29,6 +29,7 @@ export async function POST(req: Request) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const session = event.data.object as any;
+  const receiptUrl = session.receipt_url as string;
   if (event.type === "payment_intent.succeeded") {
     const { userId, transactionReference, type } = session.metadata;
 
@@ -36,9 +37,7 @@ export async function POST(req: Request) {
       try {
         // Extract receipt_url if available (User mentioned it's in the object)
         // Usually it's in latest_charge or charges array
-        const receiptUrl = session.receipt_url;
         console.log("Reciept url", receiptUrl);
-
         await finalizeDeposit({
           userId: parseInt(userId),
           amount: session.amount / 100,

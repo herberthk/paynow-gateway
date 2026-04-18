@@ -44,7 +44,7 @@ export const finalizeDeposit = async ({
     const feeResult = await getTransactionFee({ amount, type: "DEPOSIT" });
     const fee = feeResult.success ? feeResult.amount || 0 : 0;
     const admins = await getAdmins();
-
+    console.log("Receipt url from finalizeDeposit", receiptUrl);
     await prisma.$transaction(async (tx) => {
       // 1. Credit user wallet
       await tx.wallet.create({
