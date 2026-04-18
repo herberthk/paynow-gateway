@@ -21,7 +21,7 @@ interface SuccessViewProps {
 const SuccessView = ({ transaction }: SuccessViewProps) => {
   const router = useRouter();
   const amount = transaction.amount;
-  console.log("transaction", transaction);
+  // console.log("transaction", transaction);
   return (
     <div className="max-w-2xl mx-auto px-4 py-12 lg:py-20">
       <motion.div

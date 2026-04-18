@@ -2,29 +2,13 @@ import { getTransactionByRef } from "@/lib/actions/wallet";
 import SuccessView from "@/components/user/SuccessView";
 import { AlertCircle } from "lucide-react";
 import Link from "next/link";
+import type { FC } from "react";
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default async function SuccessPage({ searchParams }: PageProps) {
-  const params = await searchParams;
-  const ref = typeof params.ref === "string" ? params.ref : null;
-
-  if (!ref) {
-    return <ErrorState message="Missing transaction reference" />;
-  }
-
-  const result = await getTransactionByRef(ref);
-
-  if (!result.success || !result.transaction) {
-    return <ErrorState message={result.message || "Transaction not found"} />;
-  }
-
-  return <SuccessView transaction={result.transaction} />;
-}
-
-function ErrorState({ message }: { message: string }) {
+const ErrorState = ({ message }: { message: string }) => {
   return (
     <div className="max-w-md mx-auto mt-20 p-8 bg-white dark:bg-slate-900 rounded-3xl shadow-xl text-center border border-gray-100 dark:border-slate-800">
       <div className="w-16 h-16 bg-red-50 dark:bg-red-900/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -42,4 +26,23 @@ function ErrorState({ message }: { message: string }) {
       </Link>
     </div>
   );
-}
+};
+
+const SuccessPage: FC<PageProps> = async ({ searchParams }) => {
+  const params = await searchParams;
+  const ref = params.ref as string;
+  console.log("ref", ref);
+  if (!ref) {
+    return <ErrorState message="Missing transaction reference" />;
+  }
+
+  const result = await getTransactionByRef(ref);
+
+  if (!result.success || !result.transaction) {
+    return <ErrorState message={result.message || "Transaction not found"} />;
+  }
+
+  return <SuccessView transaction={result.transaction} />;
+};
+
+export default SuccessPage;

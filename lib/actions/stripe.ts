@@ -17,8 +17,8 @@ export async function createPaymentIntent(amount: number) {
     }
 
     if (amount < 5000) {
-       // Stripe has a minimum amount for some currencies, usually ~$0.50. 
-       // 5000 UGX is roughly $1.30, which is safe.
+      // Stripe has a minimum amount for some currencies, usually ~$0.50.
+      // 5000 UGX is roughly $1.30, which is safe.
       throw new Error("Minimum card top-up is UGX 5,000");
     }
 
@@ -35,7 +35,7 @@ export async function createPaymentIntent(amount: number) {
       },
       description: `Wallet top-up for ${user.name || user.email}`,
       // Optionally link to a customer if they exist in Stripe
-      // customer: user.stripeCustomerId, 
+      // customer: user.stripeCustomerId,
     });
 
     return {
@@ -44,6 +44,8 @@ export async function createPaymentIntent(amount: number) {
     };
   } catch (error) {
     console.error("Error creating payment intent:", error);
-    throw new Error(error instanceof Error ? error.message : "Failed to initialize payment");
+    throw new Error(
+      error instanceof Error ? error.message : "Failed to initialize payment",
+    );
   }
 }
