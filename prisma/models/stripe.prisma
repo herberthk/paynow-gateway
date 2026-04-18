@@ -1,0 +1,5 @@
+model ProcessedWebhookEvent {
+  id            String   @id @default(cuid())
+  stripeEventId String   @unique
+  processedAt   DateTime @default(now())
+}

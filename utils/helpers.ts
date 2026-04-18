@@ -57,13 +57,21 @@ export const generateTransactionReference = async (
   length = 8,
 ): Promise<string> => crypto.randomBytes(length).toString("hex").toUpperCase();
 
-export const generateTxRef = async (length = 8) => {
+export const generateTxRef = async (length = 12) => {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  const bytes = crypto.getRandomValues(new Uint8Array(length));
+  // 36 chars fits cleanly into 252 (36 × 7), so reject bytes >= 252
+  const MAX_VALID = 252; // largest multiple of 36 within 0–255
 
   let result = "";
-  for (let i = 0; i < length; i++) {
-    result += chars[bytes[i] % chars.length];
+  while (result.length < length) {
+    const bytes = crypto.getRandomValues(new Uint8Array(length * 2)); // oversample
+    for (const byte of bytes) {
+      if (result.length >= length) break;
+      if (byte < MAX_VALID) {
+        // rejection sampling — no bias
+        result += chars[byte % chars.length];
+      }
+    }
   }
 
   return `TX_${result}`;

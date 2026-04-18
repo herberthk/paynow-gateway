@@ -24,7 +24,8 @@ export const finalizeDeposit = async ({
   method,
   reason,
   receiptUrl,
-  paymentMethod = "MOBILE_MONEY",
+  paymentMethod,
+  stripeEventId,
 }: {
   userId: number;
   amount: number;
@@ -32,6 +33,7 @@ export const finalizeDeposit = async ({
   method: string;
   reason: string;
   receiptUrl?: string;
+  stripeEventId?: string;
   paymentMethod?: PaymentMethodType;
 }): Promise<{ success: boolean; refference: string; message: string }> => {
   try {
@@ -46,8 +48,16 @@ export const finalizeDeposit = async ({
     const feeResult = await getTransactionFee({ amount, type: "DEPOSIT" });
     const fee = feeResult.success ? feeResult.amount || 0 : 0;
     const admins = await getAdmins();
-    console.log("Receipt url from finalizeDeposit", receiptUrl);
+
     await prisma.$transaction(async (tx) => {
+      // ✅ Mark event as processed INSIDE the transaction so it rolls back
+      // atomically if anything below fails.
+      console.log("Stripe Event ID from finalizeDeposit", stripeEventId);
+      if (stripeEventId) {
+        await tx.processedWebhookEvent.create({
+          data: { stripeEventId },
+        });
+      }
       // 1. Credit user wallet
       await tx.wallet.create({
         data: {
@@ -56,7 +66,7 @@ export const finalizeDeposit = async ({
           type: "CREDIT",
           reason,
           refference,
-          paymentMethod,
+          paymentMethod: paymentMethod || "MOBILE_MONEY",
         },
       });
 
@@ -130,20 +140,22 @@ export const finalizeDeposit = async ({
       });
     }
 
-    admins.forEach((admin) => {
-      if (admin.email) {
-        sendAdminDepositNoticeEmail({
-          email: admin.email,
-          userName: user.name || "User",
-          adminName: admin.name || "Admin",
-          amount,
-          reference: refference,
-          fee,
-          receiptUrl,
-          method,
-        });
-      }
-    });
+    if (admins.length > 0) {
+      admins.forEach((admin) => {
+        if (admin.email) {
+          sendAdminDepositNoticeEmail({
+            email: admin.email,
+            userName: user.name || "User",
+            adminName: admin.name || "Admin",
+            amount,
+            reference: refference,
+            fee,
+            receiptUrl,
+            method,
+          });
+        }
+      });
+    }
 
     revalidatePath("/dashboard/user/wallet");
     revalidatePath("/dashboard/user/transactions");
@@ -197,30 +209,6 @@ export const processMobileMoneyDeposit = async (
     };
   }
 };
-
-// export const getUserWallet = async (id: number) => {
-//   const wallet = await prisma.wallet.findFirst({
-//     where: {
-//       userId: id,
-//     },
-//     select: {
-//       amount: true,
-//       id: true,
-//       updatedAt: true,
-//       createdAt: true,
-//       userId: true,
-//       type: true,
-//       reason: true,
-//       refference: true,
-//     },
-//   });
-//   return {
-//     ...wallet,
-//     balance: Number(wallet?.amount),
-//     createdAt: wallet?.createdAt.toDateString(),
-//     updatedAt: wallet?.updatedAt.toDateString(),
-//   };
-// };
 
 /**
  * Calculate total available balance for a user across all wallets

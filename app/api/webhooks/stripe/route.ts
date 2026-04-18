@@ -2,56 +2,77 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { finalizeDeposit } from "@/lib/actions/wallet";
+import type Stripe from "stripe";
+import prisma from "@/lib/prisma";
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const signature = (await headers()).get("Stripe-Signature") as string;
-
-  let event;
+  const signature = (await headers()).get("Stripe-Signature");
+  if (!signature || !process.env.STRIPE_WEBHOOK_SECRET) {
+    return new NextResponse("Webhook Secret Missing", { status: 400 });
+  }
+  let event: Stripe.Event;
 
   try {
-    if (!signature || !process.env.STRIPE_WEBHOOK_SECRET) {
-      return new NextResponse("Webhook Secret Missing", { status: 400 });
-    }
-
     event = stripe.webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET,
     );
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    console.error(`Webhook Error: ${error.message}`);
-    return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error(`Webhook signature verification failed: ${message}`);
+    return new NextResponse(`Webhook Error: ${message}`, { status: 400 });
   }
 
-  console.log("Session", event.data.object);
+  // ✅ Idempotency guard — Stripe retries failed/slow webhooks,
+  // so the same event can arrive more than once.
+  const alreadyProcessed = await prisma.processedWebhookEvent.findUnique({
+    where: { stripeEventId: event.id },
+  });
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const session = event.data.object as any;
-  const receiptUrl = session.receipt_url as string;
+  if (alreadyProcessed) {
+    console.log(`Duplicate webhook event skipped: ${event.id}`);
+    // Must return 200, or Stripe will keep retrying
+    return new NextResponse(null, { status: 200 });
+  }
+  // console.log("Session", event.data.object);
 
   if (event.type === "charge.succeeded") {
-    const { userId, transactionReference, type, baseAmount } = session.metadata;
+    console.log("Event ID from route", event.id);
+    // ✅ Properly typed instead of `as any`
+    const charge = event.data.object as Stripe.Charge;
+    const { userId, transactionReference, type, baseAmount } =
+      charge.metadata ?? {};
 
     if (type === "wallet_topup") {
+      if (!userId || !transactionReference || !baseAmount) {
+        console.error("Missing required metadata on charge:", charge.id);
+        // Return 200 anyway — a 4xx/5xx here causes Stripe to retry forever
+        // but the data is malformed so retrying won't help.
+        return new NextResponse(null, { status: 200 });
+      }
+
       try {
-        console.log("Processing charge.succeeded, Receipt URL:", receiptUrl);
         await finalizeDeposit({
-          userId: parseInt(userId),
+          stripeEventId: event.id, // ✅ Pass event ID for idempotency inside the tx
+          userId: parseInt(userId, 10), // ✅ Always pass radix to parseInt
           amount: parseFloat(baseAmount),
           refference: transactionReference,
           method: "Card (Stripe)",
           reason: "Card Top-up via Stripe",
           paymentMethod: "CARD",
-          receiptUrl,
+          receiptUrl: charge.receipt_url ?? undefined,
         });
 
         console.log(
-          `Successfully processed charge for user ${userId}, ref: ${transactionReference}`,
+          `Processed charge ${charge.id} for user ${userId}, ref: ${transactionReference}`,
         );
       } catch (error) {
         console.error("Error finalizing deposit from webhook:", error);
+        // Return 500 so Stripe retries — but only AFTER idempotency
+        // is handled inside finalizeDeposit, otherwise retries cause
+        // the double-charge bug you hit before.
         return new NextResponse("Error processing deposit", { status: 500 });
       }
     }
