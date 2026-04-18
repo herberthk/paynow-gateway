@@ -9,7 +9,7 @@ import { generateTxRef } from "@/utils";
  * @param amount - Amount in UGX
  * @returns Client secret for the PaymentIntent
  */
-export async function createPaymentIntent(amount: number) {
+export async function createPaymentIntent(amount: number, baseAmount: number) {
   try {
     const user = await getUserSession();
     if (!user) {
@@ -31,6 +31,7 @@ export async function createPaymentIntent(amount: number) {
       metadata: {
         userId: user.id.toString(),
         transactionReference,
+        baseAmount: baseAmount.toString(),
         type: "wallet_topup",
       },
       description: `Wallet top-up for ${user.name || user.email}`,
