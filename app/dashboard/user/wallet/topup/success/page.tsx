@@ -28,6 +28,8 @@ const ErrorState = ({ message }: { message: string }) => {
   );
 };
 
+import TransactionWaiter from "@/components/user/TransactionWaiter";
+
 const SuccessPage: FC<PageProps> = async ({ searchParams }) => {
   const params = await searchParams;
   const ref = params.ref as string;
@@ -39,6 +41,10 @@ const SuccessPage: FC<PageProps> = async ({ searchParams }) => {
   const result = await getTransactionByRef(ref);
 
   if (!result.success || !result.transaction) {
+    // If transaction not found, show the waiter to poll for it
+    if (result.message === "Transaction not found") {
+      return <TransactionWaiter txnRef={ref} />;
+    }
     return <ErrorState message={result.message || "Transaction not found"} />;
   }
 
