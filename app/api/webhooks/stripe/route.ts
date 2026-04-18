@@ -30,17 +30,16 @@ export async function POST(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const session = event.data.object as any;
   const receiptUrl = session.receipt_url as string;
-  if (event.type === "payment_intent.succeeded") {
+
+  if (event.type === "charge.succeeded") {
     const { userId, transactionReference, type, baseAmount } = session.metadata;
 
     if (type === "wallet_topup") {
       try {
-        // Extract receipt_url if available (User mentioned it's in the object)
-        // Usually it's in latest_charge or charges array
-        console.log("Reciept url", receiptUrl);
+        console.log("Processing charge.succeeded, Receipt URL:", receiptUrl);
         await finalizeDeposit({
           userId: parseInt(userId),
-          amount: parseFloat(baseAmount), // Use the base amount from metadata
+          amount: parseFloat(baseAmount),
           refference: transactionReference,
           method: "Card (Stripe)",
           reason: "Card Top-up via Stripe",
@@ -48,7 +47,7 @@ export async function POST(req: Request) {
         });
 
         console.log(
-          `Successfully processed deposit for user ${userId}, ref: ${transactionReference}`,
+          `Successfully processed charge for user ${userId}, ref: ${transactionReference}`,
         );
       } catch (error) {
         console.error("Error finalizing deposit from webhook:", error);
