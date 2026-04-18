@@ -56,6 +56,8 @@ declare global {
   };
   type FeeCategory = "DEPOSIT" | "WITHDRAWAL" | "TRANSFER" | "PAYMENT";
   type FeeType = "FIXED" | "PERCENTAGE";
+
+  type PaymentMethodType = "CARD" | "MOBILE_MONEY" | "BANK";
 }
 
 export {};

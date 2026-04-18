@@ -24,6 +24,7 @@ export const finalizeDeposit = async ({
   method,
   reason,
   receiptUrl,
+  paymentMethod = "MOBILE_MONEY",
 }: {
   userId: number;
   amount: number;
@@ -31,6 +32,7 @@ export const finalizeDeposit = async ({
   method: string;
   reason: string;
   receiptUrl?: string;
+  paymentMethod?: PaymentMethodType;
 }): Promise<{ success: boolean; refference: string; message: string }> => {
   try {
     const user = await prisma.user.findUnique({
@@ -54,6 +56,7 @@ export const finalizeDeposit = async ({
           type: "CREDIT",
           reason,
           refference,
+          paymentMethod,
         },
       });
 
