@@ -43,6 +43,7 @@ export async function POST(req: Request) {
           refference: transactionReference,
           method: "Card (Stripe)",
           reason: "Card Top-up via Stripe",
+          paymentMethod: "CARD",
           receiptUrl,
         });
 

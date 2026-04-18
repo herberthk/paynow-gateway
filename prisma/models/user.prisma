@@ -70,10 +70,12 @@ model Wallet {
   type LedgerType @default(CREDIT)
   reason String?
   refference String
+  paymentMethod PaymentMethodType @default(MOBILE_MONEY)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   @@index([createdAt])
   @@index([refference])
+  @@index([paymentMethod])
   @@index([userId])
   @@index([type])
   @@map("payment_wallets")
