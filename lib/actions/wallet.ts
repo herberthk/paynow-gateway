@@ -142,9 +142,9 @@ export const finalizeDeposit = async ({
 
     if (admins.length > 0) {
       await Promise.all(
-        admins.map((admin) => {
+        admins.map(async (admin) => {
           if (admin.email) {
-            sendAdminDepositNoticeEmail({
+            await sendAdminDepositNoticeEmail({
               email: admin.email,
               userName: user.name || "User",
               adminName: admin.name || "Admin",
