@@ -127,9 +127,9 @@ export const finalizeDeposit = async ({
       });
     });
 
-    // Send emails in background
+    // Send emails
     if (user.email) {
-      sendDepositEmail({
+      await sendDepositEmail({
         email: user.email,
         userName: user.name || "User",
         amount,
@@ -141,20 +141,22 @@ export const finalizeDeposit = async ({
     }
 
     if (admins.length > 0) {
-      admins.forEach((admin) => {
-        if (admin.email) {
-          sendAdminDepositNoticeEmail({
-            email: admin.email,
-            userName: user.name || "User",
-            adminName: admin.name || "Admin",
-            amount,
-            reference: refference,
-            fee,
-            receiptUrl,
-            method,
-          });
-        }
-      });
+      await Promise.all(
+        admins.map((admin) => {
+          if (admin.email) {
+            sendAdminDepositNoticeEmail({
+              email: admin.email,
+              userName: user.name || "User",
+              adminName: admin.name || "Admin",
+              amount,
+              reference: refference,
+              fee,
+              receiptUrl,
+              method,
+            });
+          }
+        }),
+      );
     }
 
     revalidatePath("/dashboard/user/wallet");
