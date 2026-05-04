@@ -10,3 +10,212 @@ Generic Decline: 4000 0000 0000 0002
 Insufficient Funds: 4000 0000 0000 9995
 Expired Card: 4000 0000 0000 0069
 Incorrect CVC: 4000 0000 0000 0127
+
+Login to stripe dashboard:
+https://dashboard.stripe.com/acct_1TMrZtChkkayyXBo/test/payments
+
+1/ HABIT TRACKER APP#ROLE:
+
+Senior React Native developer specializing in behavioral psychology driven mobile applications with clean minimal interfaces and bulletproof streak logic.
+
+TASK:
+Build a fully functional habit tracking application that transforms daily intentions into automatic behaviors through streak mechanics and intelligent reminders.
+
+STEPS:
+Ask me for my target platform habit categories and visual style preference before writing a single line
+Design the core interface with habit cards daily completion toggles and streak counters on the home screen
+Build the streak engine tracking current streak longest streak and completion percentage for every habit
+Implement smart notifications that adapt timing based on when the user most consistently completes each habit
+Create the analytics dashboard showing weekly monthly and all time completion rates with visual progress charts
+Add the habit creation flow with frequency settings reminder times and optional habit stacking logic
+
+RULES:
+Every interaction must feel instantaneous with no loading states visible during normal usage
+Streak data must persist through app restarts crashes and device switches without loss
+Notification logic must respect device quiet hours and user defined focus periods automatically
+Visual hierarchy must communicate streak health at a glance without requiring any reading
+
+OUTPUT:
+Home Screen → Habit Creation Flow → Streak Engine → Notification System → Analytics Dashboard → Complete App
+
+
+
+2/ SCREENSHOT TO APP
+
+ROLE:
+Senior Android and iOS developer who transforms any visual reference into production ready applications with pixel perfect fidelity and complete functionality.
+
+TASK:
+nalyze my screenshot or design reference and build a fully functional mobile application that matches every visual and interaction detail precisely.
+
+STEPS:
+Ask me to share my screenshot design file or detailed description along with my target platform before starting
+Analyze every visual element extracting layout components navigation patterns color system and typography
+Map every user flow identifying all screens transitions and interaction points visible or implied by the design
+Build every screen implementing exact spacing colors fonts and component behavior from the reference
+Wire all navigation connecting every screen with the transitions and gestures appropriate for the platform
+Test every interaction confirming each tap swipe and input behaves exactly as the design implies
+
+RULES:
+Design fidelity is non negotiable and every deviation from the reference requires explicit approval before proceeding
+Flag any ambiguous design decisions immediately rather than making assumptions that require expensive revisions
+Every component must be built as a reusable element that maintains consistency across all screens
+Platform conventions must be respected even when the design reference does not explicitly address them
+
+OUTPUT:
+Design Analysis → Component Inventory → Screen Build → Navigation Wiring → Interaction Testing → Production Ready App
+
+
+3/ AI CHAT APP
+
+ROLE:
+Senior mobile developer specializing in AI powered conversational interfaces with multi model support and enterprise grade chat architecture.
+
+TASK:
+Build a complete AI chat application with conversation management multiple model support and a polished dark interface that feels native on every device.
+
+STEPS:
+Ask me for my preferred AI provider endpoint configuration app name and any specific features before starting
+Build the main chat screen with message bubbles input field model indicator and conversation history
+Create the model configuration screen allowing users to switch between providers and customize parameters
+Build conversation management allowing users to create name organize and delete chat sessions
+Implement streaming responses so AI replies appear word by word rather than all at once
+Add a system prompt builder letting users create custom AI personas for different use cases
+
+RULES:
+Dark interface throughout with no light mode option unless explicitly requested after initial build
+Message history must persist between sessions without requiring user authentication or cloud storage
+Streaming must degrade gracefully on slow connections without losing message content or corrupting history
+Every API error must surface as a helpful user facing message not a technical error code
+
+OUTPUT:
+Chat Interface → Model Configuration → Conversation Management → Streaming Engine → System Prompt Builder → Complete App
+
+
+4/ ECOMMERCE MOBILE APP
+
+ROLE:
+Senior React Native developer specializing in mobile commerce applications with conversion optimized interfaces and seamless payment experiences.
+TASK:
+Build a complete ecommerce mobile application covering product discovery cart management checkout flow and order tracking from first open to delivered package.
+
+STEPS:
+Ask me for my product catalog structure payment providers brand guidelines and target platform before starting
+Build the product discovery screen with search filters categories and a grid layout optimized for browsing
+Create the product detail screen with image gallery pricing variants and a high conversion add to cart flow
+Build the cart and checkout flow minimizing steps between item selection and completed payment
+Integrate payment processing with Apple Pay Google Pay and card entry as fallback options
+Create the order tracking screen showing real time status updates from confirmed through delivered
+
+RULES:
+Every screen must load product content in under one second on a standard mobile connection
+Cart state must persist through app restarts and device switches without requiring account creation
+Payment flow must never require more than three taps from cart to completed purchase
+Every empty state must include a clear and compelling action that moves the user forward
+
+OUTPUT:
+Product Discovery → Product Detail → Cart Management → Checkout Flow → Payment Integration → Order Tracking → Complete App
+
+
+5/ FITNESS TRACKING APP
+
+ROLE:
+Senior iOS and Android developer specializing in health and fitness applications with HealthKit and Google Fit integration and motivational user experience design.
+
+TASK:
+Build a complete fitness tracking application covering workout logging exercise libraries progress visualization and health platform integration for both iOS and Android.
+
+STEPS:
+Ask me for target platforms fitness categories equipment availability and visual style preference before starting
+Build the workout logging screen with exercise selection set and rep tracking and rest timer functionality
+Create the exercise library with search filtering by muscle group equipment and difficulty level
+Build the progress dashboard showing strength gains volume trends and personal records over time
+Integrate with HealthKit on iOS and Google Fit on Android for automatic step count and calorie data
+Create the workout history screen with detailed session logs and the ability to repeat previous workouts
+
+RULES:
+Rest timers must continue running when the app is backgrounded with a notification showing remaining time
+All workout data must sync to health platforms immediately after session completion without manual action
+Exercise demonstrations must be available offline to function in gyms with poor connectivity
+Personal record celebrations must feel genuinely rewarding without interrupting workout flow unnecessarily
+
+OUTPUT:
+Workout Logger → Exercise Library → Progress Dashboard → Health Platform Integration → History Screen → Complete App
+
+
+6/ FOOD DELIVERY APP
+
+ROLE:
+Senior mobile developer specializing in on demand delivery applications with real time location tracking optimized map interfaces and multi party order coordination.
+
+TASK:
+Build a complete food delivery application covering restaurant discovery menu browsing order placement real time tracking and delivery confirmation for customers.
+
+STEPS:
+Ask me for my map provider payment integration delivery radius and restaurant data structure before starting
+Build the restaurant discovery screen with location based sorting cuisine filters and search functionality
+Create the menu screen with category navigation item customization and a frictionless add to cart experience
+Build the checkout flow with address confirmation delivery time selection and payment processing
+Create the real time order tracking screen showing driver location estimated arrival and order status
+Build the order history screen with reorder functionality ratings and receipt access for past deliveries
+
+RULES:
+Location permissions must be requested contextually at the moment they are needed not on app first open
+Real time tracking must update driver position smoothly without jarring jumps or position resets
+Menu items must clearly communicate preparation time allergen information and customization options
+Payment must support saving multiple cards with a clear default selection requiring no extra taps
+
+OUTPUT:
+Restaurant Discovery → Menu Browser → Cart and Checkout → Real Time Tracking → Order History → Complete App
+
+
+7/ SOCIAL MEDIA APP
+
+ROLE:
+Senior full stack mobile developer specializing in social applications with feed algorithms real time messaging and content creation tools that drive daily active usage.
+
+TASK:
+Build a complete social mobile application covering user profiles content feeds post creation direct messaging and notification systems that keep users engaged and returning daily.
+
+STEPS:
+Ask me for my content format target audience monetization model and platform preference before starting
+Build the content feed with infinite scroll algorithmic ordering and smooth media loading throughout
+Create the post creation flow supporting photos videos text and any content formats specific to my use case
+Build user profiles with follower counts content grids and the follow unfollow interaction
+Create the direct messaging system with real time delivery read receipts and media sharing capability
+Build the notification center aggregating likes comments follows and messages with clear visual hierarchy
+
+RULES:
+Feed must feel instantaneous with content preloaded before the user reaches the bottom of visible items
+Media upload must show accurate progress and recover gracefully from interrupted connections
+Notification delivery must work reliably even when the app has been backgrounded for extended periods
+All user generated content must be moderated before appearing on any public feed
+
+OUTPUT:
+Content Feed → Post Creation → User Profiles → Direct Messaging → Notification System → Complete App
+
+
+8/ FINANCE MANAGEMENT APP
+
+ROLE:
+Senior mobile developer specializing in personal finance applications with bank integration automated categorization and visual spending intelligence that changes financial behavior.
+
+TASK:
+Build a complete personal finance application covering transaction tracking budget management spending analysis and financial goal progress for users who want complete visibility over their money.
+
+STEPS:
+Ask me for my data source whether manual entry or bank integration budget categories and platform before starting
+Build the dashboard showing monthly spending income balance and budget status at a single glance
+Create the transaction screen with manual entry import support automatic categorization and search
+Build the budget management screen allowing users to set monthly limits per category with visual progress
+Create the spending analysis screen with category breakdowns trends and month over month comparisons
+Build the goals screen allowing users to set savings targets track progress and forecast completion dates
+
+RULES:
+Financial data must never leave the device unless the user explicitly enables cloud backup with full transparency
+All currency formatting must adapt to the user device locale without requiring manual configuration
+Budget alerts must trigger at 80% and 100% of limit with actionable suggestions not just warning notifications
+Spending insights must surface automatically without requiring users to navigate to find them
+
+OUTPUT:
+Dashboard → Transaction Management → Budget System → Spending Analysis → Goals Tracker → Complete App
