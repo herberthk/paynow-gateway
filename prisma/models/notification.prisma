@@ -1,0 +1,21 @@
+model SystemNotification {
+  id        String   @id @default(uuid())
+  fromUserId    Int //Sender userId
+  toUserId    Int // Recipient userId
+  title     String
+  message   String
+  path      String // Path to redirect to
+  type      NotificationType @default(INFO)
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  @@index([fromUserId,type,toUserId])
+  @@index([createdAt])
+  @@map("payment_system_notifications")
+}
+
+enum NotificationType {
+  ALERT
+  INFO
+  SUCCESS
+}

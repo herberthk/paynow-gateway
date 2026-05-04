@@ -1,0 +1,24 @@
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount Decimal  @default(0) @db.Decimal(12, 2)
+  currency Currency @default(UGX)
+  type LedgerType @default(CREDIT)
+  reason String?
+  refference String
+  paymentMethod PaymentMethodType @default(MOBILE_MONEY)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  @@index([createdAt])
+  @@index([refference])
+  @@index([paymentMethod])
+  @@index([userId])
+  @@index([type])
+  @@map("payment_wallets")
+}
+
+enum Currency {
+  UGX
+  USD
+}

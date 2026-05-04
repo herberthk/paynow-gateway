@@ -1,0 +1,11 @@
+model Otp{
+  id String @id @default(uuid())
+  userId Int @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  otpHash String
+  expiresAt  DateTime
+  createdAt DateTime @default(now())
+  attempts Int @default(0)
+  @@index([expiresAt])
+  @@map("Payment_otp")
+}

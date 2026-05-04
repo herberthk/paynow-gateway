@@ -1,5 +1,8 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="./transaction.d.ts" />
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+/// <reference path="./other.d.ts" />
+
 import { type LucideIcon } from "lucide-react";
 declare global {
   type UserRole = "USER" | "ADMIN";
@@ -127,7 +130,7 @@ declare global {
     type: "PERCENTAGE" | "FIXED";
     value: number;
     currency?: Currency;
-    category: "DEPOSIT" | "WITHDRAWAL" | "TRANSFER" | "PAYMENT";
+    category: "DEPOSIT" | "WITHDRAWAL" | "TRANSFER" | "PAYMENT" | "SUPPORT";
     active: boolean;
     lastUpdated: string;
   }

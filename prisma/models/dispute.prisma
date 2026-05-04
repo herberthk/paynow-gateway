@@ -1,0 +1,30 @@
+model Dispute {
+  id            String        @id @default(uuid())
+  transactionRef String?
+  transaction   Transaction?   @relation(fields: [transactionRef], references: [txn_ref])
+  userId        Int
+  user          User          @relation(fields: [userId], references: [id])
+  amount        Decimal?       @db.Decimal(12, 2)
+  currency      Currency        @default(UGX)
+  reason        String
+  status        DisputeStatus @default(OPEN)
+  type          DisputeType   @default(TRANSACTION)
+  evidence      String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deleted_at DateTime?
+  @@index([userId])
+  @@index([createdAt,status])
+  @@map("payment_disputes")
+}
+
+enum DisputeStatus {
+  OPEN
+  RESOLVED
+  REJECTED
+}
+
+enum DisputeType {
+  TRANSACTION
+  GENERAL
+}

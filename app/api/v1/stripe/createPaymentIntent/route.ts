@@ -4,7 +4,7 @@ import { getUserById } from "@/lib/actions/users";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, amount, baseAmount } = await req.json();
+    const { userId, amount, baseAmount, type } = await req.json();
 
     if (!userId) {
       return NextResponse.json(
@@ -28,6 +28,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (type === undefined) {
+      return NextResponse.json(
+        { success: false, message: "Transaction type is required" },
+        { status: 400 },
+      );
+    }
+
     // Minimum for card payments is UGX 10,000
     if (baseAmount < 10000) {
       return NextResponse.json(
@@ -40,6 +47,7 @@ export async function POST(req: NextRequest) {
       amount,
       baseAmount,
       providedUser: user,
+      type,
     });
 
     return NextResponse.json({
