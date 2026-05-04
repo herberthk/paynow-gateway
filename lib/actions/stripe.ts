@@ -9,9 +9,17 @@ import { generateTxRef } from "@/utils";
  * @param amount - Amount in UGX
  * @returns Client secret for the PaymentIntent
  */
-export async function createPaymentIntent(amount: number, baseAmount: number) {
+export async function createPaymentIntent({
+  amount,
+  baseAmount,
+  providedUser,
+}: {
+  amount: number;
+  baseAmount: number;
+  providedUser?: User;
+}) {
   try {
-    const user = await getUserSession();
+    const user = providedUser || (await getUserSession());
     if (!user) {
       throw new Error("Unauthorized");
     }

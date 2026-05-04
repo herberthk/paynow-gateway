@@ -13,15 +13,16 @@ import {
   Wallet,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { processMobileMoneyDeposit } from "@/lib/actions/wallet";
-import { getTransactionFee } from "@/lib/actions/fee";
-import { createPaymentIntent } from "@/lib/actions/stripe";
 import { Elements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe-client";
 import { StripePaymentForm } from "@/components/global/StripePaymentForm";
 import type { Appearance } from "@stripe/stripe-js";
 
-const TopupForm = () => {
+interface TopupFormProps {
+  user: User | null;
+}
+
+const TopupForm = ({ user }: TopupFormProps) => {
   const router = useRouter();
 
   const [selectedMethod, setSelectedMethod] = useState<string>("momo");
@@ -36,7 +37,7 @@ const TopupForm = () => {
 
   const handleContinue = async () => {
     const depositAmount = parseFloat(amount);
-    const minAmount = selectedMethod === "card" ? 10000 : 500; // Increased card minimum for Stripe
+    const minAmount = selectedMethod === "card" ? 10000 : 1000;
 
     if (isNaN(depositAmount) || depositAmount < minAmount) {
       setError(`Minimum deposit is UGX ${minAmount.toLocaleString()}`);
@@ -47,10 +48,17 @@ const TopupForm = () => {
     setError(null);
 
     try {
-      const feeResult = await getTransactionFee({
-        amount: depositAmount,
-        type: "DEPOSIT",
+      const feeResponse = await fetch("/api/v1/fees/getTransactionFee", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user?.id,
+          amount: depositAmount,
+          type: "DEPOSIT",
+        }),
       });
+
+      const feeResult = await feeResponse.json();
 
       if (!feeResult.success) {
         setError(feeResult.message || "Fee calculation failed");
@@ -61,10 +69,26 @@ const TopupForm = () => {
 
       if (selectedMethod === "card") {
         const totalAmount = depositAmount + (feeResult?.amount || 0);
-        const stripeResult = await createPaymentIntent(
-          totalAmount,
-          depositAmount,
+        const stripeResponse = await fetch(
+          "/api/v1/stripe/createPaymentIntent",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: user?.id,
+              amount: totalAmount,
+              baseAmount: depositAmount,
+            }),
+          },
         );
+
+        const stripeResult = await stripeResponse.json();
+
+        if (!stripeResult.success) {
+          setError(stripeResult.message || "Failed to initialize payment");
+          return;
+        }
+
         setClientSecret(stripeResult.clientSecret || null);
         setTxRef(stripeResult.transactionReference || "");
         setStep(2);
@@ -83,8 +107,22 @@ const TopupForm = () => {
   const handleMomoPayment = async () => {
     setIsLoading(true);
     setError(null);
+    if (parseFloat(amount) < 1000) {
+      setError("Minimum deposit is UGX 1,000");
+      setIsLoading(false);
+      return;
+    }
     try {
-      const result = await processMobileMoneyDeposit(parseFloat(amount));
+      const response = await fetch("/api/v1/wallet/processMobileMoneyDeposit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user?.id,
+          amount: parseFloat(amount),
+        }),
+      });
+
+      const result = await response.json();
 
       if (result.success) {
         router.push(
