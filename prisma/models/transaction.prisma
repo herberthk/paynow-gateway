@@ -1,0 +1,52 @@
+model Transaction {
+  id        String  @id @default(uuid())
+
+  userId    Int
+  sender    User    @relation("TransactionSender", fields: [userId], references: [id], onDelete: Cascade)
+
+  recipientId Int
+  recipient   User   @relation("TransactionRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  displayName String?
+  amount    Decimal           @db.Decimal(12, 2)
+  currency  Currency          @default(UGX)
+  type      TransactionType
+  status    TransactionStatus @default(PENDING)
+  txn_ref   String            @unique
+  category  String
+  method    String
+  reason     String?
+  receiptUrl String?
+  fee       Decimal           @db.Decimal(12, 2) @default(0.00)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deleted_at DateTime?
+  disputes  Dispute[]
+  ledger    Ledger[]
+
+  @@index([recipientId])
+  @@index([status])
+  @@index([type])
+  @@index([method])
+  @@index([category])
+  @@index([txn_ref])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("payment_transactions")
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+  PAYMENT
+  SUBSCRIPTION
+  SUPPORT
+}
+
+enum TransactionStatus {
+  COMPLETED
+  PENDING
+  FAILED
+  DISPUTED
+}

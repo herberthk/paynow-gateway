@@ -12,10 +12,12 @@ import { generateTxRef } from "@/utils";
 export async function createPaymentIntent({
   amount,
   baseAmount,
+  type,
   providedUser,
 }: {
   amount: number;
   baseAmount: number;
+  type: TransactionType;
   providedUser?: User;
 }) {
   try {
@@ -24,6 +26,9 @@ export async function createPaymentIntent({
       throw new Error("Unauthorized");
     }
 
+    if (!type) {
+      throw new Error("Transaction type is required");
+    }
     if (amount < 5000) {
       // Stripe has a minimum amount for some currencies, usually ~$0.50.
       // 5000 UGX is roughly $1.30, which is safe.
@@ -40,9 +45,9 @@ export async function createPaymentIntent({
         userId: user.id.toString(),
         transactionReference,
         baseAmount: baseAmount.toString(),
-        type: "wallet_topup",
+        type,
       },
-      description: `Wallet top-up for ${user.name || user.email}`,
+      description: `${type} for ${user.name || user.email}`,
       // Optionally link to a customer if they exist in Stripe
       // customer: user.stripeCustomerId,
     });

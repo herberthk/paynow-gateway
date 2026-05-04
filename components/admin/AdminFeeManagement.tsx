@@ -80,7 +80,7 @@ const AdminFeeManagement: React.FC<{ fees: Fee[] }> = ({ fees }) => {
       await updateTransactionFee(fee.id, editValue);
       setEditingId(null);
       notify("SUCCESS", "Fee updated successfully");
-    } catch (error) {
+    } catch {
       notify("ALERT", "Failed to update fee");
     }
   };
@@ -329,6 +329,7 @@ const AdminFeeManagement: React.FC<{ fees: Fee[] }> = ({ fees }) => {
                   <option value="WITHDRAWAL">Withdrawal</option>
                   <option value="TRANSFER">Transfer</option>
                   <option value="DEPOSIT">Deposit</option>
+                  <option value="SUPPORT">Support</option>
                 </select>
               </div>
               <div className="flex justify-end gap-3 mt-6">

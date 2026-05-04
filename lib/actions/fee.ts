@@ -130,7 +130,7 @@ export const addTransactionFee = async (fee: Fee) => {
       where: { category: fee.category },
     });
     if (existingFee) {
-      return { success: false, message: "Transfer type already exists" };
+      return { success: false, message: "Transaction fee already exists" };
     }
     await prisma.fee.create({ data: fee });
     revalidatePath("/dashboard/admin/fees");

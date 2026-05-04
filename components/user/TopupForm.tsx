@@ -78,6 +78,7 @@ const TopupForm = ({ user }: TopupFormProps) => {
               userId: user?.id,
               amount: totalAmount,
               baseAmount: depositAmount,
+              type: "wallet_topup",
             }),
           },
         );
