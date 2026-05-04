@@ -175,11 +175,15 @@ export const finalizeDeposit = async ({
  * @param amount - Amount to deposit
  * @returns Success/error status
  */
-export const processMobileMoneyDeposit = async (
-  amount: number,
-): Promise<{ success: boolean; refference?: string; message: string }> => {
+export const processMobileMoneyDeposit = async ({
+  amount,
+  providedUser,
+}: {
+  amount: number;
+  providedUser?: User;
+}): Promise<{ success: boolean; refference?: string; message: string }> => {
   try {
-    const user = await getUserSession();
+    const user = providedUser || (await getUserSession());
     if (!user) {
       return { success: false, message: "Unauthorized" };
     }
