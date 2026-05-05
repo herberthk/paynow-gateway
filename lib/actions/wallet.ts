@@ -34,7 +34,7 @@ export const finalizeDeposit = async ({
   reason: string;
   receiptUrl?: string;
   stripeEventId?: string;
-  paymentMethod?: PaymentMethodType;
+  paymentMethod: PaymentMethodType;
 }): Promise<{ success: boolean; refference: string; message: string }> => {
   try {
     const user = await prisma.user.findUnique({
@@ -206,6 +206,7 @@ export const processMobileMoneyDeposit = async ({
       refference,
       method: "Mobile Money",
       reason: "Mobile Money Deposit",
+      paymentMethod: "MOBILE_MONEY",
     });
   } catch (error) {
     console.error("Error processing deposit:", error);
