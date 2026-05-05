@@ -25,9 +25,9 @@ export const getTransactionFee = async ({ amount, type }: FeeProps) => {
     }
     let TRANSACTION_FEE = 0;
     if (fee.type === "FIXED") {
-      TRANSACTION_FEE = Number(fee.value);
+      TRANSACTION_FEE = Math.ceil(Number(fee.value));
     } else if (fee.type === "PERCENTAGE") {
-      TRANSACTION_FEE = amount * Number(fee.value);
+      TRANSACTION_FEE = Math.ceil(amount * Number(fee.value));
     }
     return {
       success: true,

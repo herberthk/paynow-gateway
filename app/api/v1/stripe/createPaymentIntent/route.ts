@@ -1,46 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createPaymentIntent } from "@/lib/actions/stripe";
 import { getUserById } from "@/lib/actions/users";
+import { z } from "zod";
+
+const createPaymentIntentSchema = z.object({
+  userId: z.coerce.number().positive("User ID must be a positive number"),
+  amount: z.coerce.number().positive("Amount must be positive"),
+  baseAmount: z.coerce.number().min(10000, "Amount must be at least UGX 10,000"),
+  type: z.enum(["wallet_topup", "payment", "transfer", "support"]),
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, amount, baseAmount, type } =
-      (await req.json()) as StripePaymentRequestBody;
-
-    if (!userId) {
+    let body;
+    try {
+      body = await req.json();
+    } catch {
       return NextResponse.json(
-        { success: false, message: "User ID is required" },
+        { success: false, message: "Invalid or missing request body" },
         { status: 400 },
       );
     }
+
+    const validation = createPaymentIntentSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Validation failed",
+          errors: validation.error.issues.map((err) => ({
+            path: err.path.join("."),
+            message: err.message,
+          })),
+        },
+        { status: 400 },
+      );
+    }
+
+    const { userId, amount, baseAmount, type } = validation.data;
 
     const user = (await getUserById(userId)) as unknown as User;
     if (!user) {
       return NextResponse.json(
         { success: false, message: "User not found" },
         { status: 404 },
-      );
-    }
-
-    if (amount === undefined || baseAmount === undefined) {
-      return NextResponse.json(
-        { success: false, message: "Amount and baseAmount are required" },
-        { status: 400 },
-      );
-    }
-
-    if (type === undefined) {
-      return NextResponse.json(
-        { success: false, message: "Transaction type is required" },
-        { status: 400 },
-      );
-    }
-
-    // Minimum for card payments is UGX 10,000
-    if (baseAmount < 10000) {
-      return NextResponse.json(
-        { success: false, message: "Amount must be at least UGX 10,000" },
-        { status: 400 },
       );
     }
 
@@ -67,3 +71,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
