@@ -14,7 +14,8 @@ declare global {
     | "WITHDRAWAL"
     | "TRANSFER"
     | "PAYMENT"
-    | "SUBSCRIPTION";
+    | "SUBSCRIPTION"
+    | "SUPPORT";
 
   interface Transaction {
     id: string;

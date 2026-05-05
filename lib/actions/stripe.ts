@@ -17,7 +17,7 @@ export async function createPaymentIntent({
 }: {
   amount: number;
   baseAmount: number;
-  type: TransactionType;
+  type: TransactionReason;
   providedUser?: User;
 }) {
   try {

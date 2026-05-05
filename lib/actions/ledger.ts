@@ -183,6 +183,7 @@ export const createLedgerEntry = async ({
       switch (type) {
         case "TRANSFER":
         case "PAYMENT":
+        case "SUPPORT":
           // SENDER: Money leaves wallet (Asset Decrease = Credit) -> Goes to Expense/Transfer (Expense Increase = Debit)
           // 1. Credit Sender Wallet
           await tx.ledger.create({
