@@ -14,6 +14,8 @@ Incorrect CVC: 4000 0000 0000 0127
 Login to stripe dashboard:
 https://dashboard.stripe.com/acct_1TMrZtChkkayyXBo/test/payments
 
+stripe listen --forward-to localhost:3000/api/webhooks/stripe
+
 1/ HABIT TRACKER APP#ROLE:
 
 Senior React Native developer specializing in behavioral psychology driven mobile applications with clean minimal interfaces and bulletproof streak logic.

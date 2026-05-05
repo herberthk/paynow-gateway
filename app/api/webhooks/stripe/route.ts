@@ -5,6 +5,12 @@ import { finalizeDeposit } from "@/lib/actions/wallet";
 import type Stripe from "stripe";
 import prisma from "@/lib/prisma";
 
+type StripePayload = {
+  userId: string;
+  transactionReference: string;
+  type: TransactionReason;
+  baseAmount: string;
+};
 export async function POST(req: Request) {
   const body = await req.text();
   const signature = (await headers()).get("Stripe-Signature");
@@ -42,17 +48,17 @@ export async function POST(req: Request) {
     console.log("Event ID from route", event.id);
     // ✅ Properly typed instead of `as any`
     const charge = event.data.object as Stripe.Charge;
-    const { userId, transactionReference, type, baseAmount } =
-      charge.metadata ?? {};
+    const metadata = charge.metadata as unknown as StripePayload;
+    const { userId, transactionReference, type, baseAmount } = metadata;
+
+    if (!userId || !transactionReference || !baseAmount) {
+      console.error("Missing required metadata on charge:", charge.id);
+      // Return 200 anyway — a 4xx/5xx here causes Stripe to retry forever
+      // but the data is malformed so retrying won't help.
+      return new NextResponse(null, { status: 200 });
+    }
 
     if (type === "wallet_topup") {
-      if (!userId || !transactionReference || !baseAmount) {
-        console.error("Missing required metadata on charge:", charge.id);
-        // Return 200 anyway — a 4xx/5xx here causes Stripe to retry forever
-        // but the data is malformed so retrying won't help.
-        return new NextResponse(null, { status: 200 });
-      }
-
       try {
         await finalizeDeposit({
           stripeEventId: event.id, // ✅ Pass event ID for idempotency inside the tx
