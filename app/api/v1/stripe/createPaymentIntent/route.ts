@@ -4,7 +4,8 @@ import { getUserById } from "@/lib/actions/users";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, amount, baseAmount, type } = await req.json();
+    const { userId, amount, baseAmount, type } =
+      (await req.json()) as StripePaymentRequestBody;
 
     if (!userId) {
       return NextResponse.json(

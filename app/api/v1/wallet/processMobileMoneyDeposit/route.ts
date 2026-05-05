@@ -4,7 +4,7 @@ import { getUserById } from "@/lib/actions/users";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, amount } = await req.json();
+    const { userId, amount } = (await req.json()) as TransferMobileRequestBody;
 
     if (!userId) {
       return NextResponse.json(
