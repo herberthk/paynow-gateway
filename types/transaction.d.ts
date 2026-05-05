@@ -54,7 +54,12 @@ declare global {
     volume: number;
     previous: number;
   };
-  type FeeCategory = "DEPOSIT" | "WITHDRAWAL" | "TRANSFER" | "PAYMENT";
+  type FeeCategory =
+    | "DEPOSIT"
+    | "WITHDRAWAL"
+    | "TRANSFER"
+    | "PAYMENT"
+    | "SUPPORT";
   type FeeType = "FIXED" | "PERCENTAGE";
 
   type PaymentMethodType = "CARD" | "MOBILE_MONEY" | "BANK";
