@@ -301,7 +301,7 @@ export const processWalletSupport = async ({
           reference: refference,
           amount,
           currency: "UGX",
-          paymentMethod: "MOBILE_MONEY", // Defaulting internal wallet transfer to MOBILE_MONEY or we could add WALLET to enum
+          paymentMethod: "WALLET",
           reason: `Supported ${recipient?.name || "Unknown"}`,
         },
       });
