@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createPaymentIntent } from "@/lib/actions/stripe";
+import { processMobileMoneySupport } from "@/lib/actions/support";
 import { getUserById } from "@/lib/actions/users";
 import { z } from "zod";
 
-const createPaymentIntentSchema = z.object({
+const processMobileMoneySupportSchema = z.object({
   userId: z.coerce.number().positive("User ID must be a positive number"),
-  amount: z.coerce.number().positive("Amount must be positive"),
-  baseAmount: z.coerce.number().min(10000, "Amount must be at least UGX 10,000"),
-  type: z.enum(["wallet_topup", "payment", "transfer", "support"]),
-  toUserId: z.coerce.number().positive("toUserId must be positive").optional(),
-  fromUserId: z.coerce.number().positive("fromUserId must be positive").optional(),
+  toUserId: z.coerce.number().positive("Recipient ID must be a positive number"),
+  amount: z.coerce.number().min(500, "Amount must be at least UGX 500"),
 });
 
 export async function POST(req: NextRequest) {
@@ -24,7 +21,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const validation = createPaymentIntentSchema.safeParse(body);
+    const validation = processMobileMoneySupportSchema.safeParse(body);
 
     if (!validation.success) {
       return NextResponse.json(
@@ -40,7 +37,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { userId, amount, baseAmount, type, toUserId, fromUserId } = validation.data;
+    const { userId, toUserId, amount } = validation.data;
 
     const user = (await getUserById(userId)) as unknown as User;
     if (!user) {
@@ -50,21 +47,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await createPaymentIntent({
+    const result = await processMobileMoneySupport({
       amount,
-      baseAmount,
       providedUser: user,
-      type,
       toUserId,
-      fromUserId,
     });
 
-    return NextResponse.json({
-      success: true,
-      ...result,
-    });
+    if (result.success) {
+      return NextResponse.json(result);
+    } else {
+      return NextResponse.json(result, { status: 400 });
+    }
   } catch (error) {
-    console.error("API Error (createPaymentIntent):", error);
+    console.error("API Error (processMobileMoneySupport):", error);
     return NextResponse.json(
       {
         success: false,
@@ -75,4 +70,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-
