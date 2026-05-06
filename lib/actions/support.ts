@@ -8,7 +8,7 @@ import { getTransactionFee } from "./fee";
 import {
   sendSupportEmail,
   sendSupportReceiptEmail,
-  sendAdminTransferEmail,
+  sendAdminSupportFeeEmail,
 } from "./email";
 import { getWalletBalance } from "./wallet";
 
@@ -175,6 +175,22 @@ export const finalizeSupportDeposit = async ({
         fee: TRANSACTION_FEE,
         method,
       });
+    }
+
+    if (TRANSACTION_FEE > 0 && admins.length > 0) {
+      for (const admin of admins) {
+        if (admin.email) {
+          await sendAdminSupportFeeEmail({
+            email: admin.email,
+            adminName: admin.name || "Admin",
+            amount: totalRecipientAmount,
+            senderName: sender.name || "User",
+            recipientName: recipient.name || "User",
+            reference: refference,
+            fee: TRANSACTION_FEE,
+          });
+        }
+      }
     }
 
     revalidatePath("/dashboard/user/wallet");
@@ -407,9 +423,9 @@ export const processWalletSupport = async ({
       }
 
       if (TRANSACTION_FEE > 0) {
-        admins.forEach((admin) => {
+        for (const admin of admins) {
           if (admin.email) {
-            sendAdminTransferEmail({
+            await sendAdminSupportFeeEmail({
               email: admin.email,
               adminName: admin.name || "Admin",
               amount: result.amount!,
@@ -419,7 +435,7 @@ export const processWalletSupport = async ({
               fee: TRANSACTION_FEE,
             });
           }
-        });
+        }
       }
     }
 

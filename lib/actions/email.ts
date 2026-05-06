@@ -373,4 +373,46 @@ export const sendSupportReceiptEmail = async ({
   }
 };
 
-// export const sendEmail = async ({ otp, email, name, expiry }: Props) => {};
+export const sendAdminSupportFeeEmail = async ({
+  email,
+  adminName,
+  amount,
+  senderName,
+  recipientName,
+  reference,
+  fee,
+}: {
+  email: string;
+  adminName: string;
+  amount: number;
+  senderName: string;
+  recipientName: string;
+  reference: string;
+  fee: number;
+}) => {
+  try {
+    const emailHtml = await render(
+      TransactionEmail({
+        userName: adminName,
+        amount,
+        senderName,
+        recipientName,
+        reference,
+        fee,
+        type: "ADMIN_NOTICE",
+      }),
+    );
+    const mailOptions = {
+      from: '"Paynow Gateway" <support@connectappbiz.com>',
+      to: email,
+      subject: "Support Transaction Fee - Paynow Gateway",
+      html: emailHtml,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Error sending admin support fee email:", error);
+    return false;
+  }
+};

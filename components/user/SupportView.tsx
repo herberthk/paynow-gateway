@@ -302,31 +302,41 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
                           </div>
                         )}
                         {/* Search Results Dropdown */}
-                        {searchResults.length > 0 && (
+                        {(searchResults.length > 0 || (searchQuery.length >= 3 && !isSearching)) && (
                           <div className="absolute z-10 w-full mt-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-xl max-h-60 overflow-y-auto">
-                            {searchResults.map((res) => (
-                              <button
-                                key={res.id}
-                                onClick={() => {
-                                  setSelectedRecipient(res);
-                                  setSearchQuery("");
-                                  setSearchResults([]);
-                                }}
-                                className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700 last:border-0 flex items-center gap-3 transition-colors"
-                              >
-                                <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600">
-                                  <UserIcon size={16} />
-                                </div>
-                                <div>
-                                  <div className="font-bold text-gray-900 dark:text-white text-sm">
-                                    {res.name}
+                            {searchResults.length > 0 ? (
+                              searchResults.map((res) => (
+                                <button
+                                  key={res.id}
+                                  onClick={() => {
+                                    setSelectedRecipient(res);
+                                    setSearchQuery("");
+                                    setSearchResults([]);
+                                  }}
+                                  className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/50 border-b border-gray-100 dark:border-slate-700 last:border-0 flex items-center gap-3 transition-colors"
+                                >
+                                  <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600">
+                                    <UserIcon size={16} />
                                   </div>
-                                  <div className="text-xs text-gray-500">
-                                    {res.email}
+                                  <div>
+                                    <div className="font-bold text-gray-900 dark:text-white text-sm">
+                                      {res.name}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {res.email}
+                                    </div>
                                   </div>
+                                </button>
+                              ))
+                            ) : (
+                              <div className="px-4 py-8 text-center">
+                                <div className="w-12 h-12 bg-gray-50 dark:bg-slate-700/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                                  <Search size={20} className="text-gray-400" />
                                 </div>
-                              </button>
-                            ))}
+                                <p className="text-sm font-bold text-gray-900 dark:text-white">No users found</p>
+                                <p className="text-xs text-gray-500 mt-1">Try a different name or email</p>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -503,8 +513,8 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
                       )}
                       <p className="text-amber-900 dark:text-amber-400 text-sm leading-relaxed font-medium">
                         {selectedMethod === "wallet"
-                          ? `You are about to transfer UGX ${(parseFloat(amount) + fee).toLocaleString()} from your wallet balance to ${selectedRecipient?.name}.`
-                          : `Ensure your phone is unlocked. You will receive a prompt to enter your MM PIN to authorize the transaction of UGX ${(parseFloat(amount) + fee).toLocaleString()}.`}
+                          ? `You are about to debit UGX ${(parseFloat(amount) + fee).toLocaleString()} from your wallet balance to support ${selectedRecipient?.name}. This action is immediate and non-reversible.`
+                          : `Ensure your phone is unlocked. You will receive a prompt to enter your MM PIN to authorize the transaction of UGX ${(parseFloat(amount) + fee).toLocaleString()} for ${selectedRecipient?.name}.`}
                       </p>
                     </div>
 
