@@ -133,6 +133,12 @@ export const menuItems = (userRole: Privilege) =>
           href: "/dashboard/user/wallet/support",
         },
         {
+          id: "/dashboard/user/support/history",
+          label: "Support History",
+          icon: Heart,
+          href: "/dashboard/user/support/history",
+        },
+        {
           id: "/dashboard/user/settings",
           label: "Settings",
           icon: Settings,

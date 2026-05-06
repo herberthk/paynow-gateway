@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Smartphone,
@@ -13,6 +13,7 @@ import {
   Wallet,
   Search,
   User as UserIcon,
+  Calendar,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Elements } from "@stripe/react-stripe-js";
@@ -180,7 +181,7 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
         const result = await response.json();
         if (result.success) {
           router.push(
-            `/dashboard/user/wallet/topup/success?ref=${result.refference}`,
+            `/dashboard/user/wallet/support/success?ref=${result.refference}`,
           );
         } else {
           setError(result.message || "Wallet support failed");
@@ -201,7 +202,7 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
         const result = await response.json();
         if (result.success) {
           router.push(
-            `/dashboard/user/wallet/topup/success?ref=${result.refference}`,
+            `/dashboard/user/wallet/support/success?ref=${result.refference}`,
           );
         } else {
           setError(result.message || "Mobile Money support failed");
@@ -244,6 +245,13 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
             </p>
           </div>
         </div>
+        <button
+          onClick={() => router.push("/dashboard/user/support/history")}
+          className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-slate-900 hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-900 dark:text-white font-bold rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm transition-all active:scale-95"
+        >
+          <Calendar size={18} className="text-indigo-600" />
+          View History
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
@@ -470,7 +478,7 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
                         onCancel={() => setStep(1)}
                         onSuccess={(reference) => {
                           router.push(
-                            `/dashboard/user/wallet/topup/success?ref=${reference}`,
+                            `/dashboard/user/wallet/support/success?ref=${reference}`,
                           );
                         }}
                       />
