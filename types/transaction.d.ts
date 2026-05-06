@@ -62,7 +62,7 @@ declare global {
     | "SUPPORT";
   type FeeType = "FIXED" | "PERCENTAGE";
 
-  type PaymentMethodType = "CARD" | "MOBILE_MONEY" | "BANK";
+  type PaymentMethodType = "CARD" | "MOBILE_MONEY" | "BANK" | "WALLET";
 }
 
 export {};

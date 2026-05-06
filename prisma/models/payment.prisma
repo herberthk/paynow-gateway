@@ -16,6 +16,7 @@ enum PaymentMethodType {
   CARD
   MOBILE_MONEY
   BANK
+  WALLET
 }
 
 enum PaymentProvider {
