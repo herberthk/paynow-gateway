@@ -476,3 +476,86 @@ export const processMobileMoneySupport = async ({
     };
   }
 };
+
+/**
+ * Fetch support history for a user (sent and received)
+ */
+export const getSupportHistory = async ({
+  userId,
+  page = 1,
+  pageSize = 10,
+}: {
+  userId: number;
+  page?: number;
+  pageSize?: number;
+}) => {
+  try {
+    const skip = (page - 1) * pageSize;
+
+    const [supportTransactions, totalCount] = await Promise.all([
+      prisma.supportUser.findMany({
+        where: {
+          OR: [{ fromUserId: userId }, { toUserId: userId }],
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        skip,
+        take: pageSize,
+      }),
+      prisma.supportUser.count({
+        where: {
+          OR: [{ fromUserId: userId }, { toUserId: userId }],
+        },
+      }),
+    ]);
+
+    // Get unique user IDs to fetch names
+    const userIds = Array.from(
+      new Set(
+        supportTransactions.flatMap((tx) => [tx.fromUserId, tx.toUserId]),
+      ),
+    );
+
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, name: true, email: true },
+    });
+
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    const enhancedRecords = supportTransactions.map((record) => {
+      const sender = userMap.get(record.fromUserId);
+      const recipient = userMap.get(record.toUserId);
+
+      return {
+        ...record,
+        amount: Number(record.amount), // Decimal to number
+        senderName: sender?.name || "Unknown",
+        senderEmail: sender?.email,
+        recipientName: recipient?.name || "Unknown",
+        recipientEmail: recipient?.email,
+        type: record.fromUserId === userId ? "SENT" : "RECEIVED",
+      };
+    });
+
+    return {
+      success: true,
+      data: enhancedRecords,
+      pagination: {
+        total: totalCount,
+        page,
+        pageSize,
+        totalPages: Math.ceil(totalCount / pageSize),
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching support history:", error);
+    return {
+      success: false,
+      message: "Failed to fetch support history",
+      data: [],
+      pagination: { total: 0, page: 1, pageSize: 10, totalPages: 0 },
+    };
+  }
+};
