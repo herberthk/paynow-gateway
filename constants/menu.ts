@@ -11,6 +11,7 @@ import {
   BookOpen,
   // TrendingUp,
   Trash,
+  Heart,
 } from "lucide-react";
 export const menuItems = (userRole: Privilege) =>
   userRole === "super_admin"
@@ -124,6 +125,12 @@ export const menuItems = (userRole: Privilege) =>
           label: "Disputes",
           icon: AlertCircle,
           href: "/dashboard/user/disputes",
+        },
+        {
+          id: "/dashboard/user/wallet/support",
+          label: "Give Support",
+          icon: Heart,
+          href: "/dashboard/user/wallet/support",
         },
         {
           id: "/dashboard/user/settings",

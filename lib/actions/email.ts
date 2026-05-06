@@ -6,6 +6,7 @@ import { generateOTP, hashOTP } from "@/utils";
 import OTPEmail from "@/components/global/OtpEmail";
 import TransactionEmail from "@/components/global/TransactionEmail";
 import DepositEmail from "@/components/global/DepositEmail";
+import SupportEmail from "@/components/global/SupportEmail";
 
 const SMTP_HOST = process.env.SMTP_HOST!;
 const SMTP_PORT = process.env.SMTP_PORT!;
@@ -286,6 +287,88 @@ export const sendAdminDepositNoticeEmail = async ({
     return true;
   } catch (error) {
     console.error("Error sending admin deposit notification:", error);
+    return false;
+  }
+};
+
+export const sendSupportEmail = async ({
+  email,
+  userName,
+  amount,
+  senderName,
+  reference,
+}: {
+  email: string;
+  userName: string;
+  amount: number;
+  senderName: string;
+  reference: string;
+}) => {
+  try {
+    const emailHtml = await render(
+      SupportEmail({
+        userName,
+        amount,
+        senderName,
+        reference,
+        type: "RECEIVER",
+      }),
+    );
+    const mailOptions = {
+      from: '"Paynow Gateway" <support@connectappbiz.com>',
+      to: email,
+      subject: "Support Received - Paynow Gateway",
+      html: emailHtml,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Error sending support email:", error);
+    return false;
+  }
+};
+
+export const sendSupportReceiptEmail = async ({
+  email,
+  userName,
+  amount,
+  recipientName,
+  reference,
+  fee,
+  method,
+}: {
+  email: string;
+  userName: string;
+  amount: number;
+  recipientName: string;
+  reference: string;
+  fee: number;
+  method?: string;
+}) => {
+  try {
+    const emailHtml = await render(
+      SupportEmail({
+        userName,
+        amount,
+        recipientName,
+        reference,
+        fee,
+        method,
+        type: "SENDER_RECEIPT",
+      }),
+    );
+    const mailOptions = {
+      from: '"Paynow Gateway" <support@connectappbiz.com>',
+      to: email,
+      subject: "Support Receipt - Paynow Gateway",
+      html: emailHtml,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Error sending support receipt email:", error);
     return false;
   }
 };

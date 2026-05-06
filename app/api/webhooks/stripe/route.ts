@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { finalizeDeposit } from "@/lib/actions/wallet";
+import { finalizeSupportDeposit } from "@/lib/actions/support";
 import type Stripe from "stripe";
 import prisma from "@/lib/prisma";
 
@@ -10,6 +11,8 @@ type StripePayload = {
   transactionReference: string;
   type: TransactionReason;
   baseAmount: string;
+  toUserId?: string;
+  fromUserId?: string;
 };
 export async function POST(req: Request) {
   const body = await req.text();
@@ -49,7 +52,7 @@ export async function POST(req: Request) {
     // ✅ Properly typed instead of `as any`
     const charge = event.data.object as Stripe.Charge;
     const metadata = charge.metadata as unknown as StripePayload;
-    const { userId, transactionReference, type, baseAmount } = metadata;
+    const { userId, transactionReference, type, baseAmount, toUserId, fromUserId } = metadata;
 
     if (!userId || !transactionReference || !baseAmount) {
       console.error("Missing required metadata on charge:", charge.id);
@@ -80,6 +83,27 @@ export async function POST(req: Request) {
         // is handled inside finalizeDeposit, otherwise retries cause
         // the double-charge bug you hit before.
         return new NextResponse("Error processing deposit", { status: 500 });
+      }
+    } else if (type === "support" && toUserId && fromUserId) {
+      try {
+        await finalizeSupportDeposit({
+          stripeEventId: event.id,
+          userId: parseInt(fromUserId, 10),
+          toUserId: parseInt(toUserId, 10),
+          amount: parseFloat(baseAmount),
+          refference: transactionReference,
+          method: "Card (Stripe)",
+          reason: "Support via Stripe",
+          paymentMethod: "CARD",
+          receiptUrl: charge.receipt_url ?? undefined,
+        });
+
+        console.log(
+          `Processed support charge ${charge.id} from user ${fromUserId} to user ${toUserId}, ref: ${transactionReference}`,
+        );
+      } catch (error) {
+        console.error("Error finalizing support from webhook:", error);
+        return new NextResponse("Error processing support", { status: 500 });
       }
     }
   }

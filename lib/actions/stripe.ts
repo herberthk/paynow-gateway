@@ -14,11 +14,15 @@ export async function createPaymentIntent({
   baseAmount,
   type,
   providedUser,
+  toUserId,
+  fromUserId,
 }: {
   amount: number;
   baseAmount: number;
   type: TransactionReason;
   providedUser?: User;
+  toUserId?: number;
+  fromUserId?: number;
 }) {
   try {
     const user = providedUser || (await getUserSession());
@@ -46,6 +50,8 @@ export async function createPaymentIntent({
         transactionReference,
         baseAmount: baseAmount.toString(),
         type,
+        ...(toUserId && { toUserId: toUserId.toString() }),
+        ...(fromUserId && { fromUserId: fromUserId.toString() }),
       },
       description: `${type} for ${user.name || user.email}`,
       // Optionally link to a customer if they exist in Stripe

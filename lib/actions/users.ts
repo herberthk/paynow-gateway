@@ -136,3 +136,41 @@ export const findUserByEmailOrPhone = async (identifier: string) => {
     };
   }
 };
+
+/**
+ * Search users by name, email, or phone (Support feature)
+ * @param query - Search string
+ * @param excludeUserId - The ID of the user searching to exclude them
+ */
+export const searchUsers = async (query: string, excludeUserId: number) => {
+  try {
+    if (!query || query.trim() === "") {
+      return { success: true, users: [] };
+    }
+
+    const trimmedQuery = query.trim();
+
+    const users = await prisma.user.findMany({
+      where: {
+        id: { not: excludeUserId },
+        OR: [
+          { name: { contains: trimmedQuery, mode: "insensitive" } },
+          { email: { contains: trimmedQuery, mode: "insensitive" } },
+          { tel: { contains: trimmedQuery } },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        tel: true,
+      },
+      take: 10,
+    });
+
+    return { success: true, users };
+  } catch (error) {
+    console.error("Error searching users:", error);
+    return { success: false, users: [] };
+  }
+};

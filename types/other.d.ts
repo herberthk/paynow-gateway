@@ -6,6 +6,8 @@ declare global {
     amount: number;
     baseAmount: number;
     type: TransactionReason;
+    toUserId?: number;
+    fromUserId?: number;
   };
 
   type TransferMobileRequestBody = {
