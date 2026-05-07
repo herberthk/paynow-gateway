@@ -13,7 +13,8 @@
     "seed": "bun run utils/seed.ts",
     "prisma:deploy": "bunx prisma migrate deploy",
     "email": "email dev --dir src/emails",
-    "reset": "bunx prisma migrate reset && bunx prisma generate && bun run seed"
+    "reset": "bunx prisma migrate reset && bunx prisma generate && bun run seed",
+    "prepare": "husky"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.34",
@@ -67,6 +68,8 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.2",
     "prisma": "^7.8.0",
     "react-email": "^5.2.5",
     "tailwindcss": "^4",
