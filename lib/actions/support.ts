@@ -162,6 +162,7 @@ export const finalizeSupportDeposit = async ({
         senderName: sender.name || "Someone",
         amount: totalRecipientAmount,
         reference: refference,
+        receiptUrl,
       });
     }
 
@@ -174,6 +175,7 @@ export const finalizeSupportDeposit = async ({
         reference: refference,
         fee: TRANSACTION_FEE,
         method,
+        receiptUrl,
       });
     }
 

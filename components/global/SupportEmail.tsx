@@ -7,6 +7,10 @@ import {
   Preview,
   Section,
   Text,
+  Hr,
+  Row,
+  Column,
+  Button,
 } from "@react-email/components";
 
 interface SupportEmailProps {
@@ -17,6 +21,7 @@ interface SupportEmailProps {
   reference: string;
   method?: string;
   fee?: number;
+  receiptUrl?: string;
   type: "RECEIVER" | "SENDER_RECEIPT";
 }
 
@@ -28,6 +33,7 @@ export const SupportEmail = ({
   reference,
   method,
   fee,
+  receiptUrl,
   type,
 }: SupportEmailProps) => {
   const isReceiver = type === "RECEIVER";
@@ -42,41 +48,114 @@ export const SupportEmail = ({
       </Preview>
       <Body style={main}>
         <Container style={container}>
-          <Heading style={h1}>Paynow Gateway</Heading>
+          <Section style={header}>
+            <Text style={logoText}>Paynow Gateway</Text>
+          </Section>
 
           <Section style={contentSection}>
-            <Heading style={h2}>
-              {isReceiver ? "Support Received 🎉" : "Support Sent Successfully"}
-            </Heading>
-
-            <Text style={text}>Hi {userName},</Text>
-
-            <Text style={text}>
-              {isReceiver
-                ? `Great news! You have received financial support of UGX ${amount.toLocaleString()} from ${senderName}.`
-                : `Your support of UGX ${amount.toLocaleString()} to ${recipientName} was successfully processed.`}
-            </Text>
-
-            <Section style={detailsContainer}>
-              <Text style={detailText}>
-                <strong>Amount:</strong> UGX {amount.toLocaleString()}
-              </Text>
-              {!isReceiver && fee !== undefined && (
-                <Text style={detailText}>
-                  <strong>Fee:</strong> UGX {fee.toLocaleString()}
-                </Text>
-              )}
-              {method && (
-                <Text style={detailText}>
-                  <strong>Payment Method:</strong> {method}
-                </Text>
-              )}
-              <Text style={detailText}>
-                <strong>Reference:</strong> {reference}
-              </Text>
+            <Section style={iconContainer}>
+              <Text style={iconStyle}>{isReceiver ? "❤️" : "✨"}</Text>
             </Section>
 
-            <Text style={footerText}>Thank you for using Paynow Gateway!</Text>
+            <Heading style={h1}>
+              {isReceiver ? "Support Received!" : "Support Sent Successfully"}
+            </Heading>
+
+            <Text style={greetingText}>Hi {userName},</Text>
+
+            <Text style={descriptionText}>
+              {isReceiver
+                ? `Wonderful news! You have received a support contribution from ${senderName}. The funds have been added to your wallet balance.`
+                : `Your support to ${recipientName} has been successfully processed. Thank you for your generosity!`}
+            </Text>
+
+            <Section style={amountBox}>
+              <Text style={amountLabel}>Amount Received</Text>
+              <Text style={amountValue}>UGX {amount.toLocaleString()}</Text>
+            </Section>
+
+            <Section style={detailsContainer}>
+              <Text style={detailsHeading}>Transaction Details</Text>
+
+              <Row style={detailRow}>
+                <Column style={detailLabel}>Reference</Column>
+                <Column style={detailValue}>{reference}</Column>
+              </Row>
+
+              {!isReceiver && (
+                <>
+                  <Hr style={divider} />
+                  <Row style={detailRow}>
+                    <Column style={detailLabel}>Recipient</Column>
+                    <Column style={detailValue}>{recipientName}</Column>
+                  </Row>
+                </>
+              )}
+
+              {isReceiver && (
+                <>
+                  <Hr style={divider} />
+                  <Row style={detailRow}>
+                    <Column style={detailLabel}>From</Column>
+                    <Column style={detailValue}>{senderName}</Column>
+                  </Row>
+                </>
+              )}
+
+              {method && (
+                <>
+                  <Hr style={divider} />
+                  <Row style={detailRow}>
+                    <Column style={detailLabel}>Method</Column>
+                    <Column style={detailValue}>
+                      {method.replace("_", " ")}
+                    </Column>
+                  </Row>
+                </>
+              )}
+
+              {!isReceiver && fee !== undefined && (
+                <>
+                  <Hr style={divider} />
+                  <Row style={detailRow}>
+                    <Column style={detailLabel}>Fee Paid</Column>
+                    <Column style={detailValue}>
+                      UGX {fee.toLocaleString()}
+                    </Column>
+                  </Row>
+                </>
+              )}
+
+              <Hr style={divider} />
+              <Row style={detailRow}>
+                <Column style={detailLabel}>Date</Column>
+                <Column style={detailValue}>
+                  {new Date().toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                </Column>
+              </Row>
+            </Section>
+
+            {receiptUrl && !isReceiver && (
+              <Section style={buttonContainer}>
+                <Button style={button} href={receiptUrl}>
+                  View Official Receipt
+                </Button>
+              </Section>
+            )}
+
+            <Hr style={footerDivider} />
+
+            <Text style={footerText}>
+              If you have any questions about this transaction, please contact
+              our support team.
+            </Text>
+            <Text style={copyrightText}>
+              © {new Date().getFullYear()} Paynow Gateway. All rights reserved.
+            </Text>
           </Section>
         </Container>
       </Body>
@@ -86,70 +165,172 @@ export const SupportEmail = ({
 
 // Styles
 const main = {
-  backgroundColor: "#f6f9fc",
+  backgroundColor: "#f4f7fb",
   fontFamily:
     '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
+  padding: "40px 0",
 };
 
 const container = {
   backgroundColor: "#ffffff",
   margin: "0 auto",
-  padding: "20px 0 48px",
-  marginBottom: "64px",
-  borderRadius: "8px",
-  boxShadow: "0 4px 6px rgba(0, 0, 0, 0.05)",
+  width: "580px",
+  borderRadius: "16px",
+  overflow: "hidden",
+  boxShadow: "0 10px 25px rgba(0, 0, 0, 0.05)",
+};
+
+const header = {
+  backgroundColor: "#4f46e5",
+  padding: "32px 0",
+  textAlign: "center" as const,
+};
+
+const logoText = {
+  color: "#ffffff",
+  fontSize: "24px",
+  fontWeight: "800",
+  letterSpacing: "-0.5px",
+  margin: "0",
 };
 
 const contentSection = {
-  padding: "0 48px",
+  padding: "40px 48px",
+};
+
+const iconContainer = {
+  textAlign: "center" as const,
+  marginBottom: "20px",
+};
+
+const iconStyle = {
+  fontSize: "48px",
+  margin: "0 auto",
 };
 
 const h1 = {
-  color: "#4f46e5",
-  fontSize: "24px",
-  fontWeight: "600",
-  lineHeight: "40px",
-  margin: "0 0 20px",
+  color: "#111827",
+  fontSize: "28px",
+  fontWeight: "800",
+  lineHeight: "36px",
+  margin: "0 0 24px",
   textAlign: "center" as const,
-  padding: "20px 0",
-  borderBottom: "1px solid #e6ebf1",
+  letterSpacing: "-0.5px",
 };
 
-const h2 = {
-  color: "#1f2937",
-  fontSize: "20px",
-  fontWeight: "600",
-  lineHeight: "28px",
-  margin: "0 0 16px",
-};
-
-const text = {
+const greetingText = {
   color: "#374151",
+  fontSize: "18px",
+  fontWeight: "600",
+  margin: "0 0 12px",
+};
+
+const descriptionText = {
+  color: "#6b7280",
   fontSize: "16px",
-  lineHeight: "24px",
-  margin: "0 0 16px",
+  lineHeight: "26px",
+  margin: "0 0 32px",
+};
+
+const amountBox = {
+  backgroundColor: "#f9fafb",
+  borderRadius: "12px",
+  padding: "24px",
+  textAlign: "center" as const,
+  border: "1px solid #f3f4f6",
+  marginBottom: "32px",
+};
+
+const amountLabel = {
+  color: "#6b7280",
+  fontSize: "14px",
+  fontWeight: "600",
+  textTransform: "uppercase" as const,
+  letterSpacing: "1px",
+  margin: "0 0 8px",
+};
+
+const amountValue = {
+  color: "#4f46e5",
+  fontSize: "36px",
+  fontWeight: "800",
+  margin: "0",
 };
 
 const detailsContainer = {
-  backgroundColor: "#f9fafb",
-  borderRadius: "6px",
-  padding: "16px",
-  margin: "24px 0",
-  border: "1px solid #e5e7eb",
+  backgroundColor: "#ffffff",
+  border: "1px solid #f3f4f6",
+  borderRadius: "12px",
+  padding: "24px",
 };
 
-const detailText = {
-  margin: "0 0 8px",
-  color: "#4b5563",
+const detailsHeading = {
+  color: "#111827",
   fontSize: "14px",
+  fontWeight: "700",
+  textTransform: "uppercase" as const,
+  letterSpacing: "1px",
+  margin: "0 0 16px",
+};
+
+const detailRow = {
+  padding: "10px 0",
+};
+
+const detailLabel = {
+  color: "#6b7280",
+  fontSize: "14px",
+  fontWeight: "500",
+};
+
+const detailValue = {
+  color: "#111827",
+  fontSize: "14px",
+  fontWeight: "600",
+  textAlign: "right" as const,
+};
+
+const divider = {
+  borderColor: "#f3f4f6",
+  margin: "4px 0",
+};
+
+const buttonContainer = {
+  textAlign: "center" as const,
+  margin: "32px 0",
+};
+
+const button = {
+  backgroundColor: "#4f46e5",
+  borderRadius: "12px",
+  color: "#fff",
+  fontSize: "16px",
+  fontWeight: "700",
+  textDecoration: "none",
+  textAlign: "center" as const,
+  display: "inline-block",
+  padding: "12px 24px",
+  boxShadow: "0 4px 6px rgba(79, 70, 229, 0.2)",
+};
+
+const footerDivider = {
+  borderColor: "#f3f4f6",
+  margin: "40px 0 24px",
 };
 
 const footerText = {
-  color: "#6b7280",
+  color: "#9ca3af",
   fontSize: "14px",
-  lineHeight: "24px",
-  margin: "32px 0 0",
+  lineHeight: "22px",
   textAlign: "center" as const,
+  margin: "0 0 12px",
+};
+
+const copyrightText = {
+  color: "#9ca3af",
+  fontSize: "12px",
+  textAlign: "center" as const,
+  margin: "0",
 };
 
 export default SupportEmail;

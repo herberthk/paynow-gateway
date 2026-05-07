@@ -165,7 +165,7 @@ export const searchUsers = async (query: string, excludeUserId: number) => {
         email: true,
         tel: true,
       },
-      take: 10,
+      take: 5,
     });
 
     return { success: true, users };
