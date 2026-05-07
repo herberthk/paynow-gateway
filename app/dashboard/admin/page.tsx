@@ -15,9 +15,7 @@ const AdminDashboardPage = async () => {
         netRevenue={stats?.totalRevenue}
         totalUsers={stats?.totalUsers}
         activeDisputes={stats?.activeDisputes}
-        volumeTrend={
-          stats?.volumeTrend?.direction as "up" | "down" | undefined
-        }
+        volumeTrend={stats?.volumeTrend?.direction as "up" | "down" | undefined}
         volumeTrendValue={stats?.volumeTrend?.label}
         revenueTrend={
           stats?.revenueTrend?.direction as "up" | "down" | undefined

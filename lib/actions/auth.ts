@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 "use server";
 import bcrypt from "bcrypt";
 import prisma from "@/lib/prisma";
@@ -54,7 +53,7 @@ export const login = async (email: string, password: string) => {
     // return "Verified successfully";
   } catch (error) {
     console.log("error", error);
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+     
     //@ts-ignore
     if (error?.digest?.startsWith("NEXT_REDIRECT")) {
       throw error; // let Next.js handle it
@@ -172,13 +171,6 @@ const loginNow = async (id: number) => {
     created_at: user.created_at?.toDateString()!,
     address: user?.address!,
     tel: user?.tel!,
-    // wallet: {
-    //   ...user.wallet,
-    //   id: user.wallet?.id!,
-    //   balance: Number(user.wallet?.balance),
-    //   createdAt: user.wallet?.createdAt.toDateString()!,
-    //   updatedAt: user.wallet?.updatedAt.toDateString()!,
-    // },
   });
   const path =
     user.privilege === "super_admin" ? "/dashboard/admin" : "/dashboard/user";
