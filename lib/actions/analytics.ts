@@ -108,7 +108,7 @@ export const getAnalyticsData = async (
       if (tx.recipientId === userId) {
         // Income (Transfer received, Deposit, etc.)
         // Filter types if necessary, but generally money IN is income
-        if (["TRANSFER", "DEPOSIT", "PAYMENT"].includes(tx.type)) {
+        if (["TRANSFER", "DEPOSIT", "PAYMENT", "SUPPORT"].includes(tx.type)) {
           dayStats.income += amount;
           totalIncome += amount;
 
@@ -122,7 +122,7 @@ export const getAnalyticsData = async (
       } else if (tx.userId === userId) {
         // Expense (Transfer sent, Payment, Withdrawal)
         if (
-          ["TRANSFER", "PAYMENT", "WITHDRAWAL", "SUBSCRIPTION"].includes(
+          ["TRANSFER", "PAYMENT", "WITHDRAWAL", "SUBSCRIPTION", "SUPPORT"].includes(
             tx.type,
           )
         ) {
@@ -290,7 +290,7 @@ export const getDashboardAnalyticsData = async (
       if (tx.recipientId === userId) {
         // Income (Transfer received, Deposit, etc.)
         // Filter types if necessary, but generally money IN is income
-        if (["TRANSFER", "DEPOSIT", "PAYMENT"].includes(tx.type)) {
+        if (["TRANSFER", "DEPOSIT", "PAYMENT", "SUPPORT"].includes(tx.type)) {
           dayStats.income += amount;
           totalIncome += amount;
 
@@ -304,7 +304,7 @@ export const getDashboardAnalyticsData = async (
       } else if (tx.userId === userId) {
         // Expense (Transfer sent, Payment, Withdrawal)
         if (
-          ["TRANSFER", "PAYMENT", "WITHDRAWAL", "SUBSCRIPTION"].includes(
+          ["TRANSFER", "PAYMENT", "WITHDRAWAL", "SUBSCRIPTION", "SUPPORT"].includes(
             tx.type,
           )
         ) {
