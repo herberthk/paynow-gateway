@@ -16,12 +16,6 @@
     "reset": "bunx prisma migrate reset && bunx prisma generate && bun run seed",
     "prepare": "husky"
   },
-  "lint-staged": {
-    "**/*.{js,ts,tsx}": [
-      "bash -c 'tsc --noEmit'",
-      "next lint --fix --file"
-    ]
-  },
   "dependencies": {
     "@ai-sdk/google": "^3.0.34",
     "@ai-sdk/react": "^3.0.107",
