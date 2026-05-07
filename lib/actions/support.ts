@@ -46,7 +46,7 @@ export const finalizeSupportDeposit = async ({
         "Sender or Recipient not found during support finalization",
       );
     }
-
+    // console.log(receiptUrl, "is the receiptUrl");
     const feeResult = await getTransactionFee({ amount, type: "SUPPORT" });
     const fee = feeResult.success ? feeResult.amount || 0 : 0;
     const admins = await getAdmins();
