@@ -37,7 +37,7 @@ export const SupportEmail = ({
   type,
 }: SupportEmailProps) => {
   const isReceiver = type === "RECEIVER";
-
+  // console.log(receiptUrl, "is the receiptUrl in component");
   return (
     <Html>
       <Head />
@@ -139,7 +139,7 @@ export const SupportEmail = ({
               </Row>
             </Section>
 
-            {receiptUrl && !isReceiver && (
+            {receiptUrl && (
               <Section style={buttonContainer}>
                 <Button style={button} href={receiptUrl}>
                   View Official Receipt
