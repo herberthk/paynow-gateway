@@ -297,12 +297,14 @@ export const sendSupportEmail = async ({
   amount,
   senderName,
   reference,
+  receiptUrl,
 }: {
   email: string;
   userName: string;
   amount: number;
   senderName: string;
   reference: string;
+  receiptUrl?: string;
 }) => {
   try {
     const emailHtml = await render(
@@ -311,6 +313,7 @@ export const sendSupportEmail = async ({
         amount,
         senderName,
         reference,
+        receiptUrl,
         type: "RECEIVER",
       }),
     );
@@ -337,6 +340,7 @@ export const sendSupportReceiptEmail = async ({
   reference,
   fee,
   method,
+  receiptUrl,
 }: {
   email: string;
   userName: string;
@@ -345,6 +349,7 @@ export const sendSupportReceiptEmail = async ({
   reference: string;
   fee: number;
   method?: string;
+  receiptUrl?: string;
 }) => {
   try {
     const emailHtml = await render(
@@ -355,6 +360,7 @@ export const sendSupportReceiptEmail = async ({
         reference,
         fee,
         method,
+        receiptUrl,
         type: "SENDER_RECEIPT",
       }),
     );
