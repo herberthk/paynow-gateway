@@ -36,7 +36,11 @@ export const getTransactions = async ({
     const isAdmin = user.privilege === "super_admin";
     const skip = (page - 1) * limit;
     // if user is admin, fetch all transactions, else fetch only user's transactions
-    const where = isAdmin ? {} : { recipientId: user.id };
+    const where = isAdmin
+      ? {}
+      : {
+          OR: [{ userId: user.id }, { recipientId: user.id }],
+        };
 
     if (query?.startsWith("TX_")) {
       const tx = await prisma.transaction.findUnique({
@@ -65,10 +69,12 @@ export const getTransactions = async ({
       };
     }
     if (query) {
-      //@ts-ignore
       where.OR = [
-        { recipientName: { contains: query, mode: "insensitive" } },
+        //@ts-ignore
+        { displayName: { contains: query, mode: "insensitive" } },
+        //@ts-ignore
         { method: { contains: query, mode: "insensitive" } },
+        //@ts-ignore
         { category: { contains: query, mode: "insensitive" } },
       ];
     }
@@ -86,6 +92,10 @@ export const getTransactions = async ({
     const [transactions, total] = await Promise.all([
       prisma.transaction.findMany({
         where,
+        include: {
+          sender: { select: { name: true } },
+          recipient: { select: { name: true } },
+        },
         skip,
         take: limit,
         orderBy: {
@@ -98,20 +108,42 @@ export const getTransactions = async ({
     const totalPages = Math.ceil(total / limit);
 
     // Serialize for client component
-    const serializedTransactions: Transaction[] = transactions.map((tx) => ({
-      ...tx,
-      amount: tx.amount.toNumber(),
-      createdAt: tx.createdAt.toISOString(),
-      // Ensure type alignment
-      type: tx.type as TransactionType,
-      status: tx.status as TransactionStatus,
-      currency: tx.currency as Currency,
-      txn_ref: tx.txn_ref!,
-      fee: tx.fee.toNumber(),
-      displayName: tx.displayName!,
-      reason: tx.reason!,
-      receiptUrl: tx.receiptUrl!,
-    }));
+    const serializedTransactions: Transaction[] = transactions.map((tx) => {
+      const isSender = tx.userId === user.id;
+      const isRecipient = tx.recipientId === user.id;
+      const isSelf = tx.userId === tx.recipientId;
+      const isAdmin = user.privilege === "super_admin";
+
+      let resolvedDisplayName = tx.displayName || "Unknown";
+      const senderName = tx.sender?.name || `User #${tx.userId}`;
+      const recipientName = tx.recipient?.name || `User #${tx.recipientId}`;
+
+      if (tx.type === "TRANSFER" || tx.type === "SUPPORT") {
+        if (isAdmin) {
+          resolvedDisplayName = `${senderName} -> ${recipientName}`;
+        } else if (isSender && !isSelf) {
+          resolvedDisplayName = recipientName;
+        } else if (isRecipient && !isSelf) {
+          resolvedDisplayName = senderName;
+        }
+      }
+
+      return {
+        ...tx,
+        amount: tx.amount.toNumber(),
+        createdAt: tx.createdAt.toISOString(),
+        // Ensure type alignment
+        type: tx.type as TransactionType,
+        status: tx.status as TransactionStatus,
+        currency: tx.currency as Currency,
+        txn_ref: tx.txn_ref!,
+        fee: tx.fee.toNumber(),
+        displayName: resolvedDisplayName,
+        reason: tx.reason!,
+        receiptUrl: tx.receiptUrl!,
+        ...(isAdmin ? { senderName, recipientName } : {}),
+      };
+    });
 
     return {
       transactions: serializedTransactions,

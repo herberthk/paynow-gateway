@@ -33,6 +33,8 @@ declare global {
     fee: number;
     reason?: string;
     receiptUrl?: string;
+    senderName?: string;
+    recipientName?: string;
   }
 
   interface Wallet {

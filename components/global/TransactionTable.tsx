@@ -368,13 +368,37 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                               </p>
                             </div>
 
-                            <div className="space-y-1">
-                              <p className="text-xs text-gray-500 dark:text-gray-400">
-                                Sender
-                              </p>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                {tx.displayName}
-                              </p>
+                            <div className="space-y-3">
+                              <div className="space-y-1">
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  {tx.senderName && tx.recipientName
+                                    ? "Sender"
+                                    : tx.type === "TRANSFER" ||
+                                        tx.type === "SUPPORT" ||
+                                        tx.type === "PAYMENT"
+                                      ? tx.type === "TRANSFER" ||
+                                        tx.type === "SUPPORT"
+                                        ? "Counterparty"
+                                        : "Recipient"
+                                      : "Sender"}
+                                </p>
+                                <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {tx.senderName && tx.recipientName
+                                    ? tx.senderName
+                                    : tx.displayName}
+                                </p>
+                              </div>
+
+                              {tx.senderName && tx.recipientName && (
+                                <div className="space-y-1">
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    Recipient
+                                  </p>
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {tx.recipientName}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           </div>
 
