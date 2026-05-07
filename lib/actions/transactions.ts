@@ -3,7 +3,6 @@
 import prisma from "@/lib/prisma";
 import { getTransactionFee } from "./fee";
 import { getUserSession } from "./session";
-// import { createLedgerEntry } from "./ledger";
 
 export const getTransactions = async ({
   page = 1,
