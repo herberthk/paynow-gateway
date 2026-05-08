@@ -666,10 +666,18 @@ export const creditAdminWallet = async ({
 /**
  * Fetch transaction details by reference
  */
-export const getTransactionByRef = async (ref: string) => {
+export const getTransactionByRef = async ({
+  ref,
+  providedUser,
+}: {
+  ref: string;
+  providedUser?: User;
+}) => {
   try {
-    const session = await getUserSession();
-    if (!session) throw new Error("Unauthorized");
+    const user = providedUser || (await getUserSession());
+    if (!user) {
+      return { success: false, message: "Unauthorized" };
+    }
 
     const transaction = await prisma.transaction.findUnique({
       where: { txn_ref: ref },
@@ -679,10 +687,7 @@ export const getTransactionByRef = async (ref: string) => {
       return { success: false, message: "Transaction not found" };
 
     // Security check: Ensure the transaction belongs to the user
-    if (
-      transaction.userId !== session.id &&
-      transaction.recipientId !== session.id
-    ) {
+    if (transaction.userId !== user.id && transaction.recipientId !== user.id) {
       return { success: false, message: "Unauthorized access to transaction" };
     }
 

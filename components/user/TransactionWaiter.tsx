@@ -19,7 +19,7 @@ export default function TransactionWaiter({ txnRef }: TransactionWaiterProps) {
   useEffect(() => {
     const poll = async () => {
       try {
-        const result = await getTransactionByRef(txnRef);
+        const result = await getTransactionByRef({ ref: txnRef });
         if (result.success && result.transaction) {
           // Transaction found! Refresh the page so the server component can render the success view
           router.refresh();
@@ -27,7 +27,9 @@ export default function TransactionWaiter({ txnRef }: TransactionWaiterProps) {
         }
 
         if (attempts >= maxAttempts) {
-          setError("Transaction is taking longer than expected. Please check your wallet history later.");
+          setError(
+            "Transaction is taking longer than expected. Please check your wallet history later.",
+          );
           return;
         }
 
@@ -67,8 +69,8 @@ export default function TransactionWaiter({ txnRef }: TransactionWaiterProps) {
     <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
       <div className="relative">
         <div className="w-20 h-20 border-4 border-indigo-100 dark:border-slate-800 rounded-full" />
-        <Loader2 
-          size={80} 
+        <Loader2
+          size={80}
           className="text-indigo-600 animate-spin absolute inset-0"
         />
       </div>
