@@ -38,7 +38,7 @@ const SuccessPage: FC<PageProps> = async ({ searchParams }) => {
     return <ErrorState message="Missing transaction reference" />;
   }
 
-  const result = await getTransactionByRef(ref);
+  const result = await getTransactionByRef({ ref });
 
   if (!result.success || !result.transaction) {
     // If transaction not found, show the waiter to poll for it
