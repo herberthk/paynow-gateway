@@ -69,7 +69,7 @@ const ForgetPassword = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full py-3 rounded-lg cursor-pointer text-white font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+            className={`w-full py-3 rounded-lg cursor-pointer text-white font-bold text-sm flex items-center justify-center gap-2 transition-all  ${
               isLoading
                 ? "bg-indigo-400 cursor-not-allowed"
                 : "bg-indigo-600 hover:bg-indigo-700 hover:shadow-lg"

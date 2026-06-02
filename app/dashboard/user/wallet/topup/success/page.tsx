@@ -33,7 +33,7 @@ import TransactionWaiter from "@/components/user/TransactionWaiter";
 const SuccessPage: FC<PageProps> = async ({ searchParams }) => {
   const params = await searchParams;
   const ref = params.ref as string;
-  console.log("ref", ref);
+  // console.log("ref", ref);
   if (!ref) {
     return <ErrorState message="Missing transaction reference" />;
   }
