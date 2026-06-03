@@ -52,7 +52,7 @@ export const finalizeDeposit = async ({
     await prisma.$transaction(async (tx) => {
       // ✅ Mark event as processed INSIDE the transaction so it rolls back
       // atomically if anything below fails.
-      console.log("Stripe Event ID from finalizeDeposit", stripeEventId);
+      // console.log("Stripe Event ID from finalizeDeposit", stripeEventId);
       if (stripeEventId) {
         await tx.processedWebhookEvent.create({
           data: { stripeEventId },
