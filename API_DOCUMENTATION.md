@@ -554,12 +554,17 @@ Retrieve details for a specific user using their user ID.
     {
       "success": true,
       "user": {
-        "id": 7614,
-        "name": "Kavuma Herbert",
-        "email": "herbertbruce8@gmail.com",
-        "tel": "+256700000000",
-        "privilege": "user",
-        "createdAt": "2026-06-03T18:50:00.000Z"
+        "userId": 6172,
+        "email": "herberthtk100@gmail.com",
+        "tel": "256779159642",
+        "name": "Herbert Britol Bruce",
+        "profile": "https://firebasestorage.googleapis.com/v0/b/connect-app-1f5ca.appspot.com/o/images%2Fmigrated_1767567819322_5d42ne.png?alt=media&token=92ea5225-4f58-4d34-97ca-16132010e4cd",
+        "address": null,
+        "ispaid": false,
+        "email_verified_at": null,
+        "created_at": "2023-11-19T16:04:59.000Z",
+        "privilege": "none",
+        "is_ghost_user": false
       }
     }
     ```
@@ -594,12 +599,17 @@ Retrieve details for a specific user using their email address.
     {
       "success": true,
       "user": {
-        "id": 7614,
-        "name": "Kavuma Herbert",
-        "email": "herbertbruce8@gmail.com",
-        "tel": "+256700000000",
-        "privilege": "user",
-        "createdAt": "2026-06-03T18:50:00.000Z"
+        "userId": 6172,
+        "email": "herberthtk100@gmail.com",
+        "tel": "256779159642",
+        "name": "Herbert Britol Bruce",
+        "profile": "https://firebasestorage.googleapis.com/v0/b/connect-app-1f5ca.appspot.com/o/images%2Fmigrated_1767567819322_5d42ne.png?alt=media&token=92ea5225-4f58-4d34-97ca-16132010e4cd",
+        "address": null,
+        "ispaid": false,
+        "email_verified_at": null,
+        "created_at": "2023-11-19T16:04:59.000Z",
+        "privilege": "none",
+        "is_ghost_user": false
       }
     }
     ```
