@@ -311,9 +311,10 @@ export const processP2PTransfer = async (
   senderId: number,
   recipientId: number,
   amount: number,
+  providedUser?: User,
 ) => {
   try {
-    const sender = await getUserSession();
+    const sender = providedUser || (await getUserSession());
     if (!sender) {
       return {
         success: false,

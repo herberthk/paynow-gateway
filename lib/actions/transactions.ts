@@ -10,12 +10,14 @@ export const getTransactions = async ({
   query = "",
   status,
   type,
+  providedUser,
 }: {
   page?: number;
   limit?: number;
   query?: string;
   status?: string;
   type?: string;
+  providedUser?: User;
 }): Promise<{
   transactions: Transaction[];
   totalPages: number;
@@ -23,7 +25,7 @@ export const getTransactions = async ({
   totalTransactions: number;
 }> => {
   try {
-    const user = await getUserSession();
+    const user = providedUser || (await getUserSession());
     if (!user) {
       return {
         transactions: [],
