@@ -271,9 +271,9 @@ export const updateTransaction = async (
   }
 };
 
-export const getTransactionByReference = async (txn_ref: string) => {
+export const getTransactionByReference = async (txn_ref: string, providedUser?: User) => {
   try {
-    const user = await getUserSession();
+    const user = providedUser || (await getUserSession());
     if (!user) return { error: "User not authenticated" };
 
     const transaction = await prisma.transaction.findUnique({
