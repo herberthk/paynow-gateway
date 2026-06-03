@@ -3,6 +3,7 @@
 This documentation provides details on all available versioned API routes (`/api/v1`) designed for third-party integrations, clients, and agents.
 
 All endpoints require:
+
 - **Method**: `POST`
 - **Headers**:
   ```http
@@ -13,6 +14,7 @@ All endpoints require:
 ---
 
 ## Table of Contents
+
 1. [Wallet Operations](#1-wallet-operations)
    - [Get Wallet Balance](#get-wallet-balance)
    - [Mobile Money Deposit](#mobile-money-deposit)
@@ -29,12 +31,16 @@ All endpoints require:
    - [Get Support History (Paginated)](#get-support-history-paginated)
 4. [Utility Operations](#4-utility-operations)
    - [Calculate Transaction Fee](#calculate-transaction-fee)
+5. [User Operations](#5-user-operations)
+   - [Get User By ID](#get-user-by-id)
+   - [Get User By Email](#get-user-by-email)
 
 ---
 
 ## 1. Wallet Operations
 
 ### Get Wallet Balance
+
 Fetch the current available balance for a specified user wallet.
 
 - **URL**: `/api/v1/wallet/getWalletBalance`
@@ -65,6 +71,7 @@ Fetch the current available balance for a specified user wallet.
 ---
 
 ### Mobile Money Deposit
+
 Initiate and process a simulated Mobile Money deposit.
 
 - **URL**: `/api/v1/wallet/processMobileMoneyDeposit`
@@ -104,6 +111,7 @@ Initiate and process a simulated Mobile Money deposit.
 ---
 
 ### Stripe Card Deposit (createPaymentIntent)
+
 Initialize a Stripe payment intent context for card top-ups, payments, or supports.
 
 - **URL**: `/api/v1/stripe/createPaymentIntent`
@@ -136,6 +144,7 @@ Initialize a Stripe payment intent context for card top-ups, payments, or suppor
 ---
 
 ### Internal P2P Transfer
+
 Transfer funds internally from one user's wallet to another user's wallet.
 
 - **URL**: `/api/v1/wallet/processP2PTransfer`
@@ -178,6 +187,7 @@ Transfer funds internally from one user's wallet to another user's wallet.
 ---
 
 ### Search Users
+
 Query and search users by name, email, or telephone number. Typically used to find recipients for support or P2P transfers.
 
 - **URL**: `/api/v1/wallet/searchUsers`
@@ -212,6 +222,7 @@ Query and search users by name, email, or telephone number. Typically used to fi
 ## 2. Transaction Operations
 
 ### Get Transaction History (Paginated)
+
 Fetch transaction history (sent, received, deposited, etc.) for a specified user.
 
 - **URL**: `/api/v1/wallet/getTransactions`
@@ -238,22 +249,29 @@ Fetch transaction history (sent, received, deposited, etc.) for a specified user
       "success": true,
       "transactions": [
         {
-          "id": "clx...",
-          "userId": 5,
-          "recipientId": 12,
-          "displayName": "Jane Doe",
-          "amount": 25000,
+          "id": "f9b3e975-cae6-4178-87f9-8bdffbd5a948",
+          "userId": 6172,
+          "recipientId": 7614,
+          "displayName": "Kavuma Herbert",
+          "amount": 250000,
           "currency": "UGX",
           "type": "TRANSFER",
           "status": "COMPLETED",
+          "txn_ref": "TX_TS93DZ7VTU6Q",
           "category": "Transfer",
           "method": "Wallet P2P Transfer",
-          "txn_ref": "TX_1717439999999",
-          "fee": 500,
-          "reason": "Received UGX 25,000 from John Doe",
-          "receiptUrl": "",
-          "createdAt": "2026-06-03T14:20:00.000Z",
-          "updatedAt": "2026-06-03T14:20:00.000Z"
+          "reason": "Received UGX 250,000 from Herbert Britol Bruce",
+          "receiptUrl": null,
+          "fee": 1575,
+          "createdAt": "2026-06-03T18:59:31.006Z",
+          "updatedAt": "2026-06-03T18:59:31.006Z",
+          "deleted_at": null,
+          "sender": {
+            "name": "Herbert Britol Bruce"
+          },
+          "recipient": {
+            "name": "Kavuma Herbert"
+          }
         }
       ],
       "totalPages": 1,
@@ -265,6 +283,7 @@ Fetch transaction history (sent, received, deposited, etc.) for a specified user
 ---
 
 ### Get Transaction By Wallet Reference
+
 Lookup a specific transaction context from the wallet perspective by reference token.
 
 - **URL**: `/api/v1/wallet/getTransactionByRef`
@@ -284,22 +303,29 @@ Lookup a specific transaction context from the wallet perspective by reference t
     {
       "success": true,
       "transaction": {
-        "id": "clx...",
-        "userId": 5,
-        "recipientId": 12,
-        "displayName": "Jane Doe",
-        "amount": 25000,
+        "id": "f9b3e975-cae6-4178-87f9-8bdffbd5a948",
+        "userId": 6172,
+        "recipientId": 7614,
+        "displayName": "Kavuma Herbert",
+        "amount": 250000,
         "currency": "UGX",
         "type": "TRANSFER",
         "status": "COMPLETED",
+        "txn_ref": "TX_TS93DZ7VTU6Q",
         "category": "Transfer",
         "method": "Wallet P2P Transfer",
-        "txn_ref": "TX_1717439999999",
-        "fee": 500,
-        "reason": "Received UGX 25,000 from John Doe",
-        "receiptUrl": "",
-        "createdAt": "2026-06-03T14:20:00.000Z",
-        "updatedAt": "2026-06-03T14:20:00.000Z"
+        "reason": "Received UGX 250,000 from Herbert Britol Bruce",
+        "receiptUrl": null,
+        "fee": 1575,
+        "createdAt": "2026-06-03T18:59:31.006Z",
+        "updatedAt": "2026-06-03T18:59:31.006Z",
+        "deleted_at": null,
+        "sender": {
+          "name": "Herbert Britol Bruce"
+        },
+        "recipient": {
+          "name": "Kavuma Herbert"
+        }
       }
     }
     ```
@@ -307,6 +333,7 @@ Lookup a specific transaction context from the wallet perspective by reference t
 ---
 
 ### Get Transaction By Reference
+
 Lookup a specific transaction details from the transactions context.
 
 - **URL**: `/api/v1/wallet/getTransactionByReference`
@@ -326,22 +353,29 @@ Lookup a specific transaction details from the transactions context.
     {
       "success": true,
       "transaction": {
-        "id": "clx...",
-        "userId": 5,
-        "recipientId": 12,
-        "displayName": "Jane Doe",
-        "amount": 25000,
+        "id": "f9b3e975-cae6-4178-87f9-8bdffbd5a948",
+        "userId": 6172,
+        "recipientId": 7614,
+        "displayName": "Kavuma Herbert",
+        "amount": 250000,
         "currency": "UGX",
         "type": "TRANSFER",
         "status": "COMPLETED",
+        "txn_ref": "TX_TS93DZ7VTU6Q",
         "category": "Transfer",
         "method": "Wallet P2P Transfer",
-        "txn_ref": "TX_1717439999999",
-        "fee": 500,
-        "reason": "Received UGX 25,000 from John Doe",
-        "receiptUrl": "",
-        "createdAt": "2026-06-03T14:20:00.000Z",
-        "updatedAt": "2026-06-03T14:20:00.000Z"
+        "reason": "Received UGX 250,000 from Herbert Britol Bruce",
+        "receiptUrl": null,
+        "fee": 1575,
+        "createdAt": "2026-06-03T18:59:31.006Z",
+        "updatedAt": "2026-06-03T18:59:31.006Z",
+        "deleted_at": null,
+        "sender": {
+          "name": "Herbert Britol Bruce"
+        },
+        "recipient": {
+          "name": "Kavuma Herbert"
+        }
       }
     }
     ```
@@ -351,6 +385,7 @@ Lookup a specific transaction details from the transactions context.
 ## 3. Financial Support Operations
 
 ### Wallet Balance Support
+
 Support a recipient user using funds from the sender's existing wallet balance.
 
 - **URL**: `/api/v1/wallet/processWalletSupport`
@@ -372,20 +407,21 @@ Support a recipient user using funds from the sender's existing wallet balance.
     {
       "success": true,
       "message": "Support completed successfully",
-      "amount": 15000,
-      "refference": "TX_1717439123456",
-      "fee": 300,
+      "amount": 150000,
+      "refference": "TX_XVWUG98EXC2P",
+      "fee": 6450,
       "currency": "UGX",
-      "recipientEmail": "jane@example.com",
-      "recipientName": "Jane Doe",
-      "senderEmail": "john@example.com",
-      "senderName": "John Doe"
+      "recipientEmail": "herbertbruce8@gmail.com",
+      "recipientName": "Kavuma Herbert",
+      "senderEmail": "herberthtk100@gmail.com",
+      "senderName": "Herbert Britol Bruce"
     }
     ```
 
 ---
 
 ### Mobile Money Support
+
 Support a recipient user using mobile money.
 
 - **URL**: `/api/v1/wallet/processMobileMoneySupport`
@@ -414,6 +450,7 @@ Support a recipient user using mobile money.
 ---
 
 ### Get Support History (Paginated)
+
 Fetch records of financial support sent or received by a specific user.
 
 - **URL**: `/api/v1/wallet/getSupportHistory`
@@ -436,19 +473,20 @@ Fetch records of financial support sent or received by a specific user.
       "success": true,
       "data": [
         {
-          "id": "clx...",
-          "fromUserId": 5,
-          "toUserId": 12,
-          "reference": "TX_1717439123456",
-          "amount": 15000,
+          "id": "cmpygc0n8000004ibdojzi2h0",
+          "fromUserId": 6172,
+          "toUserId": 7614,
+          "reference": "TX_GZWRX7CVWF8M",
+          "amount": 500000,
           "currency": "UGX",
-          "paymentMethod": "WALLET",
-          "reason": "Supported Jane Doe",
-          "createdAt": "2026-06-03T14:15:00.000Z",
-          "senderName": "John Doe",
-          "senderEmail": "john@example.com",
-          "recipientName": "Jane Doe",
-          "recipientEmail": "jane@example.com",
+          "paymentMethod": "MOBILE_MONEY",
+          "reason": "Mobile Money Support",
+          "createdAt": "2026-06-03T19:20:53.060Z",
+          "updatedAt": "2026-06-03T19:20:53.060Z",
+          "senderName": "Herbert Britol Bruce",
+          "senderEmail": "herberthtk100@gmail.com",
+          "recipientName": "Kavuma Herbert",
+          "recipientEmail": "herbertbruce8@gmail.com",
           "type": "SENT"
         }
       ],
@@ -466,6 +504,7 @@ Fetch records of financial support sent or received by a specific user.
 ## 4. Utility Operations
 
 ### Calculate Transaction Fee
+
 Calculate the expected fee for a transaction type and amount before executing it.
 
 - **URL**: `/api/v1/fees/getTransactionFee`
@@ -487,5 +526,87 @@ Calculate the expected fee for a transaction type and amount before executing it
     {
       "success": true,
       "amount": 1000
+    }
+    ```
+
+---
+
+## 5. User Operations
+
+### Get User By ID
+
+Retrieve details for a specific user using their user ID.
+
+- **URL**: `/api/v1/users/getUserById`
+- **Request Body Parameters**:
+  - `userId` (integer, required): Positive ID of the user requesting the lookup (simulated requester auth).
+  - `id` (integer, required): Positive ID of the target user to fetch.
+- **Example Request**:
+  ```json
+  {
+    "userId": 6172,
+    "id": 7614
+  }
+  ```
+- **Response Examples**:
+  - **Success (`200 OK`)**:
+    ```json
+    {
+      "success": true,
+      "user": {
+        "id": 7614,
+        "name": "Kavuma Herbert",
+        "email": "herbertbruce8@gmail.com",
+        "tel": "+256700000000",
+        "privilege": "user",
+        "createdAt": "2026-06-03T18:50:00.000Z"
+      }
+    }
+    ```
+  - **Error (`404 Not Found` / Requester or Target User not found)**:
+    ```json
+    {
+      "success": false,
+      "message": "Target user not found"
+    }
+    ```
+
+---
+
+### Get User By Email
+
+Retrieve details for a specific user using their email address.
+
+- **URL**: `/api/v1/users/getUserByEmail`
+- **Request Body Parameters**:
+  - `userId` (integer, required): Positive ID of the user requesting the lookup (simulated requester auth).
+  - `email` (string, required): Email address of the target user to fetch.
+- **Example Request**:
+  ```json
+  {
+    "userId": 6172,
+    "email": "herbertbruce8@gmail.com"
+  }
+  ```
+- **Response Examples**:
+  - **Success (`200 OK`)**:
+    ```json
+    {
+      "success": true,
+      "user": {
+        "id": 7614,
+        "name": "Kavuma Herbert",
+        "email": "herbertbruce8@gmail.com",
+        "tel": "+256700000000",
+        "privilege": "user",
+        "createdAt": "2026-06-03T18:50:00.000Z"
+      }
+    }
+    ```
+  - **Error (`404 Not Found` / Target User not found)**:
+    ```json
+    {
+      "success": false,
+      "message": "Target user not found"
     }
     ```
