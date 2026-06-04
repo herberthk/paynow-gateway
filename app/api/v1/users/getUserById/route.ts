@@ -4,7 +4,6 @@ import { z } from "zod";
 
 const getUserByIdSchema = z.object({
   userId: z.coerce.number().positive("Requester User ID must be a positive number"),
-  id: z.coerce.number().positive("Target User ID must be a positive number"),
 });
 
 export async function POST(req: NextRequest) {
@@ -35,18 +34,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { userId, id } = validation.data;
+    const { userId } = validation.data;
 
-    // Verify requester exists
-    const requester = await getUserById(userId);
-    if (!requester) {
-      return NextResponse.json(
-        { success: false, message: "Requester not found" },
-        { status: 404 },
-      );
-    }
-
-    const user = await getUserById(id);
+    const user = await getUserById(userId);
     if (!user) {
       return NextResponse.json(
         { success: false, message: "Target user not found" },
