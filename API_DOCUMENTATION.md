@@ -11,6 +11,8 @@ All endpoints require:
   ```
 - **Authentication**: Simulated authentication by providing the target client's user identifier (`userId`) in the JSON payload body.
 
+- **Payment base URL** - https://pay.connectappbiz.com
+
 ---
 
 ## Table of Contents
