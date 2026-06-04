@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getuserByEmail, getUserById } from "@/lib/actions/users";
+import { getuserByEmail } from "@/lib/actions/users";
 import { z } from "zod";
 
 const getUserByEmailSchema = z.object({
-  userId: z.coerce.number().positive("Requester User ID must be a positive number"),
   email: z.string().email("Invalid email address"),
 });
 
@@ -35,16 +34,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { userId, email } = validation.data;
-
-    // Verify requester exists
-    const requester = await getUserById(userId);
-    if (!requester) {
-      return NextResponse.json(
-        { success: false, message: "Requester not found" },
-        { status: 404 },
-      );
-    }
+    const { email } = validation.data;
 
     const user = await getuserByEmail(email);
     if (!user) {

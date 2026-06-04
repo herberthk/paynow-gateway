@@ -8,8 +8,310 @@ All endpoints require:
 - **Headers**:
   ```http
   Content-Type: application/json
+  X-Auth-Token: <AES-256-GCM encrypted token>
   ```
-- **Authentication**: Simulated authentication by providing the target client's user identifier (`userId`) in the JSON payload body.
+
+---
+
+## Authentication
+
+All `/api/v1` routes are protected by **AES-256-GCM encrypted token authentication**, enforced by the server.
+
+### How It Works
+
+1. The server holds two secrets in `.env`:
+   - `AUTH_TOKEN` — the raw plaintext token (never sent over the wire)
+   - `AES_SECRET_KEY` — a 32-byte (64 hex chars) AES-256 key shared with the client
+
+2. The **client** encrypts `AUTH_TOKEN` using AES-256-GCM with the shared `AES_SECRET_KEY` and sends the result as the `X-Auth-Token` header.
+
+3. The **server** decrypts the header value and compares it against the stored `AUTH_TOKEN`. Mismatches or decryption failures return `401 Unauthorized`.
+
+### Token Format
+
+The encrypted token sent in `X-Auth-Token` must follow this format:
+
+```
+<iv_hex>:<ciphertext_with_auth_tag_hex>
+```
+
+- **`iv_hex`** — 12-byte random IV encoded as 24 hex characters (generated fresh for every request)
+- **`ciphertext_with_auth_tag_hex`** — AES-256-GCM encrypted `AUTH_TOKEN` (ciphertext + 16-byte GCM auth tag) encoded as hex
+
+> **Security Note**: A fresh random IV **must** be generated for every request. Reusing an IV with the same key breaks AES-GCM security guarantees.
+
+---
+
+### Client-Side Encryption Examples
+
+You will need two secrets (share these out-of-band with the client securely):
+
+| Variable         | Value                                |
+| ---------------- | ------------------------------------ |
+| `AUTH_TOKEN`     | The plaintext token from `.env`      |
+| `AES_SECRET_KEY` | The 64-character hex key from `.env` |
+
+---
+
+#### Node.js / TypeScript
+
+```typescript
+import crypto from "crypto";
+
+function encryptToken(authToken: string, aesKeyHex: string): string {
+  const key = Buffer.from(aesKeyHex, "hex"); // 32 bytes
+  const iv = crypto.randomBytes(12); // 12-byte random IV
+
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([
+    cipher.update(authToken, "utf8"),
+    cipher.final(),
+  ]);
+  const authTag = cipher.getAuthTag(); // 16-byte GCM auth tag
+
+  // Combine ciphertext + auth tag, then hex-encode both parts
+  const ciphertextWithTag = Buffer.concat([encrypted, authTag]);
+
+  return `${iv.toString("hex")}:${ciphertextWithTag.toString("hex")}`;
+}
+
+// Usage
+const encryptedToken = encryptToken(
+  process.env.AUTH_TOKEN!,
+  process.env.AES_SECRET_KEY!,
+);
+
+// Send in headers
+const response = await fetch(
+  "https://pay.connectappbiz.com/api/v1/wallet/getWalletBalance",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Auth-Token": encryptedToken,
+    },
+    body: JSON.stringify({ userId: 7614 }),
+  },
+);
+```
+
+---
+
+#### Python
+
+```python
+import os
+import secrets
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+import requests
+
+def encrypt_token(auth_token: str, aes_key_hex: str) -> str:
+    key = bytes.fromhex(aes_key_hex)         # 32 bytes
+    iv = secrets.token_bytes(12)             # 12-byte random IV
+    aesgcm = AESGCM(key)
+
+    # encrypt() returns ciphertext + 16-byte auth tag appended
+    ciphertext_with_tag = aesgcm.encrypt(iv, auth_token.encode("utf-8"), None)
+
+    return f"{iv.hex()}:{ciphertext_with_tag.hex()}"
+
+# Usage
+encrypted_token = encrypt_token(
+    auth_token=os.environ["AUTH_TOKEN"],
+    aes_key_hex=os.environ["AES_SECRET_KEY"],
+)
+
+response = requests.post(
+    "https://pay.connectappbiz.com/api/v1/wallet/getWalletBalance",
+    headers={
+        "Content-Type": "application/json",
+        "X-Auth-Token": encrypted_token,
+    },
+    json={"userId": 7614},
+)
+```
+
+> Install dependency: `pip install cryptography`
+
+---
+
+#### PHP
+
+```php
+<?php
+function encryptToken(string $authToken, string $aesKeyHex): string {
+    $key = hex2bin($aesKeyHex);               // 32 bytes
+    $iv  = random_bytes(12);                  // 12-byte random IV
+
+    $ciphertext = openssl_encrypt(
+        $authToken,
+        'aes-256-gcm',
+        $key,
+        OPENSSL_RAW_DATA,
+        $iv,
+        $tag,         // GCM auth tag (output parameter)
+        '',
+        16            // 16-byte auth tag length
+    );
+
+    // Concatenate ciphertext + auth tag, then hex-encode
+    $ciphertextWithTag = $ciphertext . $tag;
+
+    return bin2hex($iv) . ':' . bin2hex($ciphertextWithTag);
+}
+
+// Usage
+$encryptedToken = encryptToken($_ENV['AUTH_TOKEN'], $_ENV['AES_SECRET_KEY']);
+
+$response = file_get_contents(
+    'https://pay.connectappbiz.com/api/v1/wallet/getWalletBalance',
+    false,
+    stream_context_create([
+        'http' => [
+            'method'  => 'POST',
+            'header'  => implode("\r\n", [
+                'Content-Type: application/json',
+                'X-Auth-Token: ' . $encryptedToken,
+            ]),
+            'content' => json_encode(['userId' => 7614]),
+        ],
+    ])
+);
+```
+
+---
+
+#### Web (Browser — Vanilla JS / React)
+
+Modern browsers support AES-256-GCM natively via the **Web Crypto API** — no libraries needed.
+
+```typescript
+// Works in any modern browser: Chrome, Firefox, Safari, Edge
+// Also compatible with React, Next.js client-side, and Vite apps
+
+function hexToBytes(hex: string): Uint8Array {
+  const buffer = new ArrayBuffer(hex.length / 2);
+  const bytes = new Uint8Array(buffer);
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+  }
+  return bytes;
+}
+
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+async function encryptToken(
+  authToken: string,
+  aesKeyHex: string,
+): Promise<string> {
+  const keyBytes = hexToBytes(aesKeyHex);
+  const iv = crypto.getRandomValues(new Uint8Array(12)); // 12-byte random IV
+
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    keyBytes,
+    { name: "AES-GCM" },
+    false,
+    ["encrypt"],
+  );
+
+  // Returns ciphertext with 16-byte GCM auth tag appended
+  const ciphertextBuffer = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv, tagLength: 128 },
+    cryptoKey,
+    new TextEncoder().encode(authToken),
+  );
+
+  return `${bytesToHex(iv)}:${bytesToHex(new Uint8Array(ciphertextBuffer))}`;
+}
+
+// Usage — store secrets in environment variables, never hardcode
+const encryptedToken = await encryptToken(
+  import.meta.env.VITE_AUTH_TOKEN, // or process.env.NEXT_PUBLIC_AUTH_TOKEN
+  import.meta.env.VITE_AES_SECRET_KEY, // or process.env.NEXT_PUBLIC_AES_SECRET_KEY
+);
+
+const response = await fetch(
+  "https://pay.connectappbiz.com/api/v1/wallet/getWalletBalance",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Auth-Token": encryptedToken,
+    },
+    body: JSON.stringify({ userId: 7614 }),
+  },
+);
+```
+
+> **Security warning**: Never expose `AUTH_TOKEN` or `AES_SECRET_KEY` in client-side browser code in production. Proxy API calls through your own backend server instead.
+
+---
+
+#### React Native (Expo & Bare Workflow)
+
+React Native does not have the Web Crypto API. Use [`react-native-quick-crypto`](https://github.com/margelo/react-native-quick-crypto) which mirrors the Node.js `crypto` API with native performance.
+
+> Install: `npm install react-native-quick-crypto` then `npx pod-install` (iOS)
+
+```typescript
+import crypto from "react-native-quick-crypto";
+
+function encryptToken(authToken: string, aesKeyHex: string): string {
+  const key = Buffer.from(aesKeyHex, "hex"); // 32 bytes
+  const iv = crypto.randomBytes(12); // 12-byte random IV
+
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const encrypted = Buffer.concat([
+    cipher.update(authToken, "utf8"),
+    cipher.final(),
+  ]);
+  const authTag = cipher.getAuthTag(); // 16-byte GCM auth tag
+
+  const ciphertextWithTag = Buffer.concat([encrypted, authTag]);
+
+  return `${iv.toString("hex")}:${ciphertextWithTag.toString("hex")}`;
+}
+
+// Usage — load from a secure store (e.g. expo-secure-store), never hardcode
+import * as SecureStore from "expo-secure-store";
+
+const authToken = await SecureStore.getItemAsync("AUTH_TOKEN");
+const aesKey = await SecureStore.getItemAsync("AES_SECRET_KEY");
+
+const encryptedToken = encryptToken(authToken!, aesKey!);
+
+const response = await fetch(
+  "https://pay.connectappbiz.com/api/v1/wallet/getWalletBalance",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Auth-Token": encryptedToken,
+    },
+    body: JSON.stringify({ userId: 7614 }),
+  },
+);
+```
+
+> For Expo managed workflow, also install `expo-secure-store`: `npx expo install expo-secure-store`
+
+---
+
+### Unauthorized Response (`401`)
+
+Returned when the header is missing, malformed, or the decrypted token does not match:
+
+```json
+{
+  "success": false,
+  "message": "Unauthorized: Invalid or missing X-Auth-Token header"
+}
+```
 
 - **Payment base URL** - https://pay.connectappbiz.com
 
@@ -541,13 +843,11 @@ Retrieve details for a specific user using their user ID.
 
 - **URL**: `/api/v1/users/getUserById`
 - **Request Body Parameters**:
-  - `userId` (integer, required): Positive ID of the user requesting the lookup (simulated requester auth).
-  - `id` (integer, required): Positive ID of the target user to fetch.
+  - `userId` (integer, required): Positive ID of the target user to fetch.
 - **Example Request**:
   ```json
   {
-    "userId": 6172,
-    "id": 7614
+    "userId": 7614
   }
   ```
 - **Response Examples**:
@@ -586,13 +886,11 @@ Retrieve details for a specific user using their email address.
 
 - **URL**: `/api/v1/users/getUserByEmail`
 - **Request Body Parameters**:
-  - `userId` (integer, required): Positive ID of the user requesting the lookup (simulated requester auth).
   - `email` (string, required): Email address of the target user to fetch.
 - **Example Request**:
   ```json
   {
-    "userId": 6172,
-    "email": "herbertbruce8@gmail.com"
+    "email": "[EMAIL_ADDRESS]"
   }
   ```
 - **Response Examples**:
