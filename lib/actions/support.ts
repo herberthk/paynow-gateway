@@ -63,6 +63,17 @@ export const finalizeSupportDeposit = async ({
         });
       }
 
+       // Debit sender
+      await tx.wallet.create({
+        data: {
+          userId,
+          amount: (amount+TRANSACTION_FEE),
+          type: "DEBIT",
+          reason: `Supported ${recipient?.name || "Unknown"} with UGX ${amount.toLocaleString()}`,
+          refference,
+          paymentMethod: paymentMethod || "MOBILE_MONEY",
+        },
+      });
       // 2. Credit recipient wallet
       await tx.wallet.create({
         data: {
