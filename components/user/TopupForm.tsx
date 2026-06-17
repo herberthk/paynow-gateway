@@ -17,12 +17,11 @@ import { Elements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe-client";
 import { StripePaymentForm } from "@/components/global/StripePaymentForm";
 import type { Appearance } from "@stripe/stripe-js";
+import { getTransactionFee } from "@/lib/actions/fee";
+import { createPaymentIntent } from "@/lib/actions/stripe";
+import { processMobileMoneyDeposit } from "@/lib/actions/wallet";
 
-interface TopupFormProps {
-  user: User | null;
-}
-
-const TopupForm = ({ user }: TopupFormProps) => {
+const TopupForm = () => {
   const router = useRouter();
 
   const [selectedMethod, setSelectedMethod] = useState<string>("momo");
@@ -48,17 +47,10 @@ const TopupForm = ({ user }: TopupFormProps) => {
     setError(null);
 
     try {
-      const feeResponse = await fetch("/api/v1/fees/getTransactionFee", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: user?.id,
-          amount: depositAmount,
-          type: "DEPOSIT",
-        }),
+      const feeResult = await getTransactionFee({
+        amount: depositAmount,
+        type: "DEPOSIT",
       });
-
-      const feeResult = await feeResponse.json();
 
       if (!feeResult.success) {
         setError(feeResult.message || "Fee calculation failed");
@@ -69,24 +61,14 @@ const TopupForm = ({ user }: TopupFormProps) => {
 
       if (selectedMethod === "card") {
         const totalAmount = depositAmount + (feeResult?.amount || 0);
-        const stripeResponse = await fetch(
-          "/api/v1/stripe/createPaymentIntent",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              userId: user?.id,
-              amount: totalAmount,
-              baseAmount: depositAmount,
-              type: "wallet_topup",
-            }),
-          },
-        );
+        const stripeResult = await createPaymentIntent({
+          amount: totalAmount,
+          baseAmount: depositAmount,
+          type: "wallet_topup",
+        });
 
-        const stripeResult = await stripeResponse.json();
-
-        if (!stripeResult.success) {
-          setError(stripeResult.message || "Failed to initialize payment");
+        if (!stripeResult.clientSecret) {
+          setError("Failed to initialize payment");
           return;
         }
 
@@ -114,16 +96,9 @@ const TopupForm = ({ user }: TopupFormProps) => {
       return;
     }
     try {
-      const response = await fetch("/api/v1/wallet/processMobileMoneyDeposit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: user?.id,
-          amount: parseFloat(amount),
-        }),
+      const result = await processMobileMoneyDeposit({
+        amount: parseFloat(amount),
       });
-
-      const result = await response.json();
 
       if (result.success) {
         router.push(

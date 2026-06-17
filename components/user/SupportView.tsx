@@ -21,6 +21,9 @@ import { getStripe } from "@/lib/stripe-client";
 import { StripePaymentForm } from "@/components/global/StripePaymentForm";
 import type { Appearance } from "@stripe/stripe-js";
 import { searchUsers } from "@/lib/actions/users";
+import { getTransactionFee } from "@/lib/actions/fee";
+import { createPaymentIntent } from "@/lib/actions/stripe";
+import { processWalletSupport, processMobileMoneySupport } from "@/lib/actions/support";
 
 interface SupportViewProps {
   user: User | null;
@@ -93,17 +96,10 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
     setError(null);
 
     try {
-      const feeResponse = await fetch("/api/v1/fees/getTransactionFee", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: user?.id,
-          amount: supportAmount,
-          type: "SUPPORT",
-        }),
+      const feeResult = await getTransactionFee({
+        amount: supportAmount,
+        type: "SUPPORT",
       });
-
-      const feeResult = await feeResponse.json();
 
       if (!feeResult.success) {
         setError(feeResult.message || "Fee calculation failed");
@@ -126,26 +122,16 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
         }
         setStep(2);
       } else if (selectedMethod === "card") {
-        const stripeResponse = await fetch(
-          "/api/v1/stripe/createPaymentIntent",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              userId: user?.id,
-              amount: totalRequired,
-              baseAmount: supportAmount,
-              type: "support",
-              toUserId: selectedRecipient.id,
-              fromUserId: user?.id,
-            }),
-          },
-        );
+        const stripeResult = await createPaymentIntent({
+          amount: totalRequired,
+          baseAmount: supportAmount,
+          type: "support",
+          toUserId: selectedRecipient.id,
+          fromUserId: user?.id,
+        });
 
-        const stripeResult = await stripeResponse.json();
-
-        if (!stripeResult.success) {
-          setError(stripeResult.message || "Failed to initialize payment");
+        if (!stripeResult.clientSecret) {
+          setError("Failed to initialize payment");
           return;
         }
 
@@ -169,16 +155,11 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
     setError(null);
     try {
       if (selectedMethod === "wallet") {
-        const response = await fetch("/api/v1/wallet/processWalletSupport", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: user?.id,
-            toUserId: selectedRecipient?.id,
-            amount: parseFloat(amount),
-          }),
+        const result = await processWalletSupport({
+          senderId: user?.id as number,
+          recipientId: selectedRecipient?.id as number,
+          amount: parseFloat(amount),
         });
-        const result = await response.json();
         if (result.success) {
           router.push(
             `/dashboard/user/wallet/support/success?ref=${result.refference}`,
@@ -187,19 +168,10 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
           setError(result.message || "Wallet support failed");
         }
       } else if (selectedMethod === "momo") {
-        const response = await fetch(
-          "/api/v1/wallet/processMobileMoneySupport",
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              userId: user?.id,
-              toUserId: selectedRecipient?.id,
-              amount: parseFloat(amount),
-            }),
-          },
-        );
-        const result = await response.json();
+        const result = await processMobileMoneySupport({
+          toUserId: selectedRecipient?.id as number,
+          amount: parseFloat(amount),
+        });
         if (result.success) {
           router.push(
             `/dashboard/user/wallet/support/success?ref=${result.refference}`,
