@@ -1,4 +1,3 @@
-import { getUserSession } from "@/lib/actions/session";
 import TopupForm from "@/components/user/TopupForm";
 import type { Metadata } from "next";
 
@@ -8,8 +7,7 @@ export const metadata: Metadata = {
 };
 
 const TopUpPage = async () => {
-  const user = await getUserSession();
-  return <TopupForm user={user} />;
+  return <TopupForm />;
 };
 
 export default TopUpPage;
