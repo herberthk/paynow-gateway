@@ -1,25 +1,24 @@
 "use client";
 import React, { useState } from "react";
-import { Eye, EyeOff, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import { login } from "@/lib";
-import Link from "next/link";
 import { useNotificationStore } from "@/store";
 
 const LoginPage = () => {
-  const [showPassword, setShowPassword] = useState(false);
+  // const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const notify = useNotificationStore((state) => state.notify);
 
   // Form State
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  // const [password, setPassword] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const result = await login(email, password);
+      const result = await login(email);
       if (result) {
         notify("ALERT", result);
       }
@@ -70,7 +69,7 @@ const LoginPage = () => {
           />
         </div>
 
-        <div>
+        {/* <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Password
           </label>
@@ -101,7 +100,7 @@ const LoginPage = () => {
           >
             Forgot Password?
           </Link>
-        </div>
+        </div> */}
 
         <button
           type="submit"
@@ -117,7 +116,7 @@ const LoginPage = () => {
           ) : (
             <>
               <Lock size={16} />
-              Sign In
+              Send OTP
             </>
           )}
         </button>

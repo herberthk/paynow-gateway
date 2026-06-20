@@ -11,7 +11,7 @@ type VerifyProps = {
   action?: "verify" | "reset";
 };
 const passwordResetSecret = process.env.PASSWORD_RESSET_SECRET;
-export const login = async (email: string, password: string) => {
+export const login = async (email: string) => {
   let encodedId = "";
   try {
     const user = await prisma.user.findUnique({
@@ -28,14 +28,14 @@ export const login = async (email: string, password: string) => {
       },
     });
     if (!user) {
-      return "Wrong email or password";
+      return "No account associated with this email";
       // throw Error("User not found");
     }
-    const isPasswordValid = await bcrypt.compare(password, user?.password!);
-    if (!isPasswordValid) {
-      return "Wrong email or password";
-      // throw Error("Invalid password");
-    }
+    // const isPasswordValid = await bcrypt.compare(password, user?.password!);
+    // if (!isPasswordValid) {
+    //   return "Wrong email or password";
+    //   // throw Error("Invalid password");
+    // }
     // console.log("user", user);
     const sent = await sendOtp({
       id: user.id,
