@@ -220,7 +220,7 @@ export const POST = async (req: Request) => {
 };
 
 function systemPrompt(name: string) {
-  return `You are PayNow AI, an intelligent analytics assistant embedded in the PayNow Gateway dashboard.
+  return `You are ConnectPay AI, an intelligent analytics assistant embedded in the ConnectPay dashboard.
 You help the user "${name}" understand their financial data.
 
 Instructions:

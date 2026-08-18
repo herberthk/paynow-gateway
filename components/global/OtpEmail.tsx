@@ -218,7 +218,7 @@ const OTPEmail = ({ otp, userName, expiryMinutes, type = "verify" }: Props) => {
           >
             Best regards,
             <br />
-            <strong>The PayNow Team</strong>
+            <strong>The ConnectPay Team</strong>
           </p>
         </div>
 
@@ -248,7 +248,7 @@ const OTPEmail = ({ otp, userName, expiryMinutes, type = "verify" }: Props) => {
               margin: "0",
             }}
           >
-            © 2026 PayNow Gateway. All rights reserved.
+            © 2026 ConnectPay. All rights reserved.
           </p>
         </div>
       </div>
@@ -268,7 +268,7 @@ const OTPEmail = ({ otp, userName, expiryMinutes, type = "verify" }: Props) => {
             margin: "0",
           }}
         >
-          Having trouble? Contact us at support@paynow.com
+          Having trouble? Contact us at support@connectpay.com
         </p>
       </div>
     </div>

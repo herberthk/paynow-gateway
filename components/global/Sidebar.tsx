@@ -37,10 +37,10 @@ const Sidebar: React.FC<UserProps> = ({ user }) => {
         <div className="p-6 border-b border-gray-200 dark:border-slate-800">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white shadow-md">
-              P
+              C
             </div>
             <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-              PayNow
+              ConnectPay
             </span>
           </div>
           <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 ml-1">

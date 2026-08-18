@@ -14,8 +14,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Paynow Gateway",
-  description: "Paynow Gateway",
+  title: "ConnectPay",
+  description: "ConnectPay payment gateway",
 };
 
 const RootLayout = ({

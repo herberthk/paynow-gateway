@@ -423,7 +423,7 @@ export const seedSystemNotifications = (userIds: number[]) => [
   {
     toUserId: userIds[0],
     fromUserId: userIds[0],
-    title: "Welcome to PayNow",
+    title: "Welcome to ConnectPay",
     message:
       "Your account has been successfully created. Start making payments today!",
     type: "SUCCESS" as const,

@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { getLastMonthRange } from "@/utils";
 
 export const metadata: Metadata = {
-  title: "Income Statement | PayNow",
+  title: "Income Statement | ConnectPay payment gateway",
   description: "View your Comprehensive Income Statement",
 };
 

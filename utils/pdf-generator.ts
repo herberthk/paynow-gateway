@@ -18,7 +18,7 @@ export const generateIncomeStatementPDF = (data: {
 
   // Header
   doc.setFontSize(20);
-  doc.text("PayNow", 14, 20);
+  doc.text("ConnectPay", 14, 20);
   doc.setFontSize(10);
   doc.text("Generated on: " + new Date().toLocaleDateString(), 14, 26);
 
@@ -113,7 +113,7 @@ export const generateBalanceSheetPDF = (data: {
 
   // Header
   doc.setFontSize(20);
-  doc.text("PayNow", 14, 20);
+  doc.text("ConnectPay", 14, 20);
   doc.setFontSize(10);
   doc.text("Generated on: " + new Date().toLocaleDateString(), 14, 26);
 
@@ -231,7 +231,7 @@ export const generateTransactionReceiptPDF = (tx: Transaction) => {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(26);
   doc.setFont("helvetica", "bold");
-  doc.text("PayNow", 20, 28);
+  doc.text("ConnectPay", 20, 28);
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
@@ -325,11 +325,11 @@ export const generateTransactionReceiptPDF = (tx: Transaction) => {
   doc.setTextColor(...grayColor);
   doc.setFont("helvetica", "normal");
 
-  doc.text("Thank you for using PayNow Gateway.", 105, pageHeight - 25, {
+  doc.text("Thank you for using ConnectPay.", 105, pageHeight - 25, {
     align: "center",
   });
   doc.text(
-    "For support, please contact support@paynow-gateway.com",
+    "For support, please contact support@connectappbiz.com",
     105,
     pageHeight - 20,
     { align: "center" },
@@ -340,5 +340,5 @@ export const generateTransactionReceiptPDF = (tx: Transaction) => {
   doc.setLineWidth(1);
   doc.line(0, pageHeight - 5, 210, pageHeight - 5);
 
-  doc.save(`PayNow_Receipt_${tx.txn_ref || tx.id}.pdf`);
+  doc.save(`ConnectPay_Receipt_${tx.txn_ref || tx.id}.pdf`);
 };

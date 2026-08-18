@@ -118,7 +118,7 @@ const DashboardAssistant: React.FC = () => {
         parts: [
           {
             type: "text",
-            text: "Hello! I am your PayNow Assistant. I have access to your data. Ask me about anything about your finances.",
+            text: "Hello! I am your ConnectPay Assistant. I have access to your data. Ask me about anything about your finances.",
           },
         ],
       },
@@ -255,7 +255,7 @@ const DashboardAssistant: React.FC = () => {
             <Sparkles className="text-white" size={20} />
           </div>
           <div>
-            <h3 className="font-bold text-white">PayNow AI</h3>
+            <h3 className="font-bold text-white">ConnectPay AI</h3>
             {connectionStatus === "connected" ? (
               <p className="text-xs text-indigo-100 flex items-center gap-1">
                 <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />

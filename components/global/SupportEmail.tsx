@@ -49,7 +49,7 @@ export const SupportEmail = ({
       <Body style={main}>
         <Container style={container}>
           <Section style={header}>
-            <Text style={logoText}>Paynow Gateway</Text>
+            <Text style={logoText}>ConnectPay</Text>
           </Section>
 
           <Section style={contentSection}>
@@ -154,7 +154,7 @@ export const SupportEmail = ({
               our support team.
             </Text>
             <Text style={copyrightText}>
-              © {new Date().getFullYear()} Paynow Gateway. All rights reserved.
+              © {new Date().getFullYear()} ConnectPay. All rights reserved.
             </Text>
           </Section>
         </Container>
