@@ -134,11 +134,11 @@ const TransactionEmail = ({
           >
             {isReceipt
               ? `You have successfully received ${currency} ${amount.toLocaleString()} from ${
-                  senderName || "a PayNow user"
+                  senderName || "a ConnectPay user"
                 }.`
               : isSenderReceipt
                 ? `You have successfully sent ${currency} ${amount.toLocaleString()} to ${
-                    recipientName || "a PayNow user"
+                    recipientName || "a ConnectPay user"
                   }. The total deduction including fees is ${currency} ${(
                     amount + (fee || 0)
                   ).toLocaleString()}.`
@@ -436,7 +436,7 @@ const TransactionEmail = ({
           >
             Best regards,
             <br />
-            <strong>The PayNow Team</strong>
+            <strong>The ConnectPay Team</strong>
           </p>
         </div>
 
@@ -466,7 +466,7 @@ const TransactionEmail = ({
               margin: "0",
             }}
           >
-            © 2026 PayNow Gateway. All rights reserved.
+            © 2026 ConnectPay. All rights reserved.
           </p>
         </div>
       </div>
@@ -485,7 +485,7 @@ const TransactionEmail = ({
             margin: "0",
           }}
         >
-          Having trouble? Contact us at support@paynow.com
+          Having trouble? Contact us at support@connectpay.com
         </p>
       </div>
     </div>

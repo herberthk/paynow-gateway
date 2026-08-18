@@ -269,7 +269,7 @@ const DepositEmail = ({
           >
             Best regards,
             <br />
-            <strong>The PayNow Team</strong>
+            <strong>The ConnectPay Team</strong>
           </p>
         </div>
 
@@ -299,7 +299,7 @@ const DepositEmail = ({
               margin: "0",
             }}
           >
-            © 2026 PayNow Gateway. All rights reserved.
+            © 2026 ConnectPay payment gateway. All rights reserved.
           </p>
         </div>
       </div>

@@ -31,9 +31,9 @@ const LayoutTitle = () => {
     <div>
       <div className="flex items-center gap-3 mb-8">
         <div className="w-10 h-10 rounded-lg bg-indigo-500 flex items-center justify-center font-bold text-white text-xl">
-          P
+          C
         </div>
-        <span className="text-2xl font-bold tracking-tight">PayNow</span>
+        <span className="text-2xl font-bold tracking-tight">ConnectPay</span>
       </div>
       <h2 className="text-3xl font-bold mb-4">{title}</h2>
       <p className="text-slate-400 leading-relaxed">{desc}</p>

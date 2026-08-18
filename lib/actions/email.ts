@@ -58,9 +58,9 @@ export const sendOtp = async ({ id, email, name, type = "verify" }: Props) => {
       OTPEmail({ otp, userName: name, expiryMinutes: 15, type }),
     );
     const mailOptions = {
-      from: '"Paynow Gateway" <support@connectappbiz.com>',
+      from: '"ConnectPay" <support@connectappbiz.com>',
       to: email,
-      subject: "Paynow Gateway",
+      subject: "ConnectPay",
       html: emailHtml,
     };
     // const verify = await transporter.verify();
@@ -101,9 +101,9 @@ export const sendTransferEmail = async ({
       }),
     );
     const mailOptions = {
-      from: '"Paynow Gateway" <support@connectappbiz.com>',
+      from: '"ConnectPay" <support@connectappbiz.com>',
       to: email,
-      subject: "Transfer Successful - Paynow Gateway",
+      subject: "Transfer Successful - ConnectPay",
       html: emailHtml,
     };
 
@@ -147,9 +147,9 @@ export const sendAdminTransferEmail = async ({
       }),
     );
     const mailOptions = {
-      from: '"Paynow Gateway" <support@connectappbiz.com>',
+      from: '"ConnectPay" <support@connectappbiz.com>',
       to: email,
-      subject: "New Transaction Fee - Paynow Gateway",
+      subject: "New Transaction Fee - ConnectPay",
       html: emailHtml,
     };
 
@@ -190,9 +190,9 @@ export const sendSenderTransferEmail = async ({
       }),
     );
     const mailOptions = {
-      from: '"Paynow Gateway" <support@connectappbiz.com>',
+      from: '"ConnectPay" <support@connectappbiz.com>',
       to: email,
-      subject: "Transfer Receipt - Paynow Gateway",
+      subject: "Transfer Receipt - ConnectPay",
       html: emailHtml,
     };
 
@@ -238,7 +238,7 @@ export const sendDepositEmail = async ({
     );
 
     const mailOptions = {
-      from: '"Paynow Gateway" <support@connectappbiz.com>',
+      from: '"ConnectPay" <support@connectappbiz.com>',
       to: email,
       subject: `Deposit Confirmation - ${reference}`,
       html: emailHtml,
@@ -277,7 +277,7 @@ export const sendAdminDepositNoticeEmail = async ({
     );
 
     const mailOptions = {
-      from: '"Paynow Gateway" <support@connectappbiz.com>',
+      from: '"ConnectPay" <support@connectappbiz.com>',
       to: email,
       subject: `New Deposit Notification - ${reference}`,
       html: emailHtml,
@@ -318,9 +318,9 @@ export const sendSupportEmail = async ({
       }),
     );
     const mailOptions = {
-      from: '"Paynow Gateway" <support@connectappbiz.com>',
+      from: '"ConnectPay" <support@connectappbiz.com>',
       to: email,
-      subject: "Support Received - Paynow Gateway",
+      subject: "Support Received - ConnectPay",
       html: emailHtml,
     };
 
@@ -365,9 +365,9 @@ export const sendSupportReceiptEmail = async ({
       }),
     );
     const mailOptions = {
-      from: '"Paynow Gateway" <support@connectappbiz.com>',
+      from: '"ConnectPay" <support@connectappbiz.com>',
       to: email,
-      subject: "Support Receipt - Paynow Gateway",
+      subject: "Support Receipt - ConnectPay",
       html: emailHtml,
     };
 
@@ -409,9 +409,9 @@ export const sendAdminSupportFeeEmail = async ({
       }),
     );
     const mailOptions = {
-      from: '"Paynow Gateway" <support@connectappbiz.com>',
+      from: '"ConnectPay" <support@connectappbiz.com>',
       to: email,
-      subject: "Support Transaction Fee - Paynow Gateway",
+      subject: "Support Transaction Fee - ConnectPay",
       html: emailHtml,
     };
 

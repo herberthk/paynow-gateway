@@ -6,8 +6,8 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Paynow Gateway dashboard",
-  description: "Paynow Gateway dashboard",
+  title: "ConnectPay payment gateway dashboard",
+  description: "ConnectPay payment gateway dashboard",
 };
 
 const RootLayout = async ({

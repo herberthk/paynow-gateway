@@ -141,7 +141,7 @@ export const StripePaymentForm = ({
       </div>
 
       <p className="text-[10px] text-center text-gray-400 dark:text-gray-500 leading-relaxed px-4">
-        Your payment is secured by Stripe. PayNow does not store your card
+        Your payment is secured by Stripe. ConnectPay does not store your card
         details. By continuing, you agree to our terms of service.
       </p>
     </motion.form>

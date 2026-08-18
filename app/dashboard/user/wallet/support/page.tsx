@@ -4,7 +4,7 @@ import { getUserSession } from "@/lib/actions/session";
 import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Support | Paynow Gateway",
+  title: "Support | ConnectPay payment gateway",
   description: "Support other users financially",
 };
 

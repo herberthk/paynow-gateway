@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { getLastMonthRange } from "@/utils";
 
 export const metadata: Metadata = {
-  title: "Balance Sheet | PayNow",
+  title: "Balance Sheet | ConnectPay payment gateway",
   description: "View your Statement of Financial Position",
 };
 

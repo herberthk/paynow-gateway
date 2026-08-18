@@ -3,7 +3,7 @@ import { TrendingUp, Wallet, ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Financial Statements | PayNow",
+  title: "Financial Statements | ConnectPay payment gateway",
   description: "View your financial reports",
 };
 
