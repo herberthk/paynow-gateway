@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
     // Pass the userId to verify the transaction belongs to the user
     const result = await getTransactionByRef({
-      ref: reference,
+      reference,
       providedUser: user as unknown as User,
     });
 

@@ -7,7 +7,7 @@ type Props = {
   reference?: string;
   method?: string;
   receiptUrl?: string;
-  role: "USER_CONFIRMATION" | "ADMIN_NOTICE";
+  role: "USER_CONFIRMATION" | "ADMIN_NOTICE" | "USER_FAILURE";
 };
 
 const DepositEmail = ({
@@ -22,6 +22,10 @@ const DepositEmail = ({
   role,
 }: Props) => {
   const isUser = role === "USER_CONFIRMATION";
+  const isFailure = role === "USER_FAILURE";
+  const showReceipt =
+    typeof receiptUrl === "string" && receiptUrl.startsWith("https://");
+  const isCardReceipt = /Card|Stripe/.test(method || "");
 
   return (
     <div
@@ -43,9 +47,11 @@ const DepositEmail = ({
         {/* Header with gradient */}
         <div
           style={{
-            background: isUser
-              ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
-              : "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+            background: isFailure
+              ? "linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)"
+              : isUser
+                ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                : "linear-gradient(135deg, #10b981 0%, #059669 100%)",
             padding: "40px 32px",
             textAlign: "center",
           }}
@@ -86,7 +92,7 @@ const DepositEmail = ({
                       verticalAlign: "middle",
                     }}
                   >
-                    ✓
+                    {isFailure ? "!" : "✓"}
                   </span>
                 </td>
               </tr>
@@ -100,7 +106,11 @@ const DepositEmail = ({
               margin: "0",
             }}
           >
-            {isUser ? "Deposit Successful!" : "New Deposit Fee Received"}
+            {isFailure
+              ? "Deposit Failed"
+              : isUser
+                ? "Deposit Successful!"
+                : "New Deposit Fee Received"}
           </h1>
         </div>
 
@@ -113,7 +123,7 @@ const DepositEmail = ({
               margin: "0 0 24px 0",
             }}
           >
-            Hi <strong>{isUser ? userName : adminName}</strong>,
+            Hi <strong>{(isUser || isFailure) ? userName : adminName}</strong>,
           </p>
 
           <p
@@ -124,9 +134,11 @@ const DepositEmail = ({
               margin: "0 0 32px 0",
             }}
           >
-            {isUser
-              ? `Your deposit of ${currency} ${amount.toLocaleString()} has been successfully processed and credited to your wallet.`
-              : `A new deposit of ${currency} ${amount.toLocaleString()} has been completed by ${userName || "a user"}. A transaction fee of ${currency} ${fee.toLocaleString()} has been credited to your account.`}
+            {isFailure
+              ? `Your deposit of ${currency} ${amount.toLocaleString()} could not be completed. No funds were moved. Please try again or contact support if the issue persists.`
+              : isUser
+                ? `Your deposit of ${currency} ${amount.toLocaleString()} has been successfully processed and credited to your wallet.`
+                : `A new deposit of ${currency} ${amount.toLocaleString()} has been completed by ${userName || "a user"}. A transaction fee of ${currency} ${fee.toLocaleString()} has been credited to your account.`}
           </p>
 
           <div
@@ -157,7 +169,7 @@ const DepositEmail = ({
                 {!isUser && (
                   <tr>
                     <td style={labelStyle}>User:</td>
-                    <td style={valueStyle}>{userName}</td>
+                    <td style={valueStyle}>{userName || "—"}</td>
                   </tr>
                 )}
                 <tr>
@@ -179,7 +191,7 @@ const DepositEmail = ({
                     {currency} {fee.toLocaleString()}
                   </td>
                 </tr>
-                {isUser && (
+                {isUser && !isFailure && (
                   <tr style={{ borderTop: "1px solid #e5e7eb" }}>
                     <td style={{ ...labelStyle, paddingTop: "12px" }}>
                       <strong>Total Charged:</strong>
@@ -204,11 +216,11 @@ const DepositEmail = ({
                     style={{
                       ...valueStyle,
                       paddingTop: "8px",
-                      color: "#059669",
+                      color: isFailure ? "#dc2626" : "#059669",
                       fontWeight: "700",
                     }}
                   >
-                    Completed
+                    {isFailure ? "Failed" : "Completed"}
                   </td>
                 </tr>
                 <tr>
@@ -226,7 +238,7 @@ const DepositEmail = ({
                     {reference}
                   </td>
                 </tr>
-                {receiptUrl && (
+                {showReceipt && receiptUrl && (
                   <tr>
                     <td style={labelStyle}>Receipt:</td>
                     <td style={valueStyle}>
@@ -239,7 +251,7 @@ const DepositEmail = ({
                           textDecoration: "underline",
                         }}
                       >
-                        View Stripe Receipt
+                        {isCardReceipt ? "View Stripe Receipt" : "View receipt"}
                       </a>
                     </td>
                   </tr>

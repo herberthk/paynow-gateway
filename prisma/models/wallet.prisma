@@ -7,12 +7,15 @@ model Wallet {
   type LedgerType @default(CREDIT)
   reason String?
   refference String
+  // Nullable: only MoMo top-ups set it. Legacy P2P/card rows predate it.
+  mobileMoneyProvider MobileMoneyProvider?
   paymentMethod PaymentMethodType @default(MOBILE_MONEY)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   @@index([createdAt])
   @@index([refference])
   @@index([paymentMethod])
+  @@index([mobileMoneyProvider])
   @@index([userId])
   @@index([type])
   @@map("payment_wallets")
@@ -22,3 +25,9 @@ enum Currency {
   UGX
   USD
 }
+
+enum MobileMoneyProvider {
+  MTN
+  AIRTEL
+}
+  

@@ -1,10 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, AlertCircle } from "lucide-react";
+import { checkYoDepositStatus } from "@/lib/actions/yo";
 import { getTransactionByRef } from "@/lib/actions/wallet";
-import Link from "next/link";
+import {
+  POLL_DEADLINE_MS,
+  POLL_START_DELAY_MS,
+  POLL_MAX_DELAY_MS,
+  POLL_BACKOFF,
+  withJitter,
+} from "@/lib/yo/constants";
+import {
+  DepositDisputedCard,
+  DepositFailedCard,
+  DepositTimeoutCard,
+} from "@/components/user/DepositStatusCards";
 
 interface TransactionWaiterProps {
   txnRef: string;
@@ -12,55 +24,126 @@ interface TransactionWaiterProps {
 
 export default function TransactionWaiter({ txnRef }: TransactionWaiterProps) {
   const router = useRouter();
-  const [attempts, setAttempts] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  const maxAttempts = 15; // 15 attempts * 2 seconds = 30 seconds max wait
+  const [phase, setPhase] = useState<
+    "waiting" | "failed" | "timeout" | "disputed"
+  >("waiting");
+  const active = useRef(true);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sawLiveCompleted = useRef(false);
+  const followUpCount = useRef(0);
+  const MAX_POST_COMPLETED_TICKS = 4;
 
   useEffect(() => {
+    active.current = true;
+    sawLiveCompleted.current = false;
+    followUpCount.current = 0;
+    const startedAt = Date.now();
+    let delay = POLL_START_DELAY_MS;
+
     const poll = async () => {
+      if (!active.current) return;
+      if (Date.now() - startedAt >= POLL_DEADLINE_MS) {
+        if (
+          sawLiveCompleted.current &&
+          followUpCount.current < MAX_POST_COMPLETED_TICKS
+        ) {
+          followUpCount.current += 1;
+          if (!active.current) return;
+          timer.current = setTimeout(poll, 3000);
+          return;
+        }
+        setPhase("timeout");
+        return;
+      }
       try {
-        const result = await getTransactionByRef({ ref: txnRef });
-        if (result.success && result.transaction) {
-          // Transaction found! Refresh the page so the server component can render the success view
+        const [liveSettled, localSettled] = await Promise.allSettled([
+          checkYoDepositStatus(txnRef),
+          getTransactionByRef({ reference: txnRef }),
+        ]);
+        if (!active.current) return;
+        const live =
+          liveSettled.status === "fulfilled" ? liveSettled.value : null;
+        const local =
+          localSettled.status === "fulfilled" ? localSettled.value : null;
+        if (live?.success && live.status === "COMPLETED") {
+          sawLiveCompleted.current = true;
+        }
+        const completed =
+          (live?.success && live.status === "COMPLETED") ||
+          (local?.success && local.transaction?.status === "COMPLETED");
+        if (completed) {
           router.refresh();
+          // The DB write may not have landed yet when the live provider
+          // flips to COMPLETED. Schedule follow-up polls so a
+          // PENDING re-render (same txnRef, effect doesn't rerun) still
+          // resolves instead of wedging the spinner forever.
+          // Bounded: after the cap, fall through to the timeout card
+          // rather than looping forever.
+          followUpCount.current += 1;
+          if (followUpCount.current > MAX_POST_COMPLETED_TICKS) {
+            setPhase("timeout");
+            return;
+          }
+          if (!active.current) return;
+          const remaining = POLL_DEADLINE_MS - (Date.now() - startedAt);
+          if (remaining > 0) {
+            timer.current = setTimeout(poll, Math.min(3000, remaining));
+          } else if (sawLiveCompleted.current) {
+            timer.current = setTimeout(poll, 3000);
+          }
           return;
         }
-
-        if (attempts >= maxAttempts) {
-          setError(
-            "Transaction is taking longer than expected. Please check your wallet history later.",
-          );
+        const disputed =
+          (live?.success && (live.status as string) === "DISPUTED") ||
+          (local?.success &&
+            (local.transaction?.status as string) === "DISPUTED");
+        if (disputed) {
+          setPhase("disputed");
           return;
         }
-
-        // Wait 2 seconds before next poll
-        setTimeout(() => setAttempts((a) => a + 1), 2000);
+        const failed =
+          (live?.success && live.status === "FAILED") ||
+          (local?.success && local.transaction?.status === "FAILED");
+        if (failed) {
+          setPhase("failed");
+          return;
+        }
+        // INDETERMINATE / PENDING keeps polling like PENDING.
       } catch (err) {
         console.error("Polling error:", err);
-        // Error polling, but let's try again until max attempts
-        setTimeout(() => setAttempts((a) => a + 1), 2000);
       }
+      if (!active.current) return;
+      delay = Math.min(delay * POLL_BACKOFF, POLL_MAX_DELAY_MS);
+      timer.current = setTimeout(poll, withJitter(delay));
     };
 
-    poll();
-  }, [txnRef, attempts, router]);
+    timer.current = setTimeout(poll, withJitter(POLL_START_DELAY_MS));
+    return () => {
+      active.current = false;
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, [txnRef, router]);
 
-  if (error) {
+  if (phase === "disputed") {
     return (
       <div className="max-w-md mx-auto mt-20 p-8 bg-white dark:bg-slate-900 rounded-3xl shadow-xl text-center border border-gray-100 dark:border-slate-800">
-        <div className="w-16 h-16 bg-amber-50 dark:bg-amber-900/10 rounded-full flex items-center justify-center mx-auto mb-6">
-          <AlertCircle className="text-amber-600" size={32} />
-        </div>
-        <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-2">
-          Processing...
-        </h2>
-        <p className="text-gray-500 dark:text-gray-400 mb-8">{error}</p>
-        <Link
-          href="/dashboard/user/wallet"
-          className="block w-full bg-gray-900 dark:bg-white dark:text-gray-900 text-white font-bold py-4 rounded-2xl transition-all hover:scale-[1.02] text-center"
-        >
-          Back to Wallet
-        </Link>
+        <DepositDisputedCard txnRef={txnRef} />
+      </div>
+    );
+  }
+
+  if (phase === "failed") {
+    return (
+      <div className="max-w-md mx-auto mt-20 p-8 bg-white dark:bg-slate-900 rounded-3xl shadow-xl text-center border border-gray-100 dark:border-slate-800">
+        <DepositFailedCard txnRef={txnRef} />
+      </div>
+    );
+  }
+
+  if (phase === "timeout") {
+    return (
+      <div className="max-w-md mx-auto mt-20 p-8 bg-white dark:bg-slate-900 rounded-3xl shadow-xl text-center border border-gray-100 dark:border-slate-800">
+        <DepositTimeoutCard txnRef={txnRef} />
       </div>
     );
   }
@@ -71,6 +154,8 @@ export default function TransactionWaiter({ txnRef }: TransactionWaiterProps) {
         <div className="w-20 h-20 border-4 border-indigo-100 dark:border-slate-800 rounded-full" />
         <Loader2
           size={80}
+          role="status"
+          aria-label="Confirming transaction"
           className="text-indigo-600 animate-spin absolute inset-0"
         />
       </div>
@@ -82,7 +167,8 @@ export default function TransactionWaiter({ txnRef }: TransactionWaiterProps) {
           Please wait while we confirm your funds...
         </p>
       </div>
-      <div className="text-xs text-gray-400 font-medium">
+      <div className="text-xs text-gray-400 font-medium flex items-center gap-2">
+        <AlertCircle size={14} />
         Reference: <span className="font-mono">{txnRef}</span>
       </div>
     </div>

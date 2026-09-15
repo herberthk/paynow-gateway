@@ -18,6 +18,18 @@ model Transaction {
   reason     String?
   receiptUrl String?
   fee       Decimal           @db.Decimal(12, 2) @default(0.00)
+  // Yo! Payments correlation fields (also usable by future providers).
+  // externalReference = our idempotency key sent via setExternalReference().
+  // For Yo top-ups it equals txn_ref. Webhooks echo it back as
+  // success.external_ref / failure.failed_transaction_reference.
+  externalReference String? @unique
+  // Gateway-side reference returned by acDepositFunds (polling/support).
+  providerRef String?
+  // Payer MSISDN in 256XXXXXXXXX format + detected network.
+  msisdn   String?
+  provider MobileMoneyProvider?
+  // Gateway network_ref from success IPN.
+  networkRef String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   deleted_at DateTime?
@@ -29,7 +41,11 @@ model Transaction {
   @@index([type])
   @@index([method])
   @@index([category])
-  @@index([txn_ref])
+  @@index([providerRef])
+  @@index([msisdn])
+  @@index([status, createdAt])
+  @@index([type, status, createdAt])
+  @@index([userId, type, status, createdAt])
   @@index([userId])
   @@index([createdAt])
   @@map("payment_transactions")
@@ -48,5 +64,5 @@ enum TransactionStatus {
   COMPLETED
   PENDING
   FAILED
-  DISPUTED
+  INDETERMINATE
 }

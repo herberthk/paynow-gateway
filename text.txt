@@ -223,3 +223,6 @@ Spending insights must surface automatically without requiring users to navigate
 
 OUTPUT:
 Dashboard → Transaction Management → Budget System → Spending Analysis → Goals Tracker → Complete App
+
+Pending migrations:
+20260914215425

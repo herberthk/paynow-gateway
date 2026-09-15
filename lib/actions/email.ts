@@ -26,6 +26,14 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+/** Strip CR/LF + control chars from values interpolated into email subjects. */
+const sanitizeEmailHeader = (value: string): string =>
+  (value ?? "").replace(/[\r\n\u0000-\u001f]/g, "").trim().slice(0, 120);
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isValidEmail = (value: string): boolean =>
+  typeof value === "string" && value.length <= 254 && EMAIL_RE.test(value);
+
 type Props = {
   id: number;
   email: string;
@@ -224,6 +232,10 @@ export const sendDepositEmail = async ({
   fee = 0,
   receiptUrl,
 }: DepositEmailProps) => {
+  if (!isValidEmail(email)) {
+    console.warn("Skipping deposit email: invalid to-address");
+    return false;
+  }
   try {
     const emailHtml = await render(
       DepositEmail({
@@ -240,7 +252,7 @@ export const sendDepositEmail = async ({
     const mailOptions = {
       from: '"ConnectPay" <support@connectappbiz.com>',
       to: email,
-      subject: `Deposit Confirmation - ${reference}`,
+      subject: `Deposit Confirmation - ${sanitizeEmailHeader(reference)}`,
       html: emailHtml,
     };
 
@@ -262,6 +274,10 @@ export const sendAdminDepositNoticeEmail = async ({
   fee = 0,
   receiptUrl,
 }: DepositEmailProps) => {
+  if (!isValidEmail(email)) {
+    console.warn("Skipping admin deposit email: invalid to-address");
+    return false;
+  }
   try {
     const emailHtml = await render(
       DepositEmail({
@@ -279,7 +295,7 @@ export const sendAdminDepositNoticeEmail = async ({
     const mailOptions = {
       from: '"ConnectPay" <support@connectappbiz.com>',
       to: email,
-      subject: `New Deposit Notification - ${reference}`,
+      subject: `New Deposit Notification - ${sanitizeEmailHeader(reference)}`,
       html: emailHtml,
     };
 
@@ -419,6 +435,49 @@ export const sendAdminSupportFeeEmail = async ({
     return true;
   } catch (error) {
     console.error("Error sending admin support fee email:", error);
+    return false;
+  }
+};
+
+export const sendDepositFailureEmail = async ({
+  email,
+  userName,
+  amount,
+  reference,
+  method = "Mobile Money",
+}: {
+  email: string;
+  userName: string;
+  amount: number;
+  reference: string;
+  method?: string;
+}) => {
+  if (!isValidEmail(email)) {
+    console.warn("Skipping deposit failure email: invalid to-address");
+    return false;
+  }
+  try {
+    const emailHtml = await render(
+      DepositEmail({
+        userName,
+        amount,
+        reference,
+        method,
+        fee: 0,
+        role: "USER_FAILURE",
+      }),
+    );
+    const mailOptions = {
+      from: '"ConnectPay" <support@connectappbiz.com>',
+      to: email,
+      subject: `Deposit Failed - ${sanitizeEmailHeader(reference)}`,
+      html: emailHtml,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Error sending deposit failure email:", error);
     return false;
   }
 };
