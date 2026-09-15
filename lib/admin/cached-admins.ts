@@ -14,9 +14,10 @@ export const fetchAdminsDirect = async (): Promise<AdminRow[]> => {
   try {
     const response = await prisma.user.findMany({
       where: {
+      where: {
         privilege: "super_admin",
-        status: true,
         deleted_at: null,
+        status: true,
       },
       select: {
         id: true,
