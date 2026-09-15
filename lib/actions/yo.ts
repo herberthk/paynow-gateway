@@ -32,7 +32,7 @@ import {
   STATUS_POLL_TIMEOUT_MS,
 } from "@/lib/yo/constants";
 import { creditDepositFee } from "./deposit-fee";
-import { getCachedAdmins } from "./admin/admin-mgmt";
+import { getCachedAdmins } from "@/lib/admin/cached-admins";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -712,11 +712,13 @@ export const checkYoDepositStatus = async (
       fee: txn.fee.toNumber(),
       providerRef: txn.providerRef,
     };
-    if (guard.processed || txn.status === "COMPLETED") {
-      return { ...local, status: "COMPLETED" };
-    }
+    // Check terminal FAILED before guard.processed — the guard is marked
+    // processed for *both* success and failure settlements.
     if (txn.status === "FAILED") {
       return { ...local, status: "FAILED" };
+    }
+    if (guard.processed || txn.status === "COMPLETED") {
+      return { ...local, status: "COMPLETED" };
     }
 
     // Still open — ask the provider (branch on TransactionStatus, not Status:

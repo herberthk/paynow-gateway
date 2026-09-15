@@ -27,29 +27,32 @@ export default function TransactionWaiter({ txnRef }: TransactionWaiterProps) {
   const [phase, setPhase] = useState<
     "waiting" | "failed" | "timeout" | "disputed"
   >("waiting");
-  const active = useRef(true);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sawLiveCompleted = useRef(false);
   const followUpCount = useRef(0);
   const MAX_POST_COMPLETED_TICKS = 4;
 
   useEffect(() => {
-    active.current = true;
+    // Reset phase for the new transaction reference.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPhase("waiting");
+
+    let cancelled = false;
     sawLiveCompleted.current = false;
     followUpCount.current = 0;
     const startedAt = Date.now();
     let delay = POLL_START_DELAY_MS;
+    let localTimer: ReturnType<typeof setTimeout> | null = null;
 
     const poll = async () => {
-      if (!active.current) return;
+      if (cancelled) return;
       if (Date.now() - startedAt >= POLL_DEADLINE_MS) {
         if (
           sawLiveCompleted.current &&
           followUpCount.current < MAX_POST_COMPLETED_TICKS
         ) {
           followUpCount.current += 1;
-          if (!active.current) return;
-          timer.current = setTimeout(poll, 3000);
+          if (cancelled) return;
+          localTimer = setTimeout(poll, 3000);
           return;
         }
         setPhase("timeout");
@@ -60,7 +63,7 @@ export default function TransactionWaiter({ txnRef }: TransactionWaiterProps) {
           checkYoDepositStatus(txnRef),
           getTransactionByRef({ reference: txnRef }),
         ]);
-        if (!active.current) return;
+        if (cancelled) return;
         const live =
           liveSettled.status === "fulfilled" ? liveSettled.value : null;
         const local =
@@ -70,7 +73,7 @@ export default function TransactionWaiter({ txnRef }: TransactionWaiterProps) {
         }
         const completed =
           (live?.success && live.status === "COMPLETED") ||
-          (local?.success && local.transaction?.status === "COMPLETED");
+          (local?.success && local.transaction.status === "COMPLETED");
         if (completed) {
           router.refresh();
           // The DB write may not have landed yet when the live provider
@@ -84,26 +87,26 @@ export default function TransactionWaiter({ txnRef }: TransactionWaiterProps) {
             setPhase("timeout");
             return;
           }
-          if (!active.current) return;
+          if (cancelled) return;
           const remaining = POLL_DEADLINE_MS - (Date.now() - startedAt);
           if (remaining > 0) {
-            timer.current = setTimeout(poll, Math.min(3000, remaining));
+            localTimer = setTimeout(poll, Math.min(3000, remaining));
           } else if (sawLiveCompleted.current) {
-            timer.current = setTimeout(poll, 3000);
+            localTimer = setTimeout(poll, 3000);
           }
           return;
         }
         const disputed =
-          (live?.success && (live.status as string) === "DISPUTED") ||
+          (live?.success && (live.status as string) === "INDETERMINATE") ||
           (local?.success &&
-            (local.transaction?.status as string) === "DISPUTED");
+            (local.transaction.status as string) === "INDETERMINATE");
         if (disputed) {
           setPhase("disputed");
           return;
         }
         const failed =
           (live?.success && live.status === "FAILED") ||
-          (local?.success && local.transaction?.status === "FAILED");
+          (local?.success && local.transaction.status === "FAILED");
         if (failed) {
           setPhase("failed");
           return;
@@ -112,15 +115,15 @@ export default function TransactionWaiter({ txnRef }: TransactionWaiterProps) {
       } catch (err) {
         console.error("Polling error:", err);
       }
-      if (!active.current) return;
+      if (cancelled) return;
       delay = Math.min(delay * POLL_BACKOFF, POLL_MAX_DELAY_MS);
-      timer.current = setTimeout(poll, withJitter(delay));
+      localTimer = setTimeout(poll, withJitter(delay));
     };
 
-    timer.current = setTimeout(poll, withJitter(POLL_START_DELAY_MS));
+    localTimer = setTimeout(poll, withJitter(POLL_START_DELAY_MS));
     return () => {
-      active.current = false;
-      if (timer.current) clearTimeout(timer.current);
+      cancelled = true;
+      if (localTimer) clearTimeout(localTimer);
     };
   }, [txnRef, router]);
 

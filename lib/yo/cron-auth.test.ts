@@ -10,6 +10,9 @@ const authedRequest = (header: string | null) =>
     headers: header ? { authorization: header } : {},
   });
 
+const rawHeaderRequest = (header: string) =>
+  ({ headers: { get: () => header } }) as unknown as Request;
+
 describe("isCronAuthorized", () => {
   it("accepts the exact bearer secret", () => {
     vi.stubEnv("CRON_SECRET", "s3cr3t");
@@ -34,16 +37,19 @@ describe("isCronAuthorized", () => {
     vi.stubEnv("CRON_SECRET", "s3cr3t");
     // NOTE: the Fetch Headers layer strips OWS, so a real Request can never
     // deliver the trailing space — stub headers to unit-test the comparison.
-    const req = {
-      headers: { get: () => "Bearer s3cr3t " },
-    } as unknown as Request;
-    expect(isCronAuthorized(req)).toBe(false);
+    expect(isCronAuthorized(rawHeaderRequest("Bearer s3cr3t "))).toBe(false);
   });
 
   it("never matches a whitespace-only secret for unauthenticated calls", () => {
     vi.stubEnv("CRON_SECRET", "   ");
     expect(isCronAuthorized(authedRequest(null))).toBe(false);
     expect(isCronAuthorized(authedRequest("Bearer wrong"))).toBe(false);
+  });
+
+  it("trims trailing whitespace from the secret (common .env mishap)", () => {
+    vi.stubEnv("CRON_SECRET", "s3cr3t  ");
+    expect(isCronAuthorized(authedRequest("Bearer s3cr3t"))).toBe(true);
+    expect(isCronAuthorized(rawHeaderRequest("Bearer s3cr3t  "))).toBe(false);
   });
 
   it("denies unauthenticated calls without the explicit opt-in", () => {

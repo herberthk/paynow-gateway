@@ -92,7 +92,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400";
       case "FAILED":
         return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400";
-      case "DISPUTED":
+      case "INDETERMINATE":
         return "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400";
       default:
         return "bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300";
@@ -107,7 +107,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
         return <Clock size={16} className="mr-1.5" />;
       case "FAILED":
         return <XCircle size={16} className="mr-1.5" />;
-      case "DISPUTED":
+      case "INDETERMINATE":
         return <AlertCircle size={16} className="mr-1.5" />;
       default:
         return null;
@@ -200,7 +200,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
               <option value="COMPLETED">Completed</option>
               <option value="PENDING">Pending</option>
               <option value="FAILED">Failed</option>
-              <option value="DISPUTED">Disputed</option>
+              <option value="INDETERMINATE">Payment under review</option>
             </select>
           </div>
           <button className="p-2 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-300 transition-colors">
@@ -305,7 +305,9 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(tx.status)}`}
                     >
                       {getStatusIcon(tx.status)}
-                      {tx.status}
+                      {tx.status === "INDETERMINATE"
+                        ? "Payment under review"
+                        : tx.status}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-gray-400">

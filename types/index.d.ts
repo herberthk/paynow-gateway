@@ -12,7 +12,6 @@ declare global {
     | "PENDING"
     | "FAILED"
     | "INDETERMINATE"
-    | "DISPUTED";
 
   type TransactionType =
     | "DEPOSIT"

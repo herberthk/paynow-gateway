@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTransactions } from "@/lib/actions/transactions";
+import { fetchTransactionsForUser } from "@/lib/server/transactions-core";
 import { getUserById } from "@/lib/actions/users";
 import { z } from "zod";
 
@@ -50,13 +50,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await getTransactions({
+    const result = await fetchTransactionsForUser(user as unknown as User, {
       page: page || 1,
       limit: limit || 10,
       query: query || "",
       status: status,
       type: type,
-      providedUser: user as unknown as User,
     });
 
     return NextResponse.json({

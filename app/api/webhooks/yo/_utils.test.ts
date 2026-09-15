@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseYoForm, toPaymentBody, toFailureBody } from "./_utils";
+import { parseYoForm, toPaymentBody, toFailureBody, PayloadTooLargeError } from "./_utils";
 
 const formRequest = (fields: Record<string, string>) => {
   const form = new FormData();
@@ -131,6 +131,32 @@ describe("parseYoForm", () => {
   it("returns null for GET requests with no content-type", async () => {
     const parsed = await parseYoForm(new Request("http://localhost/x"));
     expect(parsed).toBeNull();
+  });
+
+  it("throws PayloadTooLargeError if content-length exceeds limit", async () => {
+    const req = new Request("http://localhost/x", {
+      method: "POST",
+      headers: { "content-length": "1000001" },
+    });
+    await expect(parseYoForm(req)).rejects.toThrow(PayloadTooLargeError);
+  });
+
+  it("throws PayloadTooLargeError if streamed chunked body exceeds limit", async () => {
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new Uint8Array(600_000));
+        controller.enqueue(new Uint8Array(600_000));
+        controller.close();
+      },
+    });
+    const req = new Request("http://localhost/x", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: stream,
+      // @ts-expect-error duplex required in node fetch
+      duplex: "half",
+    });
+    await expect(parseYoForm(req)).rejects.toThrow(PayloadTooLargeError);
   });
 });
 

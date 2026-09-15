@@ -33,7 +33,7 @@
 //   amount: number;
 //   currency: string;
 //   date: string;
-//   status: "COMPLETED" | "PENDING" | "FAILED" | "DISPUTED";
+//   status: "COMPLETED" | "PENDING" | "FAILED";
 //   type: "DEPOSIT" | "WITHDRAWAL" | "TRANSFER" | "PAYMENT" | "SUBSCRIPTION";
 //   method: string;
 //   category: string;

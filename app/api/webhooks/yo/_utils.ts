@@ -5,16 +5,69 @@ import type {
   PaymentFailureNotificationBody,
 } from "@herberthtk/yo-payments-api";
 
+export class PayloadTooLargeError extends Error {
+  constructor(message = "Payload too large") {
+    super(message);
+    this.name = "PayloadTooLargeError";
+  }
+}
+
 /** Keep only string form fields — drop Files before verification. */
-export async function parseYoForm(req: Request): Promise<Record<string, string> | null> {
+export async function parseYoForm(
+  req: Request,
+  maxBytes = 1_000_000,
+): Promise<Record<string, string> | null> {
+  const contentLength = req.headers.get("content-length");
+  if (contentLength != null) {
+    const parsedLength = Number.parseInt(contentLength, 10);
+    if (Number.isFinite(parsedLength) && parsedLength > maxBytes) {
+      throw new PayloadTooLargeError();
+    }
+  }
+
+  let requestToParse: Request = req;
+  if (req.body && !req.bodyUsed) {
+    const reader = req.body.getReader();
+    let totalBytes = 0;
+    const chunks: Uint8Array[] = [];
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        totalBytes += value.byteLength;
+        if (totalBytes > maxBytes) {
+          await reader.cancel();
+          throw new PayloadTooLargeError();
+        }
+        chunks.push(value);
+      }
+    } finally {
+      reader.releaseLock();
+    }
+    const merged = new Uint8Array(totalBytes);
+    let offset = 0;
+    for (const chunk of chunks) {
+      merged.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    requestToParse = new Request(req.url, {
+      method: req.method,
+      headers: req.headers,
+      body: merged,
+    });
+  }
+
   try {
-    const form = await req.formData();
+    const form = await requestToParse.formData();
     const body: Record<string, string> = {};
     for (const [key, value] of form.entries()) {
       if (typeof value === "string") body[key] = value;
     }
     return body;
-  } catch {
+  } catch (err) {
+    if (err instanceof PayloadTooLargeError) {
+      throw err;
+    }
     return null;
   }
 }

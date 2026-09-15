@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { processWalletSupport } from "@/lib/actions/support";
+import { _processWalletSupportCore } from "@/lib/server/support-core";
 import { getUserById } from "@/lib/actions/users";
 import { z } from "zod";
 
@@ -50,11 +50,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await processWalletSupport({
+    const result = await _processWalletSupportCore({
+      sender: user,
       senderId: userId,
       recipientId: toUserId,
       amount,
-      providedUser: user,
     });
 
     if (result.success) {

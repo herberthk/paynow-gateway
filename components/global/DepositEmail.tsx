@@ -22,6 +22,7 @@ const DepositEmail = ({
   role,
 }: Props) => {
   const isUser = role === "USER_CONFIRMATION";
+  const isAdmin = role === "ADMIN_NOTICE";
   const isFailure = role === "USER_FAILURE";
   const showReceipt =
     typeof receiptUrl === "string" && receiptUrl.startsWith("https://");
@@ -166,7 +167,7 @@ const DepositEmail = ({
 
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <tbody>
-                {!isUser && (
+                {isAdmin && (
                   <tr>
                     <td style={labelStyle}>User:</td>
                     <td style={valueStyle}>{userName || "—"}</td>
@@ -191,7 +192,7 @@ const DepositEmail = ({
                     {currency} {fee.toLocaleString()}
                   </td>
                 </tr>
-                {isUser && !isFailure && (
+                {isUser && (
                   <tr style={{ borderTop: "1px solid #e5e7eb" }}>
                     <td style={{ ...labelStyle, paddingTop: "12px" }}>
                       <strong>Total Charged:</strong>

@@ -32,7 +32,8 @@ describe("DepositEmail", () => {
     );
     expect(html).toContain("Carol");
     expect(html).toContain("Dave");
-    expect(html).toContain("500");
+    // Strip HTML comments inserted by @react-email/render between JSX nodes.
+    expect(html.replace(/<!--[\s\S]*?-->/g, "")).toContain("UGX 500");
     expect(html).toContain("transaction fee");
     expect(html).not.toContain("undefined");
   });

@@ -1,7 +1,7 @@
 import "server-only";
 import { getYoClient } from "@/lib/yo/client";
 import { finalizeYoFailure } from "@/lib/actions/yo";
-import { parseYoForm, toFailureBody } from "../_utils";
+import { parseYoForm, toFailureBody, PayloadTooLargeError } from "../_utils";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,15 +11,15 @@ export const dynamic = "force-dynamic";
  * back as `failed_transaction_reference` (no gateway ref, no amount).
  */
 export async function POST(req: Request) {
-  // Body-size guard before formData parsing: absent header = proceed.
-  const contentLength = req.headers.get("content-length");
-  if (contentLength != null) {
-    const parsedLength = Number.parseInt(contentLength, 10);
-    if (Number.isFinite(parsedLength) && parsedLength > 1_000_000) {
+  let raw: Record<string, string> | null;
+  try {
+    raw = await parseYoForm(req);
+  } catch (err) {
+    if (err instanceof PayloadTooLargeError) {
       return new Response("PAYLOAD TOO LARGE", { status: 413 });
     }
+    return new Response("BAD REQUEST", { status: 400 });
   }
-  const raw = await parseYoForm(req);
   if (!raw) return new Response("BAD REQUEST", { status: 400 });
 
   let result: {

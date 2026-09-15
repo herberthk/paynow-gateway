@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
     "pretest:e2e": "bun run build",
     "test:e2e": "playwright test",
     "test:e2e:ci": "bun run build && bunx playwright test",
@@ -17,8 +18,7 @@
     "studio": "bunx prisma studio",
     "seed": "bun run utils/seed.ts",
     "prisma:deploy": "bunx prisma migrate deploy",
-    "reset": "bunx prisma migrate reset && bunx prisma generate && bun run seed",
-    "prepare": "husky"
+    "reset": "bunx prisma migrate reset && bunx prisma generate && bun run seed"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.34",
@@ -76,7 +76,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
-    "husky": "^9.1.7",
     "lint-staged": "^17.0.2",
     "prisma": "^7.8.0",
     "react-email": "^5.2.5",

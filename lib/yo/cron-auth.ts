@@ -13,11 +13,11 @@ function allowUnauthCron(): boolean {
 }
 
 export function cronSecretRequired(): boolean {
-  return !process.env.CRON_SECRET && !allowUnauthCron();
+  return !(process.env.CRON_SECRET ?? "").trim() && !allowUnauthCron();
 }
 
 export function isCronAuthorized(req: Request): boolean {
-  const secret = process.env.CRON_SECRET;
+  const secret = (process.env.CRON_SECRET ?? "").trim();
   if (!secret) {
     // Scheduler secret not configured — fail closed. Allow unauthenticated
     // access only when ALLOW_UNAUTH_CRON === "true" in non-production.

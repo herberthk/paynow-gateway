@@ -1,8 +1,8 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { finalizeDeposit } from "@/lib/actions/wallet";
-import { finalizeSupportDeposit } from "@/lib/actions/support";
+import { finalizeDeposit } from "@/lib/server/wallet-core";
+import { finalizeSupportDeposit } from "@/lib/server/support-core";
 import type Stripe from "stripe";
 import prisma from "@/lib/prisma";
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { processP2PTransfer } from "@/lib/actions/wallet";
+import { _processP2PTransferCore } from "@/lib/server/wallet-core";
 import { getUserById } from "@/lib/actions/users";
 import { z } from "zod";
 
@@ -47,11 +47,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await processP2PTransfer(
-      userId,
+    const result = await _processP2PTransferCore(
+      user,
       recipientId,
       amount,
-      user,
     );
 
     if (result.success) {

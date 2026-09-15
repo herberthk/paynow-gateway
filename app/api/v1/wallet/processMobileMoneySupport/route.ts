@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { processMobileMoneySupport } from "@/lib/actions/support";
+import { _processMobileMoneySupport } from "@/lib/server/support-core";
 import { getUserById } from "@/lib/actions/users";
 import { z } from "zod";
 
@@ -47,11 +47,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await processMobileMoneySupport({
-      amount,
-      providedUser: user,
-      toUserId,
-    });
+    const result = await _processMobileMoneySupport(user, amount, toUserId);
 
     if (result.success) {
       return NextResponse.json(result);
