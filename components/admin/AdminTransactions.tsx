@@ -30,7 +30,7 @@
 //   amount: number;
 //   currency: string;
 //   date: string;
-//   status: "COMPLETED" | "PENDING" | "FAILED" | "DISPUTED";
+//   status: "COMPLETED" | "PENDING" | "FAILED";
 //   type: "DEPOSIT" | "WITHDRAWAL" | "TRANSFER" | "PAYMENT" | "SUBSCRIPTION";
 //   method: string;
 //   category: string;
@@ -91,8 +91,6 @@
 //         return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400";
 //       case "FAILED":
 //         return "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400";
-//       case "DISPUTED":
-//         return "bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400";
 //       default:
 //         return "bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300";
 //     }
@@ -188,13 +186,6 @@
 //     setProcessingId(tx.id);
 //     await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate API
 
-//     // Update local state
-//     setTransactions((prev) =>
-//       prev.map(
-//         (t) => (t.id === tx.id ? { ...t, status: "DISPUTED" } : t), // Using Disputed as a proxy for refunded/reversed in this enum
-//       ),
-//     );
-
 //     if (notify)
 //       notify("SUCCESS", `Transaction ${tx.id} has been fully refunded.`);
 //     setProcessingId(null);
@@ -229,7 +220,7 @@
 //         {/* Header Controls */}
 //         <div className="p-4 border-b border-gray-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
 //           <div className="flex bg-gray-100 dark:bg-slate-700/50 p-1 rounded-lg">
-//             {["ALL", "COMPLETED", "PENDING", "FAILED", "DISPUTED"].map((f) => (
+//             {["ALL", "COMPLETED", "PENDING", "FAILED"].map((f) => (
 //               <button
 //                 key={f}
 //                 onClick={() => setFilter(f)}

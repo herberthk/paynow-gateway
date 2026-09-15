@@ -3,14 +3,13 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getUserSession } from "./session";
 import { generateTxRef } from "@/utils";
-import { getAdmins } from "./admin";
+import { getCachedAdmins } from "@/lib/admin/cached-admins";
 import { getTransactionFee } from "./fee";
 import {
   sendSupportEmail,
   sendSupportReceiptEmail,
   sendAdminSupportFeeEmail,
 } from "./email";
-import { getWalletBalance } from "./wallet";
 
 /**
  * Core logic to finalize a support deposit in the database
@@ -49,7 +48,7 @@ export const finalizeSupportDeposit = async ({
     // console.log(receiptUrl, "is the receiptUrl");
     const feeResult = await getTransactionFee({ amount, type: "SUPPORT" });
     const fee = feeResult.success ? feeResult.amount || 0 : 0;
-    const admins = await getAdmins();
+    const admins = await getCachedAdmins();
     const isAdmin = sender.privilege === "super_admin";
     const TRANSACTION_FEE = isAdmin ? 0 : fee;
 
@@ -206,33 +205,23 @@ export const finalizeSupportDeposit = async ({
 };
 
 /**
- * Process Support via Wallet Balance (P2P Support)
+ * Core wallet support logic — server-only, accepts a pre-authenticated sender.
+ * Used by the public Server Action and the v1 API route.
+ * @internal Not a Server Action — do not expose to the client.
  */
-export const processWalletSupport = async ({
+export const _processWalletSupportCore = async ({
+  sender,
   senderId,
   recipientId,
   amount,
-  providedUser,
 }: {
+  sender: User;
   senderId: number;
   recipientId: number;
   amount: number;
   method?: string;
-  providedUser?: User;
 }) => {
   try {
-    const sender = providedUser || (await getUserSession());
-    if (!sender || sender.id !== senderId) {
-      return {
-        success: false,
-        message: "Unauthorized",
-        amount: 0,
-        currency: "UGX",
-        refference: "",
-        fee: 0,
-      };
-    }
-
     if (amount <= 1000) {
       return {
         success: false,
@@ -267,19 +256,39 @@ export const processWalletSupport = async ({
       };
     }
 
-    const admins = await getAdmins();
+    const admins = await getCachedAdmins();
     const refference = await generateTxRef();
 
-    // Get sender balance
-    const senderBalance = (await getWalletBalance(senderId)).balance ?? 0;
     const isAdmin = sender.privilege === "super_admin";
     const TRANSACTION_FEE = isAdmin ? 0 : feeResult.amount;
     const totalDeduction = amount + TRANSACTION_FEE;
 
     const result = await prisma.$transaction(async (tx) => {
-      if (senderBalance < totalDeduction) {
+      // Advisory lock on the sender's wallet — serializes concurrent support
+      // debits from the same user to prevent double-spend race conditions.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('wallet_debit'), ${senderId})`;
+
+      // Fresh balance re-read inside the transaction after acquiring the lock.
+      const freshRows = await tx.$queryRaw<{ balance: number }[]>`
+        SELECT
+          COALESCE(
+            SUM(
+              CASE
+                WHEN type = 'CREDIT' THEN amount
+                WHEN type = 'DEBIT' THEN -amount
+                ELSE 0
+              END
+            ),
+            0
+          ) AS balance
+        FROM payment_wallets
+        WHERE "userId" = ${senderId};
+      `;
+      const freshBalance = Number(freshRows[0]?.balance ?? 0);
+
+      if (freshBalance < totalDeduction) {
         throw new Error(
-          `Insufficient balance. Available UGX ${senderBalance.toLocaleString()}, Required UGX ${totalDeduction.toLocaleString()}`,
+          `Insufficient balance. Available UGX ${freshBalance.toLocaleString()}, Required UGX ${totalDeduction.toLocaleString()}`,
         );
       }
 
@@ -454,38 +463,71 @@ export const processWalletSupport = async ({
 };
 
 /**
- * Process Mobile Money Support
+ * Process Support via Wallet Balance (P2P Support) — public Server Action.
+ * Authenticates the caller via session cookie, then delegates to the core.
+ */
+export const processWalletSupport = async ({
+  senderId,
+  recipientId,
+  amount,
+}: {
+  senderId: number;
+  recipientId: number;
+  amount: number;
+  method?: string;
+}) => {
+  const sender = await getUserSession();
+  if (!sender || sender.id !== senderId) {
+    return {
+      success: false,
+      message: "Unauthorized",
+      amount: 0,
+      currency: "UGX",
+      refference: "",
+      fee: 0,
+    };
+  }
+  return _processWalletSupportCore({ sender, senderId, recipientId, amount });
+};
+
+/**
+ * Core logic — accepts a pre-authenticated user.
+ * @internal
+ */
+export const _processMobileMoneySupport = async (
+  user: User,
+  amount: number,
+  toUserId: number,
+): Promise<{ success: boolean; refference?: string; message: string }> => {
+  if (amount < 500) {
+    return { success: false, message: "Minimum support amount is UGX 500" };
+  }
+  const refference = await generateTxRef();
+  return finalizeSupportDeposit({
+    userId: user.id,
+    toUserId,
+    amount,
+    refference,
+    method: "Mobile Money",
+    reason: "Mobile Money Support",
+    paymentMethod: "MOBILE_MONEY",
+  });
+};
+
+/**
+ * Process Mobile Money Support — public Server Action.
  */
 export const processMobileMoneySupport = async ({
   amount,
-  providedUser,
   toUserId,
 }: {
   amount: number;
-  providedUser?: User;
   toUserId: number;
 }): Promise<{ success: boolean; refference?: string; message: string }> => {
   try {
-    const user = providedUser || (await getUserSession());
-    if (!user) {
-      return { success: false, message: "Unauthorized" };
-    }
-
-    if (amount < 500) {
-      return { success: false, message: "Minimum support amount is UGX 500" };
-    }
-
-    const refference = await generateTxRef();
-
-    return await finalizeSupportDeposit({
-      userId: user.id,
-      toUserId,
-      amount,
-      refference,
-      method: "Mobile Money",
-      reason: "Mobile Money Support",
-      paymentMethod: "MOBILE_MONEY",
-    });
+    const user = await getUserSession();
+    if (!user) return { success: false, message: "Unauthorized" };
+    return _processMobileMoneySupport(user, amount, toUserId);
   } catch (error) {
     console.error("Error processing mobile money support:", error);
     return {

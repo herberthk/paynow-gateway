@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getTransactionByRef } from "@/lib/actions/wallet";
+import { _getTransactionByRefCore } from "@/lib/actions/wallet";
 import { getUserById } from "@/lib/actions/users";
 import { z } from "zod";
 
@@ -46,11 +46,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Pass the userId to verify the transaction belongs to the user
-    const result = await getTransactionByRef({
+    const result = await _getTransactionByRefCore(
+      user as unknown as User,
       reference,
-      providedUser: user as unknown as User,
-    });
+    );
 
     if (!result.success) {
       return NextResponse.json(result, { status: 404 });

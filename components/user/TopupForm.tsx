@@ -99,7 +99,7 @@ const TopupForm = ({ initialPhone = "" }: { initialPhone?: string }) => {
   const [pollStartedAt, setPollStartedAt] = useState<number>(0);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollingActive = useRef(false);
-  const pollWindowCount = useRef(0);
+  const [pollWindowCount, setPollWindowCount] = useState(0);
   const reduceMotion = useReducedMotion();
 
   const phonePreview = useMemo(() => {
@@ -193,7 +193,7 @@ const TopupForm = ({ initialPhone = "" }: { initialPhone?: string }) => {
   const startPolling = (ref: string, existingStartedAt?: number) => {
     stopPolling();
     pollingActive.current = true;
-    pollWindowCount.current += 1;
+    setPollWindowCount((c) => c + 1);
     const startedAt = existingStartedAt ?? Date.now();
     setPollStartedAt(startedAt);
     pollTimer.current = setTimeout(
@@ -310,7 +310,7 @@ const TopupForm = ({ initialPhone = "" }: { initialPhone?: string }) => {
         setPollStartedAt(startedAt);
         setExternalRef(result.externalRef);
         setMomoPhase("pending");
-        pollWindowCount.current = 0;
+        setPollWindowCount(0);
         startPolling(result.externalRef, startedAt);
       } else {
         setMomoPhase("confirm");
@@ -772,7 +772,7 @@ const TopupForm = ({ initialPhone = "" }: { initialPhone?: string }) => {
                         {/* Progress */}
                         <PollCountdown
                           key={`${externalRef}-${pollStartedAt}`}
-                          startedAt={pollStartedAt || Date.now()}
+                          startedAt={pollStartedAt}
                         />
 
                         <div className="p-4 bg-gray-50 dark:bg-slate-800/50 rounded-2xl flex items-center gap-3 text-left mb-6">
@@ -829,10 +829,10 @@ const TopupForm = ({ initialPhone = "" }: { initialPhone?: string }) => {
                         <DepositTimeoutCard
                           txnRef={externalRef}
                           keepWaitingExhausted={
-                            pollWindowCount.current >= 3
+                            pollWindowCount >= 3
                           }
                           onKeepWaiting={
-                            pollWindowCount.current >= 3
+                            pollWindowCount >= 3
                               ? undefined
                               : () => {
                                   setError(null);

@@ -114,7 +114,19 @@ describe("session round-trip", () => {
     await expect(getUserSession()).resolves.toBeNull();
   });
 
-  // NOTE: no status:false test — session.ts has no status check
-  // (verified: getUserSession only validates numeric id + privilege
-  // allowlist), so there is nothing to pin here. Skipped intentionally.
+  it("status:false token → null", async () => {
+    jar.set(
+      "session",
+      await signWith({ id: 7, privilege: "none", status: false }, SECRET),
+    );
+    await expect(getUserSession()).resolves.toBeNull();
+  });
+
+  it("weak secret in production → encrypt throws", async () => {
+    vi.stubEnv("SESSION_SECRET", "short");
+    vi.stubEnv("NODE_ENV", "production");
+    await expect(encrypt({ id: 7, privilege: "none" })).rejects.toThrow(
+      "32 bytes",
+    );
+  });
 });

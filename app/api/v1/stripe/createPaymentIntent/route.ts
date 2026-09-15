@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createPaymentIntent } from "@/lib/actions/stripe";
+import { _createPaymentIntentCore } from "@/lib/actions/stripe";
 import { getUserById } from "@/lib/actions/users";
 import { z } from "zod";
 
@@ -50,10 +50,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await createPaymentIntent({
+    const result = await _createPaymentIntentCore(user, {
       amount,
       baseAmount,
-      providedUser: user,
       type,
       toUserId,
       fromUserId,

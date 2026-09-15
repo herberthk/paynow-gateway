@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { createSession, getUserSession } from "./session";
 import bcrypt from "bcrypt";
 import { revalidatePath } from "next/cache";
-import { getAdmins } from "./admin";
+import { getCachedAdmins } from "@/lib/admin/cached-admins";
 
 export const updatePassword = async ({
   currentPassword,
@@ -49,7 +49,7 @@ export const updatePassword = async ({
         password: hashedPassword,
       },
     });
-    const admins = await getAdmins();
+    const admins = await getCachedAdmins();
     // send notifications to admins
     await prisma.systemNotification.createMany({
       data: admins.map((admin) => ({
@@ -118,7 +118,7 @@ export const updateUserInfo = async ({
       },
     });
 
-    const admins = await getAdmins();
+    const admins = await getCachedAdmins();
     // send notifications to admins
     await prisma.systemNotification.createMany({
       data: admins.map((admin) => ({

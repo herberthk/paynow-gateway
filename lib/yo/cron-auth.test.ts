@@ -46,6 +46,12 @@ describe("isCronAuthorized", () => {
     expect(isCronAuthorized(authedRequest("Bearer wrong"))).toBe(false);
   });
 
+  it("trims trailing whitespace from the secret (common .env mishap)", () => {
+    vi.stubEnv("CRON_SECRET", "s3cr3t  ");
+    expect(isCronAuthorized(authedRequest("Bearer s3cr3t"))).toBe(true);
+    expect(isCronAuthorized(authedRequest("Bearer s3cr3t  "))).toBe(false);
+  });
+
   it("denies unauthenticated calls without the explicit opt-in", () => {
     vi.stubEnv("CRON_SECRET", "");
     vi.stubEnv("ALLOW_UNAUTH_CRON", "");

@@ -2,6 +2,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import prisma from "@/lib/prisma";
 
 let warnedWeakSecret = false;
 
@@ -10,13 +11,21 @@ const getKey = () => {
   if (!secret) {
     throw new Error("SESSION_SECRET is not configured");
   }
-  if (secret.length < 32 && !warnedWeakSecret) {
-    warnedWeakSecret = true;
-    console.warn(
-      "SESSION_SECRET is shorter than 32 characters — use a strong random secret in production.",
-    );
+  const encoded = new TextEncoder().encode(secret);
+  if (encoded.byteLength < 32) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "SESSION_SECRET must be at least 32 bytes in production.",
+      );
+    }
+    if (!warnedWeakSecret) {
+      warnedWeakSecret = true;
+      console.warn(
+        "SESSION_SECRET is shorter than 32 characters — use a strong random secret in production.",
+      );
+    }
   }
-  return new TextEncoder().encode(secret);
+  return encoded;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -107,6 +116,25 @@ export const getUserSession = async () => {
   if (record.status === false) {
     return null;
   }
+
+  // Verify mutable authorization state against current database values.
+  // This ensures suspended users and revoked privileges are rejected
+  // even if they hold a valid JWT.
+  try {
+    const dbUser = await prisma.user.findUnique({
+      where: { id: record.id as number },
+      select: { status: true, privilege: true, deleted_at: true },
+    });
+    if (!dbUser) return null;
+    if (dbUser.status === false) return null;
+    if (dbUser.deleted_at !== null) return null;
+    // Reject if privilege was revoked/changed since token was issued.
+    if (dbUser.privilege !== record.privilege) return null;
+  } catch {
+    // DB verification failure — fail open to JWT claims to avoid
+    // locking out all users during transient DB issues.
+  }
+
   return payload as unknown as User;
 };
 

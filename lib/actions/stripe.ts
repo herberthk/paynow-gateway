@@ -5,63 +5,76 @@ import { getUserSession } from "./session";
 import { generateTxRef } from "@/utils";
 
 /**
- * Create a Stripe PaymentIntent for wallet top-up
- * @param amount - Amount in UGX
- * @returns Client secret for the PaymentIntent
+ * Core Stripe PaymentIntent logic — accepts a pre-authenticated user.
+ * @internal
+ */
+export async function _createPaymentIntentCore(
+  user: User,
+  {
+    amount,
+    baseAmount,
+    type,
+    toUserId,
+    fromUserId,
+  }: {
+    amount: number;
+    baseAmount: number;
+    type: TransactionReason;
+    toUserId?: number;
+    fromUserId?: number;
+  },
+) {
+  if (!type) throw new Error("Transaction type is required");
+  if (amount < 5000) throw new Error("Minimum card top-up is UGX 5,000");
+
+  const transactionReference = await generateTxRef();
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: amount * 100,
+    currency: "ugx",
+    metadata: {
+      userId: user.id.toString(),
+      transactionReference,
+      baseAmount: baseAmount.toString(),
+      type,
+      ...(toUserId && { toUserId: toUserId.toString() }),
+      ...(fromUserId && { fromUserId: fromUserId.toString() }),
+    },
+    description: `${type} for ${user.name || user.email}`,
+  });
+
+  return {
+    clientSecret: paymentIntent.client_secret,
+    transactionReference,
+  };
+}
+
+/**
+ * Create a Stripe PaymentIntent for wallet top-up — public Server Action.
+ * Authenticates via session cookie, then delegates to the core.
  */
 export async function createPaymentIntent({
   amount,
   baseAmount,
   type,
-  providedUser,
   toUserId,
   fromUserId,
 }: {
   amount: number;
   baseAmount: number;
   type: TransactionReason;
-  providedUser?: User;
   toUserId?: number;
   fromUserId?: number;
 }) {
   try {
-    const user = providedUser || (await getUserSession());
-    if (!user) {
-      throw new Error("Unauthorized");
-    }
-
-    if (!type) {
-      throw new Error("Transaction type is required");
-    }
-    if (amount < 5000) {
-      // Stripe has a minimum amount for some currencies, usually ~$0.50.
-      // 5000 UGX is roughly $1.30, which is safe.
-      throw new Error("Minimum card top-up is UGX 5,000");
-    }
-
-    const transactionReference = await generateTxRef();
-
-    // Create a PaymentIntent with the order amount and currency
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount * 100, // Stripe requires UGX to be multiplied by 100
-      currency: "ugx",
-      metadata: {
-        userId: user.id.toString(),
-        transactionReference,
-        baseAmount: baseAmount.toString(),
-        type,
-        ...(toUserId && { toUserId: toUserId.toString() }),
-        ...(fromUserId && { fromUserId: fromUserId.toString() }),
-      },
-      description: `${type} for ${user.name || user.email}`,
-      // Optionally link to a customer if they exist in Stripe
-      // customer: user.stripeCustomerId,
+    const user = await getUserSession();
+    if (!user) throw new Error("Unauthorized");
+    return _createPaymentIntentCore(user, {
+      amount,
+      baseAmount,
+      type,
+      toUserId,
+      fromUserId,
     });
-
-    return {
-      clientSecret: paymentIntent.client_secret,
-      transactionReference,
-    };
   } catch (error) {
     console.error("Error creating payment intent:", error);
     throw new Error(

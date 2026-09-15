@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getUserSession } from "./session";
 import { generateTxRef } from "@/utils";
-import { getAdmins } from "./admin";
+import { getCachedAdmins } from "@/lib/admin/cached-admins";
 import { getTransactionFee } from "./fee";
 import { creditDepositFee } from "./deposit-fee";
 import {
@@ -48,7 +48,7 @@ export const finalizeDeposit = async ({
 
     const feeResult = await getTransactionFee({ amount, type: "DEPOSIT" });
     const fee = feeResult.success ? feeResult.amount || 0 : 0;
-    const admins = await getAdmins();
+    const admins = await getCachedAdmins();
 
     await prisma.$transaction(async (tx) => {
       // ✅ Mark event as processed INSIDE the transaction so it rolls back
@@ -154,6 +154,29 @@ export const finalizeDeposit = async ({
 };
 
 /**
+ * Core logic — accepts a pre-authenticated user.
+ * Used by the Server Action and the v1 API route.
+ * @internal
+ */
+export const _processMobileMoneyDepositCore = async (
+  user: User,
+  amount: number,
+): Promise<{ success: boolean; refference?: string; message: string }> => {
+  if (amount < 500) {
+    return { success: false, message: "Minimum deposit amount is UGX 500" };
+  }
+  const refference = await generateTxRef();
+  return finalizeDeposit({
+    userId: user.id,
+    amount,
+    refference,
+    method: "Mobile Money",
+    reason: "Mobile Money Deposit",
+    paymentMethod: "MOBILE_MONEY",
+  });
+};
+
+/**
  * Process Mobile Money deposit for a user
  * @deprecated Simulated instant-credit flow. New top-ups must use
  * `initiateYoDeposit` from `@/lib/actions/yo` (real Yo! Payments with
@@ -161,37 +184,13 @@ export const finalizeDeposit = async ({
  */
 export const processMobileMoneyDeposit = async ({
   amount,
-  providedUser,
 }: {
   amount: number;
-  providedUser?: User;
 }): Promise<{ success: boolean; refference?: string; message: string }> => {
   try {
-    const user = providedUser || (await getUserSession());
-    if (!user) {
-      return { success: false, message: "Unauthorized" };
-    }
-
-    if (amount < 500) {
-      return {
-        success: false,
-        message: "Minimum deposit amount is UGX 500",
-      };
-    }
-
-    const refference = await generateTxRef();
-
-    // In a real mobile money flow, you would call an API here
-    // For now, we simulate success and finalize the deposit
-
-    return await finalizeDeposit({
-      userId: user.id,
-      amount,
-      refference,
-      method: "Mobile Money",
-      reason: "Mobile Money Deposit",
-      paymentMethod: "MOBILE_MONEY",
-    });
+    const user = await getUserSession();
+    if (!user) return { success: false, message: "Unauthorized" };
+    return _processMobileMoneyDepositCore(user, amount);
   } catch (error) {
     console.error("Error processing deposit:", error);
     return {
@@ -291,14 +290,17 @@ export const getWalletBalanceBeforeDate = async (
  * @param amount - Amount to transfer
  * @returns Success/error status with updated balances
  */
-export const processP2PTransfer = async (
+/**
+ * Core P2P transfer logic — accepts a pre-authenticated sender.
+ * @internal
+ */
+export const _processP2PTransferCore = async (
+  sender: User,
   senderId: number,
   recipientId: number,
   amount: number,
-  providedUser?: User,
 ) => {
   try {
-    const sender = providedUser || (await getUserSession());
     if (!sender) {
       return {
         success: false,
@@ -346,7 +348,7 @@ export const processP2PTransfer = async (
       };
     }
 
-    const admins = await getAdmins(); // pre-fetch
+    const admins = await getCachedAdmins(); // pre-fetch
     // Generate transaction reference
     const refference = await generateTxRef();
     const senderBalance = (await getWalletBalance(senderId)).balance;
@@ -370,9 +372,13 @@ export const processP2PTransfer = async (
     const result = await prisma.$transaction(async (tx) => {
       const totalDeduction = amount + TRANSACTION_FEE;
 
-      // Fresh balance re-read inside the transaction immediately before the
-      // sufficiency check. Note: without SELECT FOR UPDATE this narrows but
-      // doesn't eliminate the race under concurrent transfers.
+      // Advisory lock on the sender's wallet — serializes concurrent transfers
+      // from the same user to prevent double-spend race conditions.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('wallet_debit'), ${senderId})`;
+
+      // Fresh balance re-read inside the transaction immediately after acquiring
+      // the lock. The advisory lock ensures only one transfer per sender
+      // executes this block at a time.
       const freshRows = await tx.$queryRaw<{ balance: number }[]>`
         SELECT
           COALESCE(
@@ -621,6 +627,29 @@ export const processP2PTransfer = async (
   }
 };
 
+/**
+ * Process P2P wallet transfer — public Server Action.
+ * Authenticates via session cookie then delegates to the core.
+ */
+export const processP2PTransfer = async (
+  senderId: number,
+  recipientId: number,
+  amount: number,
+) => {
+  const sender = await getUserSession();
+  if (!sender) {
+    return {
+      success: false,
+      message: "User not found",
+      amount: 0,
+      currency: "UGX",
+      refference: "",
+      fee: 0,
+    };
+  }
+  return _processP2PTransferCore(sender, senderId, recipientId, amount);
+};
+
 type CreateWalletTransaction = {
   refference: string;
   amount: number;
@@ -665,7 +694,7 @@ export const creditAdminWallet = async ({
   refference,
 }: CreditAdminWallet) => {
   try {
-    const admins = await getAdmins();
+    const admins = await getCachedAdmins();
     await prisma.wallet.createMany({
       data: admins.map((admin) => ({
         userId: admin.id,
@@ -682,24 +711,14 @@ export const creditAdminWallet = async ({
 };
 
 /**
- * Fetch transaction details by reference.
- * Resolves by `txn_ref` first, then falls back to `externalReference`
- * (Yo! top-ups use the same value for both, but external callers may
- * pass either).
+ * Core logic — accepts a pre-authenticated user.
+ * @internal
  */
-export const getTransactionByRef = async ({
-  reference,
-  providedUser,
-}: {
-  reference: string;
-  providedUser?: User;
-}) => {
+export const _getTransactionByRefCore = async (
+  user: User,
+  reference: string,
+) => {
   try {
-    const user = providedUser || (await getUserSession());
-    if (!user) {
-      return { success: false, message: "Unauthorized" };
-    }
-
     const transaction =
       (await prisma.transaction.findUnique({
         where: { txn_ref: reference },
@@ -709,19 +728,21 @@ export const getTransactionByRef = async ({
       }));
 
     if (!transaction)
-      return { success: false, message: "Transaction not found" };
+      return { success: false as const, message: "Transaction not found" };
 
     // Security check: owner (sender/recipient) or super_admin
-    // (aligns with getTransactionByReference in transactions.ts).
     const isOwner =
       transaction.userId === user.id || transaction.recipientId === user.id;
     const isSuperAdmin = user.privilege === "super_admin";
     if (!isOwner && !isSuperAdmin) {
-      return { success: false, message: "Unauthorized access to transaction" };
+      return {
+        success: false as const,
+        message: "Unauthorized access to transaction",
+      };
     }
 
     return {
-      success: true,
+      success: true as const,
       transaction: {
         ...transaction,
         amount: transaction.amount.toNumber(),
@@ -735,6 +756,22 @@ export const getTransactionByRef = async ({
     };
   } catch (error) {
     console.error("Error fetching transaction:", error);
-    return { success: false, message: "Failed to fetch transaction" };
+    return { success: false as const, message: "Failed to fetch transaction" };
   }
+};
+
+/**
+ * Fetch transaction details by reference.
+ * Resolves by `txn_ref` first, then falls back to `externalReference`
+ * (Yo! top-ups use the same value for both, but external callers may
+ * pass either).
+ */
+export const getTransactionByRef = async ({
+  reference,
+}: {
+  reference: string;
+}) => {
+  const user = await getUserSession();
+  if (!user) return { success: false as const, message: "Unauthorized" };
+  return _getTransactionByRefCore(user, reference);
 };
