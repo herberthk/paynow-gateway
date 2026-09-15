@@ -5,6 +5,7 @@ import { getUserSession } from "./session";
 import { generateTxRef } from "@/utils";
 import { getAdmins } from "./admin";
 import { getTransactionFee } from "./fee";
+import { creditDepositFee } from "./deposit-fee";
 import {
   sendAdminTransferEmail,
   sendDepositEmail,
@@ -70,30 +71,13 @@ export const finalizeDeposit = async ({
         },
       });
 
-      // 2. Credit transaction fee to all admins
-      if (fee > 0 && admins.length > 0) {
-        await tx.wallet.createMany({
-          data: admins.map((admin) => ({
-            userId: admin.id,
-            amount: fee,
-            type: "CREDIT",
-            reason: `Transaction fee from deposit: ${refference}`,
-            refference,
-          })),
-        });
-
-        // Send notification to admins
-        await tx.systemNotification.createMany({
-          data: admins.map((admin) => ({
-            fromUserId: userId,
-            toUserId: admin.id,
-            title: "New Deposit Fee",
-            message: `You received a transaction fee of UGX ${fee.toLocaleString()} from a deposit.`,
-            type: "SUCCESS",
-            path: `/dashboard/user/transactions?query=${refference}`,
-          })),
-        });
-      }
+      // 2. Credit transaction fee to all admins (shared helper)
+      await creditDepositFee(tx, {
+        fromUserId: userId,
+        externalRef: refference,
+        fee,
+        admins,
+      });
 
       // 3. Create transaction record
       await tx.transaction.create({
@@ -171,9 +155,9 @@ export const finalizeDeposit = async ({
 
 /**
  * Process Mobile Money deposit for a user
- * @param userId - User ID
- * @param amount - Amount to deposit
- * @returns Success/error status
+ * @deprecated Simulated instant-credit flow. New top-ups must use
+ * `initiateYoDeposit` from `@/lib/actions/yo` (real Yo! Payments with
+ * PENDING → webhook/poll settlement). Kept for the legacy v1 API route.
  */
 export const processMobileMoneyDeposit = async ({
   amount,
@@ -369,14 +353,47 @@ export const processP2PTransfer = async (
     // calculate fee based on type
     const isAdmin = sender?.privilege === "super_admin";
     const TRANSACTION_FEE = isAdmin ? 0 : fee.amount;
+    // Outer fast-fail pre-check on a possibly-stale read (fast UX failure
+    // without opening a DB transaction). The authoritative check re-reads
+    // the balance inside the interactive transaction below.
+    if (senderBalance < amount + TRANSACTION_FEE) {
+      return {
+        success: false,
+        message: `Insufficient balance. Available UGX ${senderBalance.toLocaleString()}, Required UGX ${(amount + TRANSACTION_FEE).toLocaleString()}`,
+        amount: 0,
+        currency: "UGX",
+        refference: "",
+        fee: 0,
+      };
+    }
     // Use Prisma transaction to ensure atomicity
     const result = await prisma.$transaction(async (tx) => {
       const totalDeduction = amount + TRANSACTION_FEE;
 
+      // Fresh balance re-read inside the transaction immediately before the
+      // sufficiency check. Note: without SELECT FOR UPDATE this narrows but
+      // doesn't eliminate the race under concurrent transfers.
+      const freshRows = await tx.$queryRaw<{ balance: number }[]>`
+        SELECT
+          COALESCE(
+            SUM(
+              CASE
+                WHEN type = 'CREDIT' THEN amount
+                WHEN type = 'DEBIT' THEN -amount
+                ELSE 0
+              END
+            ),
+            0
+          ) AS balance
+        FROM payment_wallets
+        WHERE "userId" = ${senderId};
+      `;
+      const freshBalance = Number(freshRows[0]?.balance ?? 0);
+
       // Check sufficient balance
-      if (senderBalance < totalDeduction) {
+      if (freshBalance < totalDeduction) {
         throw new Error(
-          `Insufficient balance. Available UGX ${senderBalance.toLocaleString()}, Required UGX ${totalDeduction.toLocaleString()}`,
+          `Insufficient balance. Available UGX ${freshBalance.toLocaleString()}, Required UGX ${totalDeduction.toLocaleString()}`,
         );
       }
       const recipient = await tx.user.findUnique({
@@ -665,13 +682,16 @@ export const creditAdminWallet = async ({
 };
 
 /**
- * Fetch transaction details by reference
+ * Fetch transaction details by reference.
+ * Resolves by `txn_ref` first, then falls back to `externalReference`
+ * (Yo! top-ups use the same value for both, but external callers may
+ * pass either).
  */
 export const getTransactionByRef = async ({
-  ref,
+  reference,
   providedUser,
 }: {
-  ref: string;
+  reference: string;
   providedUser?: User;
 }) => {
   try {
@@ -680,15 +700,23 @@ export const getTransactionByRef = async ({
       return { success: false, message: "Unauthorized" };
     }
 
-    const transaction = await prisma.transaction.findUnique({
-      where: { txn_ref: ref },
-    });
+    const transaction =
+      (await prisma.transaction.findUnique({
+        where: { txn_ref: reference },
+      })) ??
+      (await prisma.transaction.findUnique({
+        where: { externalReference: reference },
+      }));
 
     if (!transaction)
       return { success: false, message: "Transaction not found" };
 
-    // Security check: Ensure the transaction belongs to the user
-    if (transaction.userId !== user.id && transaction.recipientId !== user.id) {
+    // Security check: owner (sender/recipient) or super_admin
+    // (aligns with getTransactionByReference in transactions.ts).
+    const isOwner =
+      transaction.userId === user.id || transaction.recipientId === user.id;
+    const isSuperAdmin = user.privilege === "super_admin";
+    if (!isOwner && !isSuperAdmin) {
       return { success: false, message: "Unauthorized access to transaction" };
     }
 
@@ -700,9 +728,9 @@ export const getTransactionByRef = async ({
         fee: transaction.fee.toNumber(),
         createdAt: transaction.createdAt.toISOString(),
         updatedAt: transaction.updatedAt.toISOString(),
-        receiptUrl: transaction.receiptUrl!,
-        displayName: transaction.displayName!,
-        reason: transaction.reason!,
+        receiptUrl: transaction.receiptUrl ?? undefined,
+        displayName: transaction.displayName ?? "",
+        reason: transaction.reason ?? undefined,
       },
     };
   } catch (error) {

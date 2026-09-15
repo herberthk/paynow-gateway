@@ -1,0 +1,25 @@
+model ProcessedTransaction {
+  id        String  @id @default(cuid())
+  // Our idempotency key provided during transaction creation.
+  // Webhooks correlate on this (success external_ref /
+  // failure failed_transaction_reference). Matches Transaction.externalReference.
+  externalReference String @unique
+  // Gateway-side reference from the provider (Yo TransactionReference).
+  // Nullable: only known after acDepositFunds returns OK.
+  transactionReference String?
+  // Whether the terminal outcome (wallet credit / failure marking +
+  // notifications) has been applied. Guards webhooks + polling + cron
+  // against double processing.
+  processed   Boolean   @default(false)
+  processedAt DateTime?
+  // Expiry confirmation: incremented on each non-terminal observation by
+  // the >24h sweeper. Expire only when checks>=2 and a fresh status check
+  // in the same run is still non-terminal.
+  checks        Int       @default(0)
+  lastCheckedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([processed, createdAt])
+  @@map("processed_transactions")
+}

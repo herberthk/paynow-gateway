@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import { getTransactionFee } from "./fee";
 import { getUserSession } from "./session";
 
@@ -37,57 +38,104 @@ export const getTransactions = async ({
     const isAdmin = user.privilege === "super_admin";
     const skip = (page - 1) * limit;
     // if user is admin, fetch all transactions, else fetch only user's transactions
-    const where = isAdmin
+    let where: Prisma.TransactionWhereInput = isAdmin
       ? {}
       : {
           OR: [{ userId: user.id }, { recipientId: user.id }],
         };
 
     if (query?.startsWith("TX_")) {
-      const tx = await prisma.transaction.findUnique({
-        where: { txn_ref: query },
-      });
+      // Resolve by txn_ref first, then fall back to externalReference
+      // (consistent with wallet.ts getTransactionByRef).
+      const tx =
+        (await prisma.transaction.findUnique({
+          where: { txn_ref: query },
+        })) ??
+        (await prisma.transaction.findUnique({
+          where: { externalReference: query },
+        }));
+
+      const isOwner =
+        !!tx && (tx.userId === user.id || tx.recipientId === user.id);
+      if (!tx || (!isOwner && !isAdmin)) {
+        return {
+          transactions: [],
+          totalPages: 0,
+          currentPage: 1,
+          totalTransactions: 0,
+        };
+      }
 
       return {
-        transactions: tx
-          ? [
-              {
-                ...tx,
-                amount: tx.amount.toNumber(),
-                createdAt: tx.createdAt.toISOString(),
-                currency: tx.currency as Currency,
-                txn_ref: tx.txn_ref!,
-                fee: tx.fee.toNumber(),
-                displayName: tx.displayName!,
-                reason: tx.reason!,
-                receiptUrl: tx.receiptUrl!,
-              },
-            ]
-          : [],
+        transactions: [
+          {
+            ...tx,
+            amount: tx.amount.toNumber(),
+            createdAt: tx.createdAt.toISOString(),
+            updatedAt: tx.updatedAt.toISOString(),
+            currency: tx.currency as Currency,
+            txn_ref: tx.txn_ref ?? undefined,
+            fee: tx.fee.toNumber(),
+            displayName: tx.displayName ?? "",
+            reason: tx.reason ?? undefined,
+            receiptUrl: tx.receiptUrl ?? undefined,
+          },
+        ],
         totalPages: 1,
         currentPage: 1,
-        totalTransactions: tx ? 1 : 0,
+        totalTransactions: 1,
       };
     }
     if (query) {
-      where.OR = [
-        //@ts-ignore
-        { displayName: { contains: query, mode: "insensitive" } },
-        //@ts-ignore
-        { method: { contains: query, mode: "insensitive" } },
-        //@ts-ignore
-        { category: { contains: query, mode: "insensitive" } },
-      ];
+      const search: Prisma.TransactionWhereInput = {
+        OR: [
+          { displayName: { contains: query, mode: "insensitive" } },
+          { method: { contains: query, mode: "insensitive" } },
+          { category: { contains: query, mode: "insensitive" } },
+        ],
+      };
+      if (isAdmin) {
+        where = search;
+      } else {
+        where = {
+          AND: [
+            { OR: [{ userId: user.id }, { recipientId: user.id }] },
+            search,
+          ],
+        };
+      }
     }
 
-    if (status && status !== "ALL") {
-      //@ts-ignore
-      where.status = status;
+    const VALID_STATUSES = [
+      "COMPLETED",
+      "PENDING",
+      "FAILED",
+      "INDETERMINATE",
+      "DISPUTED",
+    ] as const;
+    if (
+      status &&
+      status !== "ALL" &&
+      (VALID_STATUSES as readonly string[]).includes(status)
+    ) {
+      where.status =
+        status as Prisma.TransactionWhereInput["status"];
     }
 
-    if (type && type !== "ALL") {
-      //@ts-ignore
-      where.type = type;
+    const VALID_TYPES = [
+      "DEPOSIT",
+      "WITHDRAWAL",
+      "TRANSFER",
+      "PAYMENT",
+      "SUBSCRIPTION",
+      "SUPPORT",
+    ] as const;
+    if (
+      type &&
+      type !== "ALL" &&
+      (VALID_TYPES as readonly string[]).includes(type)
+    ) {
+      where.type = type as Prisma.TransactionWhereInput["type"];
     }
 
     const [transactions, total] = await Promise.all([
@@ -133,15 +181,16 @@ export const getTransactions = async ({
         ...tx,
         amount: tx.amount.toNumber(),
         createdAt: tx.createdAt.toISOString(),
+        updatedAt: tx.updatedAt.toISOString(),
         // Ensure type alignment
         type: tx.type as TransactionType,
         status: tx.status as TransactionStatus,
         currency: tx.currency as Currency,
-        txn_ref: tx.txn_ref!,
+        txn_ref: tx.txn_ref ?? undefined,
         fee: tx.fee.toNumber(),
         displayName: resolvedDisplayName,
-        reason: tx.reason!,
-        receiptUrl: tx.receiptUrl!,
+        reason: tx.reason ?? undefined,
+        receiptUrl: tx.receiptUrl ?? undefined,
         ...(isAdmin ? { senderName, recipientName } : {}),
       };
     });
@@ -258,16 +307,121 @@ export const createP2PTransaction = async ({
 export const updateTransaction = async (
   id: string,
   transaction: Transaction,
-) => {
+): Promise<{ success: boolean; message?: string; transaction?: unknown }> => {
+  const admin = await getUserSession();
+  if (!admin || admin.privilege !== "super_admin") {
+    return { success: false, message: "Unauthorized" };
+  }
+
+  // Strip client-only/display fields. "DISPUTED" is display-only
+  // (TransactionTable) with no Prisma counterpart — refuse it loudly.
+  // Thrown OUTSIDE the try so it isn't swallowed by the catch below.
+  if (transaction.status === "DISPUTED") {
+    throw new Error("DISPUTED is display-only and cannot be persisted");
+  }
+  // receiptUrl must be https-only when non-empty — also thrown OUTSIDE the
+  // try so a bad URL isn't swallowed into a generic failure.
+  if (
+    transaction.receiptUrl !== undefined &&
+    transaction.receiptUrl !== "" &&
+    !transaction.receiptUrl.startsWith("https://")
+  ) {
+    throw new Error("receiptUrl must be an https:// URL");
+  }
+
+  // Terminal credits must only come from settlement paths — block direct
+  // transitions TO COMPLETED via this generic admin edit path.
+  if (transaction.status === "COMPLETED") {
+    return {
+      success: false,
+      message: "Cannot mark COMPLETED directly — use settlement flow",
+    };
+  }
+  // Cap free-text/display field lengths (reject like DISPUTED, outside try).
+  // receiptUrl allows 2048 chars (signed URLs exceed 120); all others 120.
+  const CAPPED_FIELDS = [
+    "method",
+    "category",
+    "reason",
+    "displayName",
+    "networkRef",
+  ] as const;
+  for (const field of CAPPED_FIELDS) {
+    const value = transaction[field];
+    if (typeof value === "string" && value.length > 120) {
+      throw new Error(`${field} must be at most 120 characters`);
+    }
+  }
+  if (
+    typeof transaction.receiptUrl === "string" &&
+    transaction.receiptUrl.length > 2048
+  ) {
+    throw new Error("receiptUrl must be at most 2048 characters");
+  }
+
   try {
+    // Immutable once COMPLETED: read the CURRENT row first. FAILED rows may
+    // still be edited (e.g. manual reconcile notes).
+    const current = await prisma.transaction.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+    if (current?.status === "COMPLETED") {
+      return {
+        success: false,
+        message: "Completed transactions are immutable",
+      };
+    }
+    // Allowlist writable fields only. Never allow amount/fee/userId/
+    // recipientId/txn_ref/externalReference/providerRef/msisdn/provider/
+    // type/currency. COMPLETED is intentionally excluded (see guard above).
+    const data: Prisma.TransactionUpdateInput = {};
+    const ALLOWED_STATUSES = ["PENDING", "FAILED", "INDETERMINATE"] as const;
+    if (
+      transaction.status &&
+      (ALLOWED_STATUSES as readonly string[]).includes(transaction.status)
+    ) {
+      data.status =
+        transaction.status as Prisma.TransactionUpdateInput["status"];
+    }
+    if (transaction.category !== undefined) {
+      data.category = transaction.category;
+    }
+    if (transaction.method !== undefined) {
+      data.method = transaction.method;
+    }
+    if (transaction.reason !== undefined) {
+      data.reason = transaction.reason;
+    }
+    if (transaction.displayName !== undefined) {
+      data.displayName = transaction.displayName;
+    }
+    if (transaction.networkRef !== undefined) {
+      data.networkRef = transaction.networkRef;
+    }
+    if (transaction.receiptUrl !== undefined) {
+      data.receiptUrl = transaction.receiptUrl;
+    }
     const updatedTransaction = await prisma.transaction.update({
       where: { id },
-      data: transaction,
+      data,
     });
-    return updatedTransaction;
+    // Best-effort audit trail — must never fail the update.
+    try {
+      await prisma.auditLog.create({
+        data: {
+          action: "transaction.update",
+          adminId: admin.id,
+          details: `Updated transaction ${id}`,
+        },
+      });
+    } catch (auditError) {
+      console.warn("Audit log write failed:", auditError);
+    }
+    return { success: true, transaction: updatedTransaction };
   } catch (error) {
     console.error("Error updating transaction:", error);
-    return null;
+    return { success: false, message: "Failed to update transaction" };
   }
 };
 

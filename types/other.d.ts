@@ -44,6 +44,27 @@ declare global {
       totalPages: number;
     };
   };
+
+  type YoTopupStatus = "COMPLETED" | "PENDING" | "FAILED" | "INDETERMINATE";
+
+  interface ProcessedTransaction {
+    id: string;
+    externalReference: string;
+    transactionReference: string | null;
+    processed: boolean;
+    processedAt?: string | null;
+    createdAt: string;
+    updatedAt: string;
+  }
+
+  interface InitiateYoDepositResult {
+    success: boolean;
+    externalRef?: string;
+    provider?: MobileMoneyProvider;
+    fee?: number;
+    totalCharged?: number;
+    message?: string;
+  }
 }
 
 export {};

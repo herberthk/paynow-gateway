@@ -7,7 +7,12 @@ import { type LucideIcon } from "lucide-react";
 declare global {
   type UserRole = "USER" | "ADMIN";
 
-  type TransactionStatus = "COMPLETED" | "PENDING" | "FAILED" | "DISPUTED";
+  type TransactionStatus =
+    | "COMPLETED"
+    | "PENDING"
+    | "FAILED"
+    | "INDETERMINATE"
+    | "DISPUTED";
 
   type TransactionType =
     | "DEPOSIT"
@@ -17,9 +22,12 @@ declare global {
     | "SUBSCRIPTION"
     | "SUPPORT";
 
+  type MobileMoneyProvider = "MTN" | "AIRTEL";
+
   interface Transaction {
     id: string;
     createdAt: string;
+    updatedAt?: string;
     userId: number;
     recipientId: number;
     displayName: string;
@@ -30,6 +38,12 @@ declare global {
     category: string; // e.g., 'Transport', 'Rent', 'Utilities'
     method: string; // e.g., 'MTN Mobile Money', 'Visa **** 4242'
     txn_ref?: string;
+    // Yo! Payments correlation (also usable by future providers)
+    externalReference?: string | null;
+    providerRef?: string | null;
+    msisdn?: string | null;
+    provider?: MobileMoneyProvider | null;
+    networkRef?: string | null;
     fee: number;
     reason?: string;
     receiptUrl?: string;

@@ -3,8 +3,21 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-const secretKey = process.env.SESSION_SECRET; // Use a strong, env-based secret
-const key = new TextEncoder().encode(secretKey);
+let warnedWeakSecret = false;
+
+const getKey = () => {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    throw new Error("SESSION_SECRET is not configured");
+  }
+  if (secret.length < 32 && !warnedWeakSecret) {
+    warnedWeakSecret = true;
+    console.warn(
+      "SESSION_SECRET is shorter than 32 characters — use a strong random secret in production.",
+    );
+  }
+  return new TextEncoder().encode(secret);
+};
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const encrypt = async (payload: any) => {
@@ -12,26 +25,43 @@ export const encrypt = async (payload: any) => {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d") // e.g., 7 days
-    .sign(key);
+    .sign(getKey());
 };
 
 export const decrypt = async (session: string = "") => {
   try {
-    const { payload } = await jwtVerify(session, key, {
+    const { payload } = await jwtVerify(session, getKey(), {
       algorithms: ["HS256"],
     });
     return payload;
   } catch (error) {
-    console.log("Failed to verify session", error);
+    // ERR_JWS_INVALID / ERR_JWT_EXPIRED are expected when a browser holds a
+    // stale cookie (e.g. the SESSION_SECRET rotated, or a legacy plain-JSON
+    // cookie was set before JWT sessions existed). Returning null causes the
+    // auth layer to re-prompt for login — no action needed.
+    const code = (error as { code?: string })?.code;
+    const expected = ["ERR_JWS_INVALID", "ERR_JWT_EXPIRED", "ERR_JWT_CLAIM_VALIDATION_FAILED"];
+    if (!expected.includes(code ?? "")) {
+      console.error("Unexpected session verification error:", error);
+    }
     return null;
   }
 };
 
 export const createSession = async (user: User) => {
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-  //   const session = await encrypt({ userId, expires });
+  const token = await encrypt({
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    privilege: user.privilege,
+    status: user.status,
+    created_at: user.created_at,
+    tel: user.tel,
+    address: user.address,
+  });
   const cookieStore = await cookies();
-  await cookieStore.set("session", JSON.stringify(user), {
+  await cookieStore.set("session", token, {
     expires,
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -44,17 +74,40 @@ export const deleteSession = async () => {
   const cookieStore = await cookies();
   cookieStore.set("session", "", {
     expires: new Date(0),
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
     path: "/",
   });
 };
 
 export const getUserSession = async () => {
   const cookieStore = await cookies();
-  const session = cookieStore.get("session")?.value;
-  if (!session) {
+  const token = cookieStore.get("session")?.value;
+  if (!token) {
     return null;
   }
-  return JSON.parse(session) as User;
+  // Legacy plain-JSON cookies fail verification → null (user re-logs in).
+  const payload = await decrypt(token);
+  if (!payload || typeof payload !== "object" || !("id" in payload)) {
+    return null;
+  }
+  // Validate privilege against the known allowlist; forged/unknown values
+  // (and non-numeric ids) fail closed to null.
+  const record = payload as Record<string, unknown>;
+  if (
+    typeof record.id !== "number" ||
+    (record.privilege !== "none" &&
+      record.privilege !== "admin" &&
+      record.privilege !== "super_admin")
+  ) {
+    return null;
+  }
+  // Suspended users fail closed to null.
+  if (record.status === false) {
+    return null;
+  }
+  return payload as unknown as User;
 };
 
 export const logout = async () => {

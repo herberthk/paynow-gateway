@@ -7,6 +7,7 @@ export const getAdmins = async () => {
     const response = await prisma.user.findMany({
       where: {
         privilege: "super_admin",
+        deleted_at: null,
       },
       select: {
         id: true,
@@ -35,6 +36,25 @@ export const getAdminById = async (id: number) => {
   }
 };
 
+type AdminRow = { id: number; name: string | null; email: string | null };
+
+const ADMIN_CACHE_TTL_MS = 60_000;
+let adminCache: { at: number; rows: AdminRow[] } | null = null;
+
+/**
+ * Cached admin list for hot paths (IPN/poll/cron settlement). The admin set
+ * changes rarely; a 60s instance-local TTL avoids a DB round-trip per settle.
+ * Use `getAdmins` directly where strict freshness matters.
+ */
+export const getCachedAdmins = async (): Promise<AdminRow[]> => {
+  if (adminCache && Date.now() - adminCache.at < ADMIN_CACHE_TTL_MS) {
+    return adminCache.rows;
+  }
+  const rows = await getAdmins();
+  adminCache = { at: Date.now(), rows };
+  return rows;
+};
+
 export const assignAdmin = async (id: number) => {
   try {
     const response = await prisma.user.update({
@@ -45,6 +65,8 @@ export const assignAdmin = async (id: number) => {
         privilege: "super_admin",
       },
     });
+    // Role changed — invalidate the cached admin list (see adminCache above).
+    adminCache = null;
     return response;
   } catch (error) {
     console.error("Error assigning admin:", error);
@@ -70,6 +92,9 @@ export const updateUserPrivilege = async (
       where: { id: userId },
       data: { privilege },
     });
+
+    // Role changed — invalidate the cached admin list (see adminCache above).
+    adminCache = null;
 
     return { success: true, message: "User role updated" };
   } catch (error) {

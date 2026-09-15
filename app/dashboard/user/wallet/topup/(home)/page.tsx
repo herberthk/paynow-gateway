@@ -1,4 +1,5 @@
 import TopupForm from "@/components/user/TopupForm";
+import { getUserSession } from "@/lib/actions/session";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -7,7 +8,8 @@ export const metadata: Metadata = {
 };
 
 const TopUpPage = async () => {
-  return <TopupForm />;
+  const user = await getUserSession();
+  return <TopupForm initialPhone={user?.tel ?? ""} />;
 };
 
 export default TopUpPage;
