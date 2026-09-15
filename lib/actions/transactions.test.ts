@@ -10,6 +10,8 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+vi.mock("server-only", () => ({}));
+
 // session.ts imports jose + next/headers — mock the module itself so tests
 // control getUserSession per-test without touching those dependencies.
 vi.mock("@/lib/actions/session", () => ({
@@ -26,6 +28,8 @@ import { getUserSession } from "./session";
 import { getTransactions } from "./transactions";
 
 const findUnique = vi.mocked(prisma.transaction.findUnique);
+const findMany = vi.mocked(prisma.transaction.findMany);
+const count = vi.mocked(prisma.transaction.count);
 const mockSession = vi.mocked(getUserSession);
 
 const owner = { id: 1, privilege: "none" } as unknown as User;
@@ -122,5 +126,33 @@ describe("getTransactions TX_ ref lookup + serializer", () => {
     expect(row.createdAt).toBe("2026-09-01T10:00:00.000Z");
     expect(row.receiptUrl).toBeUndefined();
     expect(row.reason).toBeUndefined();
+  });
+});
+
+describe("getTransactions pagination", () => {
+  it("caps the page size before querying", async () => {
+    mockSession.mockResolvedValueOnce(owner);
+    findMany.mockResolvedValueOnce([]);
+    count.mockResolvedValueOnce(0);
+
+    const result = await getTransactions({ page: 2, limit: 1_000_000 });
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skip: 100, take: 100 }),
+    );
+    expect(result.currentPage).toBe(2);
+  });
+
+  it("defaults invalid page and limit values before querying", async () => {
+    mockSession.mockResolvedValueOnce(owner);
+    findMany.mockResolvedValueOnce([]);
+    count.mockResolvedValueOnce(0);
+
+    const result = await getTransactions({ page: 1.5, limit: 0 });
+
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ skip: 0, take: 10 }),
+    );
+    expect(result.currentPage).toBe(1);
   });
 });

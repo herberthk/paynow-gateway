@@ -200,7 +200,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
               <option value="COMPLETED">Completed</option>
               <option value="PENDING">Pending</option>
               <option value="FAILED">Failed</option>
-              <option value="INDETERMINATE">Disputed</option>
+              <option value="INDETERMINATE">Payment under review</option>
             </select>
           </div>
           <button className="p-2 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-600 dark:text-gray-300 transition-colors">
@@ -305,7 +305,9 @@ const TransactionTable: React.FC<TransactionTableProps> = ({
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(tx.status)}`}
                     >
                       {getStatusIcon(tx.status)}
-                      {tx.status}
+                      {tx.status === "INDETERMINATE"
+                        ? "Payment under review"
+                        : tx.status}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-gray-400">

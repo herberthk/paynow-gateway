@@ -17,9 +17,19 @@ vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
 }));
 
+vi.mock("@/lib/prisma", () => ({
+  default: {
+    user: {
+      findUnique: vi.fn(),
+    },
+  },
+}));
+
+import prisma from "@/lib/prisma";
 import { createSession, encrypt, getUserSession } from "./session";
 
 const SECRET = "test-session-secret-32-chars-minimum-ok";
+const findUnique = vi.mocked(prisma.user.findUnique);
 
 const user = {
   id: 7,
@@ -40,6 +50,11 @@ const signWith = (payload: Record<string, unknown>, secret: string) =>
 
 beforeEach(() => {
   vi.stubEnv("SESSION_SECRET", SECRET);
+  findUnique.mockResolvedValue({
+    status: true,
+    privilege: "none",
+    deleted_at: null,
+  } as never);
 });
 
 afterEach(() => {
@@ -120,6 +135,20 @@ describe("session round-trip", () => {
       await signWith({ id: 7, privilege: "none", status: false }, SECRET),
     );
     await expect(getUserSession()).resolves.toBeNull();
+  });
+
+  it("database verification failure → null", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    await createSession(user);
+    findUnique.mockRejectedValueOnce(new Error("database unavailable"));
+
+    await expect(getUserSession()).resolves.toBeNull();
+    expect(consoleError).toHaveBeenCalledWith(
+      "Failed to verify session against the database:",
+      expect.any(Error),
+    );
+
+    consoleError.mockRestore();
   });
 
   it("weak secret in production → encrypt throws", async () => {

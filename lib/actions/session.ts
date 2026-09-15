@@ -130,9 +130,9 @@ export const getUserSession = async () => {
     if (dbUser.deleted_at !== null) return null;
     // Reject if privilege was revoked/changed since token was issued.
     if (dbUser.privilege !== record.privilege) return null;
-  } catch {
-    // DB verification failure — fail open to JWT claims to avoid
-    // locking out all users during transient DB issues.
+  } catch (error) {
+    console.error("Failed to verify session against the database:", error);
+    return null;
   }
 
   return payload as unknown as User;

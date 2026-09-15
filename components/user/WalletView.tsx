@@ -129,7 +129,6 @@ const WalletView = ({ user, wallet }: UserProps) => {
       setTransactionAmout(transferAmount);
       // Process wallet transfer
       const transferResult = await processP2PTransfer(
-        user.id,
         recipientData.id,
         transferAmount,
       );

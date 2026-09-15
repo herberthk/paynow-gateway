@@ -4,7 +4,10 @@ import prisma from "@/lib/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { getTransactionFee } from "./fee";
 import { getUserSession } from "./session";
-import { fetchTransactionsForUser } from "@/lib/server/transactions-core";
+import {
+  fetchTransactionsForUser,
+  getTransactionByReferenceForUser,
+} from "@/lib/server/transactions-core";
 
 export const getTransactions = async ({
   page = 1,
@@ -260,40 +263,8 @@ export const updateTransaction = async (
   }
 };
 
-/** @internal Core logic — accepts a pre-authenticated user. */
-export const _getTransactionByReferenceCore = async (
-  user: User,
-  txn_ref: string,
-) => {
-  try {
-    const transaction = await prisma.transaction.findUnique({
-      where: { txn_ref },
-    });
-
-    if (!transaction)
-      return { error: `Transaction with reference ${txn_ref} not found.` };
-
-    const isOwner =
-      transaction.userId === user.id || transaction.recipientId === user.id;
-    const isAdmin = user.privilege === "super_admin";
-    if (!isOwner && !isAdmin) {
-      return { error: "Not authorized to access this information" };
-    }
-
-    return {
-      ...transaction,
-      amount: transaction.amount.toNumber(),
-      fee: transaction.fee.toNumber(),
-      createdAt: transaction.createdAt.toISOString(),
-    };
-  } catch (error) {
-    console.error("Error fetching transaction by reference:", error);
-    return { error: "An error occurred while fetching the transaction." };
-  }
-};
-
 export const getTransactionByReference = async (txn_ref: string) => {
   const user = await getUserSession();
   if (!user) return { error: "User not authenticated" };
-  return _getTransactionByReferenceCore(user, txn_ref);
+  return getTransactionByReferenceForUser(user, txn_ref);
 };

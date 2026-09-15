@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { _processWalletSupportCore } from "@/lib/actions/support";
+import { _processWalletSupportCore } from "@/lib/server/support-core";
 import { getUserById } from "@/lib/actions/users";
 import { z } from "zod";
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { _getTransactionByReferenceCore } from "@/lib/actions/transactions";
+import { getTransactionByReferenceForUser } from "@/lib/server/transactions-core";
 import { getUserById } from "@/lib/actions/users";
 import { z } from "zod";
 
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const result = await _getTransactionByReferenceCore(user, reference);
+    const result = await getTransactionByReferenceForUser(user, reference);
 
     if (result && "error" in result) {
       return NextResponse.json(

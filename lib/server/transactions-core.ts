@@ -3,6 +3,8 @@ import "server-only";
 import prisma from "@/lib/prisma";
 import type { Prisma } from "@/lib/generated/prisma/client";
 
+const MAX_TRANSACTION_PAGE_SIZE = 100;
+
 /**
  * Core transaction query logic. Server-only — not a Server Action.
  * Used by the exported `getTransactions` Server Action (session-authenticated)
@@ -30,8 +32,13 @@ export const fetchTransactionsForUser = async (
   currentPage: number;
   totalTransactions: number;
 }> => {
+  const validatedPage = Number.isSafeInteger(page) && page > 0 ? page : 1;
+  const validatedLimit =
+    Number.isSafeInteger(limit) && limit > 0
+      ? Math.min(limit, MAX_TRANSACTION_PAGE_SIZE)
+      : 10;
   const isAdmin = user.privilege === "super_admin";
-  const skip = (page - 1) * limit;
+  const skip = (validatedPage - 1) * validatedLimit;
   // if user is admin, fetch all transactions, else fetch only user's transactions
   let where: Prisma.TransactionWhereInput = isAdmin
     ? {}
@@ -140,7 +147,7 @@ export const fetchTransactionsForUser = async (
         recipient: { select: { name: true } },
       },
       skip,
-      take: limit,
+      take: validatedLimit,
       orderBy: {
         createdAt: "desc",
       },
@@ -148,7 +155,7 @@ export const fetchTransactionsForUser = async (
     prisma.transaction.count({ where }),
   ]);
 
-  const totalPages = Math.ceil(total / limit);
+  const totalPages = Math.ceil(total / validatedLimit);
 
   // Serialize for client component
   const serializedTransactions: Transaction[] = transactions.map((tx) => {
@@ -192,7 +199,40 @@ export const fetchTransactionsForUser = async (
   return {
     transactions: serializedTransactions,
     totalPages,
-    currentPage: page,
+    currentPage: validatedPage,
     totalTransactions: total,
   };
+};
+
+/** Fetch a transaction for a trusted, pre-authenticated user. */
+export const getTransactionByReferenceForUser = async (
+  user: User,
+  txn_ref: string,
+) => {
+  try {
+    const transaction = await prisma.transaction.findUnique({
+      where: { txn_ref },
+    });
+
+    if (!transaction) {
+      return { error: `Transaction with reference ${txn_ref} not found.` };
+    }
+
+    const isOwner =
+      transaction.userId === user.id || transaction.recipientId === user.id;
+    const isAdmin = user.privilege === "super_admin";
+    if (!isOwner && !isAdmin) {
+      return { error: "Not authorized to access this information" };
+    }
+
+    return {
+      ...transaction,
+      amount: transaction.amount.toNumber(),
+      fee: transaction.fee.toNumber(),
+      createdAt: transaction.createdAt.toISOString(),
+    };
+  } catch (error) {
+    console.error("Error fetching transaction by reference:", error);
+    return { error: "An error occurred while fetching the transaction." };
+  }
 };
