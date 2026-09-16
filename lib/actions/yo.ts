@@ -14,22 +14,18 @@ import {
   sendDepositFailureEmail,
 } from "./email";
 import {
-  getYoClient,
-  configureDepositRequest,
-  getYoWebhookUrls,
+  yoAPI,
 } from "@/lib/yo/client";
 import {
   parseTopupMsisdn,
   normalizeUgMsisdn,
   methodLabelFor,
 } from "@/lib/yo/phone";
-import { buildTopupNarrative } from "@/lib/yo/narrative";
 import {
   MIN_TOPUP,
   MAX_TOPUP,
   MAX_PENDING_DEPOSITS,
   RATE_LIMIT_WINDOW_MINUTES,
-  STATUS_POLL_TIMEOUT_MS,
 } from "@/lib/yo/constants";
 import { creditDepositFee } from "./deposit-fee";
 import { getCachedAdmins } from "@/lib/admin/cached-admins";
@@ -483,6 +479,7 @@ export const finalizeYoFailure = async (
 export const initiateYoDeposit = async (input: {
   amount: number;
   msisdn: string;
+  narrative:string
 }): Promise<
   | {
       success: true;
@@ -541,20 +538,18 @@ export const initiateYoDeposit = async (input: {
     }
 
     const method = methodLabelFor(phone.provider);
-    const narrative = buildTopupNarrative(user.name);
 
     // Fail fast on APP_BASE_URL https / credential misconfig before
     // creating an orphan PENDING row.
-    getYoWebhookUrls();
-    getYoClient();
+    // getYoWebhookUrls();
+    // getYoClient();
 
     // Persist FIRST — webhooks/polling correlate on externalReference.
     // Retry on reference collision (TX_ + 12 chars makes this near-impossible,
     // but a retry is cheaper than a failed deposit).
-    let externalRef = "";
-    let persisted = false;
-    for (let attempt = 0; attempt < 3 && !persisted; attempt += 1) {
-      externalRef = await generateTxRef();
+    const externalRef = await generateTxRef(14);
+    // let persisted = false;
+    // for (let attempt = 0; attempt < 3 && !persisted; attempt += 1) {
       try {
         await prisma.$transaction([
           prisma.transaction.create({
@@ -580,53 +575,53 @@ export const initiateYoDeposit = async (input: {
             data: { externalReference: externalRef },
           }),
         ]);
-        persisted = true;
+        // persisted = true;
       } catch (error) {
-        if (
-          attempt < 2 &&
-          typeof error === "object" &&
-          error !== null &&
-          "code" in error &&
-          (error as { code?: string }).code === "P2002"
-        ) {
-          continue;
-        }
+        // if (
+        //   attempt < 2 &&
+        //   typeof error === "object" &&
+        //   error !== null &&
+        //   "code" in error &&
+        //   (error as { code?: string }).code === "P2002"
+        // ) {
+        //   continue;
+        // }
         console.error("yo initiate persist failed", { error });
         return {
           success: false,
           message: "Could not start deposit. Please try again.",
         };
       }
-    }
-    if (!persisted) {
-      return {
-        success: false,
-        message: "Could not start deposit. Please try again.",
-      };
-    }
+    // }
+    // if (!persisted) {
+    //   return {
+    //     success: false,
+    //     message: "Could not start deposit. Please try again.",
+    //   };
+    // }
 
     const total = parsed.data.amount + fee;
     try {
-      const api = getYoClient();
-      configureDepositRequest(api, externalRef);
-      const res = await api.acDepositFunds(
+      yoAPI.setExternalReference(externalRef);
+      const res = await yoAPI.acDepositFunds(
         phone.msisdn,
         total,
-        narrative,
+        input.narrative,
       );
+      console.log("yo initiate res", res)
       if (res.Status === "OK") {
         if (res.TransactionReference) {
           // Gated sync: skip silently if already settled terminally.
           await prisma.$transaction([
-            prisma.transaction.updateMany({
+            prisma.transaction.update({
               where: {
                 externalReference: externalRef,
-                status: { in: ["PENDING", "INDETERMINATE"] },
+                status: "PENDING",
               },
               data: { providerRef: res.TransactionReference },
             }),
-            prisma.processedTransaction.updateMany({
-              where: { externalReference: externalRef, processed: false },
+            prisma.processedTransaction.update({
+              where: { externalReference: externalRef },
               data: { transactionReference: res.TransactionReference },
             }),
           ]);
@@ -676,7 +671,8 @@ export const initiateYoDeposit = async (input: {
 
 export const checkYoDepositStatus = async (
   externalRef: string,
-): Promise<
+)
+: Promise<
   | {
       success: true;
       status: YoTopupStatus;
@@ -712,76 +708,76 @@ export const checkYoDepositStatus = async (
       fee: txn.fee.toNumber(),
       providerRef: txn.providerRef,
     };
+    return {...local, status: txn.status};
     // Check terminal FAILED before guard.processed — the guard is marked
     // processed for *both* success and failure settlements.
-    if (txn.status === "FAILED") {
-      return { ...local, status: "FAILED" };
-    }
-    if (guard.processed || txn.status === "COMPLETED") {
-      return { ...local, status: "COMPLETED" };
-    }
+    // if (txn.status === "FAILED") {
+    //   return { ...local, status: "FAILED" };
+    // }
+    // if (guard.processed || txn.status === "COMPLETED") {
+    //   return { ...local, status: "COMPLETED" };
+    // }
 
     // Still open — ask the provider (branch on TransactionStatus, not Status:
     // a failed poll reports Status ERROR/Code 2 with TransactionStatus FAILED).
-    try {
-      const api = getYoClient({ timeoutMs: STATUS_POLL_TIMEOUT_MS });
-      const st = await api.acTransactionCheckStatus(null, externalRef);
-      if (st.TransactionReference && st.TransactionReference !== txn.providerRef) {
-        // Gated sync: skip silently if already settled terminally.
-        await prisma.$transaction([
-          prisma.transaction.updateMany({
-            where: {
-              externalReference: externalRef,
-              status: { in: ["PENDING", "INDETERMINATE"] },
-            },
-            data: { providerRef: st.TransactionReference },
-          }),
-          prisma.processedTransaction.updateMany({
-            where: { externalReference: externalRef, processed: false },
-            data: { transactionReference: st.TransactionReference },
-          }),
-        ]);
-      }
-      if (st.TransactionStatus === "SUCCEEDED") {
-        const settled = await finalizeYoSuccess({
-          externalRef,
-          gatewayAmount: st.Amount ?? null,
-          gatewayRef: st.TransactionReference ?? null,
-        });
-        if (!settled.applied) {
-          // amount-unknown → still recoverable via cron; mismatches and
-          // races resolve to the locally stored terminal state.
-          if (settled.reason === "amount-unknown") {
-            return { ...local, status: "PENDING" };
-          }
-          const fresh = await prisma.transaction.findUnique({
-            where: { externalReference: externalRef },
-            select: { status: true },
-          });
-          const status =
-            fresh?.status === "COMPLETED"
-              ? "COMPLETED"
-              : fresh?.status === "FAILED"
-                ? "FAILED"
-                : "PENDING";
-          return { ...local, status };
-        }
-        return { ...local, status: "COMPLETED" };
-      }
-      if (st.TransactionStatus === "FAILED") {
-        await finalizeYoFailure(externalRef);
-        return { ...local, status: "FAILED" };
-      }
-      if (st.TransactionStatus === "INDETERMINATE") {
-        return { ...local, status: "INDETERMINATE" };
-      }
-      return { ...local, status: "PENDING" };
-    } catch (error) {
-      if (error instanceof YoAPIError) {
-        return { ...local, status: "PENDING" };
-      }
-      throw error;
-    }
+    // try {
+    //   const st = await yoAPI.acTransactionCheckStatus(null, externalRef);
+    //   if (st.TransactionReference && st.TransactionReference !== txn.providerRef) {
+    //     // Gated sync: skip silently if already settled terminally.
+    //     await prisma.$transaction([
+    //       prisma.transaction.updateMany({
+    //         where: {
+    //           externalReference: externalRef,
+    //           status: { in: ["PENDING", "INDETERMINATE"] },
+    //         },
+    //         data: { providerRef: st.TransactionReference },
+    //       }),
+    //       prisma.processedTransaction.updateMany({
+    //         where: { externalReference: externalRef, processed: false },
+    //         data: { transactionReference: st.TransactionReference },
+    //       }),
+    //     ]);
+    //   }
+    //   // if (st.TransactionStatus === "SUCCEEDED") {
+    //   //   const settled = await finalizeYoSuccess({
+    //   //     externalRef,
+    //   //     gatewayAmount: st.Amount ?? null,
+    //   //     gatewayRef: st.TransactionReference ?? null,
+    //   //   });
+    //   //   if (!settled.applied) {
+    //   //     // amount-unknown → still recoverable via cron; mismatches and
+    //   //     // races resolve to the locally stored terminal state.
+    //   //     if (settled.reason === "amount-unknown") {
+    //   //       return { ...local, status: "PENDING" };
+    //   //     }
+    //   //     const fresh = await prisma.transaction.findUnique({
+    //   //       where: { externalReference: externalRef },
+    //   //       select: { status: true },
+    //   //     });
+    //   //     const status =
+    //   //       fresh?.status === "COMPLETED"
+    //   //         ? "COMPLETED"
+    //   //         : fresh?.status === "FAILED"
+    //   //           ? "FAILED"
+    //   //           : "PENDING";
+    //   //     return { ...local, status };
+    //   //   }
+    //   //   return { ...local, status: "COMPLETED" };
+    //   // }
+    //   // if (st.TransactionStatus === "FAILED") {
+    //   //   await finalizeYoFailure(externalRef);
+    //   //   return { ...local, status: "FAILED" };
+    //   // }
+    //   // if (st.TransactionStatus === "INDETERMINATE") {
+    //   //   return { ...local, status: "INDETERMINATE" };
+    //   // }
+    //   return { ...local, status: "PENDING" };
+    // } catch (error) {
+    //   if (error instanceof YoAPIError) {
+    //     return { ...local, status: "PENDING" };
+    //   }
+    //   throw error;
+    // }
   } catch (error) {
     console.error("Error checking Yo deposit status:", error);
     return { success: false, message: "Could not check status" };

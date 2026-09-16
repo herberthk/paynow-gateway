@@ -8,7 +8,7 @@
         "@ai-sdk/google": "^3.0.34",
         "@ai-sdk/react": "^3.0.107",
         "@google/genai": "^1.31.0",
-        "@herberthtk/yo-payments-api": "^0.4.0",
+        "@herberthtk/yo-payments-api": "^0.5.0",
         "@prisma/adapter-pg": "^7.3.0",
         "@prisma/client": "^7.8.0",
         "@prisma/extension-accelerate": "^3.0.1",
@@ -270,7 +270,7 @@
 
     "@google/genai": ["@google/genai@1.37.0", "", { "dependencies": { "google-auth-library": "^10.3.0", "protobufjs": "^7.5.4", "ws": "^8.18.0" }, "peerDependencies": { "@modelcontextprotocol/sdk": "^1.25.2" }, "optionalPeers": ["@modelcontextprotocol/sdk"] }, "sha512-of85LwNqretPhBHHEljUY05OSsQVUPyw5n1RdNkUpKR36kgHq7CVVEGY4GplVbFaqbdT3DXfLSv5B/Avbe5vXw=="],
 
-    "@herberthtk/yo-payments-api": ["@herberthtk/yo-payments-api@0.4.0", "", { "dependencies": { "fast-xml-parser": "^5.11.1" } }, "sha512-uIVap6wFNgQHSyGUbr1Ylt2zzRDsEaanHNr8ptssPbNaCsFbEk5UceQE9N+GikrL0yttJg1UpfKHpZffbdMvTQ=="],
+    "@herberthtk/yo-payments-api": ["@herberthtk/yo-payments-api@0.5.0", "", { "dependencies": { "fast-xml-parser": "^5.11.1" } }, "sha512-4zcC5RkQUAHktkVXFH1bu8UR5ZMPLq40ynMdCWnKvC8GvhvIequRh7hjxwwjugc2zsAVLQ4YrwBFM8n/rOGfWA=="],
 
     "@hono/node-server": ["@hono/node-server@1.19.11", "", { "peerDependencies": { "hono": "^4" } }, "sha512-dr8/3zEaB+p0D2n/IUrlPF1HZm586qgJNXK1a9fhg/PzdtkK7Ksd5l312tJX2yBuALqDYBlG20QEbayqPyxn+g=="],
 

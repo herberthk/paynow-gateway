@@ -5,8 +5,8 @@ import {
   parseTopupMsisdn,
   formatUgDisplay,
   methodLabelFor,
-} from "./phone";
-import { withJitter } from "./constants";
+} from "@/lib/yo/phone";
+import { withJitter } from "@/lib/yo/constants";
 
 describe("normalizeUgMsisdn", () => {
   it.each([

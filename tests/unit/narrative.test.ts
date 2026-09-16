@@ -1,5 +1,5 @@
+import { buildTopupNarrative } from "@/lib/yo/narrative";
 import { describe, expect, it } from "vitest";
-import { buildTopupNarrative } from "./narrative";
 
 describe("buildTopupNarrative", () => {
   it("strips XML-significant characters", () => {

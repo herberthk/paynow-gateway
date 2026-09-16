@@ -24,8 +24,8 @@ vi.mock("next/cache", () => ({
 }));
 
 import prisma from "@/lib/prisma";
-import { getUserSession } from "./session";
-import { getTransactions } from "./transactions";
+import { getUserSession } from "@/lib/actions/session";
+import { getTransactions } from "@/lib/actions/transactions";
 
 const findUnique = vi.mocked(prisma.transaction.findUnique);
 const findMany = vi.mocked(prisma.transaction.findMany);

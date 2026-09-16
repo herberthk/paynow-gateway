@@ -44,6 +44,12 @@ export const getAdminById = async (id: number) => {
 
 export const assignAdmin = async (id: number) => {
   try {
+    const { getUserSession } = await import("../session");
+    const session = await getUserSession();
+    if (!session || session.privilege !== "super_admin") {
+      return null;
+    }
+
     const response = await prisma.user.update({
       where: {
         id,

@@ -5,9 +5,7 @@
  * Strips XML-significant chars (SDK inserts values verbatim) and keeps
  * the narrative short plain text.
  */
-export function buildTopupNarrative(
-  userName: string | null | undefined,
-): string {
+export const buildTopupNarrative = (userName: string | null | undefined): string => {
   return (
     `Wallet top-up ${userName || ""}`
       // Strip XML-significant chars (SDK inserts values verbatim) plus

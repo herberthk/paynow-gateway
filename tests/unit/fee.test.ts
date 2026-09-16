@@ -14,7 +14,7 @@ vi.mock("next/cache", () => ({
 
 import prisma from "@/lib/prisma";
 import { seedFees } from "@/utils/seed";
-import { getTransactionFee } from "./fee";
+import { getTransactionFee } from "../../lib/actions/fee";
 
 const findUnique = vi.mocked(prisma.fee.findUnique);
 

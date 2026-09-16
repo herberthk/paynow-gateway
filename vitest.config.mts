@@ -13,10 +13,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: [
-      "lib/**/*.test.ts",
-      "app/**/*.test.ts",
-      "utils/**/*.test.ts",
-      "components/**/*.test.{ts,tsx}",
+      "tests/**/*.test.{ts,tsx}"
     ],
     // DB-backed tests are excluded by default — unit tests only.
     exclude: ["node_modules", ".next", "**/*.e2e.test.ts"],

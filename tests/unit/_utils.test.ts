@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseYoForm, toPaymentBody, toFailureBody, PayloadTooLargeError } from "./_utils";
+import { parseYoForm, toPaymentBody, toFailureBody, PayloadTooLargeError } from "@/app/api/webhooks/yo/_utils";
 
 const formRequest = (fields: Record<string, string>) => {
   const form = new FormData();

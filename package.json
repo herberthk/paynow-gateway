@@ -24,7 +24,7 @@
     "@ai-sdk/google": "^3.0.34",
     "@ai-sdk/react": "^3.0.107",
     "@google/genai": "^1.31.0",
-    "@herberthtk/yo-payments-api": "^0.4.0",
+    "@herberthtk/yo-payments-api": "^0.5.0",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.8.0",
     "@prisma/extension-accelerate": "^3.0.1",

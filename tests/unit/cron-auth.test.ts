@@ -1,6 +1,5 @@
+import { cronSecretRequired, isCronAuthorized } from "@/lib/yo/cron-auth";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cronSecretRequired, isCronAuthorized } from "./cron-auth";
-
 afterEach(() => {
   vi.unstubAllEnvs();
 });

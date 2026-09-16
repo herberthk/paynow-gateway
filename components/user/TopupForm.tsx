@@ -303,6 +303,7 @@ const TopupForm = ({ initialPhone = "" }: { initialPhone?: string }) => {
       const result = await initiateYoDeposit({
         amount: momoAmount,
         msisdn: phonePreview.msisdn,
+        narrative:"Wallet top-up"
       });
 
       if (result.success && result.externalRef) {
