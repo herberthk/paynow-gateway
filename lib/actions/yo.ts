@@ -768,7 +768,20 @@ export const checkYoDepositStatus = async (
         return { ...local, status: "COMPLETED" };
       }
       if (st.TransactionStatus === "FAILED") {
-        await finalizeYoFailure(externalRef);
+        const settled = await finalizeYoFailure(externalRef);
+        if (!settled.applied) {
+          const fresh = await prisma.transaction.findUnique({
+            where: { externalReference: externalRef },
+            select: { status: true },
+          });
+          const status =
+            fresh?.status === "COMPLETED"
+              ? "COMPLETED"
+              : fresh?.status === "FAILED"
+                ? "FAILED"
+                : "PENDING";
+          return { ...local, status };
+        }
         return { ...local, status: "FAILED" };
       }
       if (st.TransactionStatus === "INDETERMINATE") {
