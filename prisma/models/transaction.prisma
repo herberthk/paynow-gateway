@@ -37,6 +37,7 @@ model Transaction {
   ledger    Ledger[]
 
   @@index([recipientId])
+  @@index([externalReference])
   @@index([status])
   @@index([type])
   @@index([method])

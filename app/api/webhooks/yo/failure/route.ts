@@ -1,5 +1,5 @@
 import "server-only";
-import { getYoClient } from "@/lib/yo/client";
+import { yoAPI } from "@/lib/yo/client";
 import { finalizeYoFailure } from "@/lib/actions/yo";
 import { parseYoForm, toFailureBody, PayloadTooLargeError } from "../_utils";
 
@@ -21,19 +21,20 @@ export async function POST(req: Request) {
     return new Response("BAD REQUEST", { status: 400 });
   }
   if (!raw) return new Response("BAD REQUEST", { status: 400 });
-
+console.log("yo failure ipn raw", raw);
   let result: {
     is_verified: boolean;
     failed_transaction_reference: string;
   };
   try {
-    result = getYoClient().receivePaymentFailureNotification(
+    result = yoAPI.receivePaymentFailureNotification(
       toFailureBody(raw),
     );
   } catch (error) {
     console.error("yo failure ipn verify threw", { error });
     return new Response("RETRY", { status: 500 });
   }
+  console.log("yo failure ipn verify", result);
   if (!result.is_verified) {
     console.warn("yo failure ipn NOT VERIFIED", {
       failed_transaction_reference: raw.failed_transaction_reference,

@@ -26,7 +26,8 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 import prisma from "@/lib/prisma";
-import { createSession, encrypt, getUserSession } from "./session";
+import { createSession, encrypt, getUserSession } from "@/lib/actions/session";
+
 
 const SECRET = "test-session-secret-32-chars-minimum-ok";
 const findUnique = vi.mocked(prisma.user.findUnique);

@@ -1,8 +1,8 @@
 import "server-only";
 import { NextResponse } from "next/server";
-import { YoAPIError } from "@herberthtk/yo-payments-api";
+import { YoAPIError, type TransactionCheckStatusResponse } from "@herberthtk/yo-payments-api";
 import prisma from "@/lib/prisma";
-import { getYoCronClient } from "@/lib/yo/client";
+import { yoAPI } from "@/lib/yo/client";
 import {
   STALE_MINUTES,
   RECONCILE_BATCH_SIZE,
@@ -95,10 +95,9 @@ export async function POST(req: Request) {
       if (!guard || guard.processed) return;
       const priorChecks = guard.checks ?? 0;
       // Final status check before expiring — never bury a debited payment.
-      const api = getYoCronClient();
-      let st;
+      let st:TransactionCheckStatusResponse;
       try {
-        st = await api.acTransactionCheckStatus(null, externalReference);
+        st = await yoAPI.acTransactionCheckStatus(null, externalReference);
       } catch (statusError) {
         // Transport error — leave for the next run, do not expire
         // (no counter change).
@@ -234,8 +233,7 @@ export async function POST(req: Request) {
         return;
       }
       // Fresh client per item — YoAPI holds per-request state.
-      const api = getYoCronClient();
-      const st = await api.acTransactionCheckStatus(
+      const st = await yoAPI.acTransactionCheckStatus(
         null,
         item.externalReference,
       );
