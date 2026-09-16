@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render } from "@react-email/render";
-import DepositEmail from "./DepositEmail";
+import DepositEmail from "@/components/global/DepositEmail";
 
 describe("DepositEmail", () => {
   it("USER_FAILURE greets userName with a Failed title", async () => {
