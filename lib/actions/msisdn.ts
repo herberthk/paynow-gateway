@@ -102,13 +102,9 @@ export async function verifyMsisdnAction(
     };
   } catch (error: unknown) {
     console.error("verifyMsisdnAction error:", error);
-    const msg =
-      error instanceof Error
-        ? error.message
-        : "Failed to verify phone number. Please try again.";
     return {
       success: false,
-      message: msg,
+      message: "Failed to verify phone number. Please try again.",
     };
   }
 }
