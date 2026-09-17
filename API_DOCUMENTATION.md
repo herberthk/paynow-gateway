@@ -868,13 +868,15 @@ Validate a Ugandan Mobile Money phone number and retrieve the registered account
     ```json
     {
       "success": false,
-      "message": "Phone number must be in 12-digit format '256XXXXXXXXX' (e.g. 256779133640)"
+      "failureType": "validation",
+      "message": "Enter a valid Ugandan number e.g. 0777123456"
     }
     ```
   - **Validation Error (`400 Bad Request` / Unsupported network)**:
     ```json
     {
       "success": false,
+      "failureType": "unsupported-provider",
       "message": "Only MTN and Airtel Uganda numbers are supported for Mobile Money top-up"
     }
     ```
@@ -882,6 +884,7 @@ Validate a Ugandan Mobile Money phone number and retrieve the registered account
     ```json
     {
       "success": false,
+      "failureType": "verification",
       "message": "No registered name found for this phone number. Please verify the number."
     }
     ```

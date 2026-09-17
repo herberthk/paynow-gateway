@@ -22,4 +22,11 @@ const encryptedToken = encryptToken(
   process.env.AES_SECRET_KEY!,
 );
 
-console.log("Encrypted Token: ", encryptedToken);
+await fetch("https://pay.connectappbiz.com/api/v1/wallet/getWalletBalance", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "X-Auth-Token": encryptedToken,
+  },
+  body: JSON.stringify({ userId: 7614 }),
+});

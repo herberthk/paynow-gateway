@@ -44,7 +44,15 @@ export async function POST(req: NextRequest) {
     if (result.success) {
       return NextResponse.json(result);
     } else {
-      return NextResponse.json(result, { status: 400 });
+      const status =
+        result.failureType === "upstream-5xx"
+          ? 502
+          : result.failureType === "network" ||
+              result.failureType === "timeout"
+            ? 503
+            : 400;
+
+      return NextResponse.json(result, { status });
     }
   } catch (error) {
     console.error("API Error (verifyMsisdn):", error);

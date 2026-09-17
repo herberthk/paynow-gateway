@@ -1,7 +1,16 @@
 "use server";
 
-import verifyNumber from "@/sdk/index";
+import verifyNumber, { VerificationError } from "@/sdk/index";
 import { detectProvider, normalizeUgMsisdn, type MobileMoneyProviderName } from "@/lib/yo/phone";
+
+export type VerifyMsisdnFailureType =
+  | "validation"
+  | "unsupported-provider"
+  | "verification"
+  | "network"
+  | "timeout"
+  | "upstream-4xx"
+  | "upstream-5xx";
 
 export type VerifyMsisdnResult =
   | {
@@ -17,6 +26,7 @@ export type VerifyMsisdnResult =
     }
   | {
       success: false;
+      failureType: VerifyMsisdnFailureType;
       message: string;
     };
 
@@ -34,6 +44,7 @@ export async function verifyMsisdnAction(
     if (!rawInput || typeof rawInput !== "string") {
       return {
         success: false,
+        failureType: "validation",
         message: "Phone number is required",
       };
     }
@@ -43,6 +54,7 @@ export async function verifyMsisdnAction(
     if (!normalized.ok) {
       return {
         success: false,
+        failureType: "validation",
         message: normalized.error || "Please enter a valid Ugandan phone number (format: 256XXXXXXXXX)",
       };
     }
@@ -53,6 +65,7 @@ export async function verifyMsisdnAction(
     if (!MSISDN_REGEX.test(msisdn)) {
       return {
         success: false,
+        failureType: "validation",
         message: "Phone number must be in 12-digit format '256XXXXXXXXX' (e.g. 256779133640)",
       };
     }
@@ -62,6 +75,7 @@ export async function verifyMsisdnAction(
     if (!provider) {
       return {
         success: false,
+        failureType: "unsupported-provider",
         message: "Only MTN and Airtel Uganda numbers are supported for Mobile Money top-up",
       };
     }
@@ -77,6 +91,7 @@ export async function verifyMsisdnAction(
       if (!fullName) {
         return {
           success: false,
+          failureType: "verification",
           message: "No registered name found for this phone number. Please verify the number.",
         };
       }
@@ -96,14 +111,30 @@ export async function verifyMsisdnAction(
 
     return {
       success: false,
+      failureType: "verification",
       message:
         res?.message ||
         "Could not verify number with mobile network. Please ensure the number is active and registered on Mobile Money.",
     };
   } catch (error: unknown) {
     console.error("verifyMsisdnAction error:", error);
+
+    let failureType: VerifyMsisdnFailureType = "verification";
+    if (error instanceof VerificationError) {
+      if (error.kind === "network" || error.kind === "timeout") {
+        failureType = error.kind;
+      } else if (error.kind === "validation") {
+        failureType = "validation";
+      } else if (error.status && error.status >= 500) {
+        failureType = "upstream-5xx";
+      } else if (error.status && error.status >= 400) {
+        failureType = "upstream-4xx";
+      }
+    }
+
     return {
       success: false,
+      failureType,
       message: "Failed to verify phone number. Please try again.",
     };
   }

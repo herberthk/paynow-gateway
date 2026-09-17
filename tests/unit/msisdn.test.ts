@@ -1,18 +1,23 @@
 import { describe, expect, it, vi } from "vitest";
 import { verifyMsisdnAction } from "@/lib/actions/msisdn";
-import verifyNumber from "@/sdk/index";
+import verifyNumber, { VerificationError } from "@/sdk/index";
 
-vi.mock("@/sdk/index", () => ({
-  default: {
-    verify: vi.fn(),
-  },
-}));
+vi.mock("@/sdk/index", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/sdk/index")>();
+  return {
+    ...actual,
+    default: {
+      verify: vi.fn(),
+    },
+  };
+});
 
 describe("verifyMsisdnAction", () => {
   it("rejects invalid format phone numbers", async () => {
     const res1 = await verifyMsisdnAction("12345");
     expect(res1.success).toBe(false);
     if (!res1.success) {
+      expect(res1.failureType).toBe("validation");
       expect(res1.message).toMatch(/valid Ugandan number/i);
     }
 
@@ -25,6 +30,7 @@ describe("verifyMsisdnAction", () => {
     const res = await verifyMsisdnAction("256711234567");
     expect(res.success).toBe(false);
     if (!res.success) {
+      expect(res.failureType).toBe("unsupported-provider");
       expect(res.message).toMatch(/MTN and Airtel/i);
     }
   });
@@ -81,7 +87,25 @@ describe("verifyMsisdnAction", () => {
     const res = await verifyMsisdnAction("256779159642");
     expect(res.success).toBe(false);
     if (!res.success) {
+      expect(res.failureType).toBe("verification");
       expect(res.message).toMatch(/Subscriber not found/i);
+    }
+  });
+
+  it.each([
+    [new VerificationError("network failure", "network"), "network"],
+    [new VerificationError("timeout", "timeout"), "timeout"],
+    [new VerificationError("bad gateway", "upstream", 503), "upstream-5xx"],
+    [new VerificationError("bad request", "upstream", 422), "upstream-4xx"],
+  ] as const)("classifies %s as %s", async (error, expectedFailureType) => {
+    const mockVerify = vi.mocked(verifyNumber.verify);
+    mockVerify.mockRejectedValueOnce(error);
+
+    const res = await verifyMsisdnAction("256779159642");
+
+    expect(res.success).toBe(false);
+    if (!res.success) {
+      expect(res.failureType).toBe(expectedFailureType);
     }
   });
 });
