@@ -90,9 +90,14 @@ export function useMomoVerification({
     try {
       const res = await verifyMsisdnAction(msisdn);
       if (res.success) {
+        // Normalize the MSISDN returned by the API so the exact-match
+        // readiness check (verifiedAccount.msisdn === phone) is always
+        // consistent regardless of the format the server echoes back.
+        const normalizedResult = normalizeUgMsisdn(res.msisdn);
+        const canonicalMsisdn = normalizedResult.ok ? normalizedResult.msisdn : msisdn;
         setVerifiedAccount({
           name: res.name,
-          msisdn: res.msisdn,
+          msisdn: canonicalMsisdn,
           provider: res.provider,
         });
         setPhoneVerificationError(null);
@@ -102,11 +107,9 @@ export function useMomoVerification({
           res.message || "Failed to verify phone number. Please ensure the number is active on Mobile Money."
         );
       }
-    } catch (err: unknown) {
+    } catch {
       setVerifiedAccount(null);
-      setPhoneVerificationError(
-        err instanceof Error ? err.message : "Phone number verification failed. Please try again."
-      );
+      setPhoneVerificationError("Phone number verification failed. Please try again.");
     } finally {
       setIsVerifyingPhone(false);
     }

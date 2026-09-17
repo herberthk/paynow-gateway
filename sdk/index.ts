@@ -77,17 +77,24 @@ export class VerifyMsisdn {
    * @throws {VerificationError}           if the number cannot be verified.
    */
   private async makeFetchRequest(msisdn: string): Promise<MsisdnVerificationResponse> {
-    return await fetch(`${this.API_BASE_URL}/msisdn-verification`, {
+    const res = await fetch(`${this.API_BASE_URL}/msisdn-verification`, {
       method: "POST",
       headers: {
         Authorization: this.authHeader,
         "Content-Type": "application/json",
         Connection: "keep-alive",
       },
-      body: JSON.stringify({
-        msisdn,
-      }),
-    }).then((res) => res.json());
+      body: JSON.stringify({ msisdn }),
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (!res.ok) {
+      throw new VerificationError(
+        `MSISDN verification request failed with HTTP ${res.status}`
+      );
+    }
+
+    return res.json() as Promise<MsisdnVerificationResponse>;
   }
 
   /**
@@ -123,5 +130,14 @@ export class VerifyMsisdn {
   }
 }
 
-const verifyNumber = new VerifyMsisdn();
-export default verifyNumber
+// Lazy singleton — construction is deferred to the first verify() call so a
+// missing env var surfaces as a request-time error rather than crashing the
+// Next.js build or server startup.
+let _instance: VerifyMsisdn | undefined;
+const verifyNumber = {
+  verify(msisdn: string) {
+    if (!_instance) _instance = new VerifyMsisdn();
+    return _instance.verify(msisdn);
+  },
+};
+export default verifyNumber;

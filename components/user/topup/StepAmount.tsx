@@ -167,11 +167,16 @@ export const StepAmount = memo(function StepAmount({
                 type="tel"
                 value={phone.startsWith("256") ? phone.slice(3) : phone}
                 onChange={(e) => {
-                  const val = e.target.value;
-                  if (val.startsWith("256")) {
-                    onPhoneChange(val);
+                  // Strip everything that isn't a digit
+                  const digits = e.target.value.replace(/\D/g, "");
+                  if (digits.startsWith("256")) {
+                    // Already has the country prefix — pass as-is
+                    onPhoneChange(digits);
+                  } else if (digits.startsWith("0") && digits.length > 1) {
+                    // National "0779..." → strip leading zero, prefix 256
+                    onPhoneChange(`256${digits.slice(1)}`);
                   } else {
-                    onPhoneChange(`256${val}`);
+                    onPhoneChange(`256${digits}`);
                   }
                 }}
                 placeholder="779159642"
