@@ -29,6 +29,7 @@ import {
 } from "@/lib/yo/constants";
 import { creditDepositFee } from "./deposit-fee";
 import { getCachedAdmins } from "@/lib/admin/cached-admins";
+import verifyNumber from "@/sdk/index";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -504,6 +505,28 @@ export const initiateYoDeposit = async (input: {
     }
     const phone = parseTopupMsisdn(parsed.data.msisdn);
     if (!phone.ok) return { success: false, message: phone.error };
+
+    // Primary validation gate: Ensure the number is verified on Mobile Money via the SDK
+    try {
+      const verification = await verifyNumber.verify(phone.msisdn);
+      if (verification?.response !== "OK" || !verification?.data) {
+        return {
+          success: false,
+          message:
+            verification?.message ||
+            "Phone number verification failed. Ensure the number is registered on Mobile Money.",
+        };
+      }
+    } catch (verErr: unknown) {
+      console.error("SDK verification error during deposit:", verErr);
+      return {
+        success: false,
+        message:
+          verErr instanceof Error
+            ? verErr.message
+            : "Failed to verify phone number with mobile network. Please try again.",
+      };
+    }
 
     const feeResult = await getTransactionFee({
       amount: parsed.data.amount,
