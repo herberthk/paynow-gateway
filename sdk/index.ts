@@ -1,8 +1,24 @@
 
-class VerificationError extends Error {
-  constructor(message: string) {
-    super(message);
+export type VerificationErrorKind =
+  | "validation"
+  | "network"
+  | "timeout"
+  | "upstream";
+
+export class VerificationError extends Error {
+  public readonly kind: VerificationErrorKind;
+  public readonly status?: number;
+
+  constructor(
+    message: string,
+    kind: VerificationErrorKind,
+    status?: number,
+    options?: ErrorOptions,
+  ) {
+    super(message, options);
     this.name = "PawaPayError";
+    this.kind = kind;
+    this.status = status;
     Object.setPrototypeOf(this, new.target.prototype);
   }
 }
@@ -14,7 +30,7 @@ class VerificationValidationError extends VerificationError {
   public readonly field?: string;
 
   constructor(message: string, field?: string) {
-    super(message);
+    super(message, "validation");
     this.name = "VerificationValidationError";
     this.field = field;
     Object.setPrototypeOf(this, VerificationValidationError.prototype);
@@ -77,20 +93,40 @@ export class VerifyMsisdn {
    * @throws {VerificationError}           if the number cannot be verified.
    */
   private async makeFetchRequest(msisdn: string): Promise<MsisdnVerificationResponse> {
-    const res = await fetch(`${this.API_BASE_URL}/msisdn-verification`, {
-      method: "POST",
-      headers: {
-        Authorization: this.authHeader,
-        "Content-Type": "application/json",
-        Connection: "keep-alive",
-      },
-      body: JSON.stringify({ msisdn }),
-      signal: AbortSignal.timeout(10_000),
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.API_BASE_URL}/msisdn-verification`, {
+        method: "POST",
+        headers: {
+          Authorization: this.authHeader,
+          "Content-Type": "application/json",
+          Connection: "keep-alive",
+        },
+        body: JSON.stringify({ msisdn }),
+        signal: AbortSignal.timeout(10_000),
+      });
+    } catch (error) {
+      const kind =
+        error instanceof Error &&
+        (error.name === "TimeoutError" || error.name === "AbortError")
+          ? "timeout"
+          : "network";
+
+      throw new VerificationError(
+        kind === "timeout"
+          ? "MSISDN verification request timed out"
+          : "MSISDN verification network request failed",
+        kind,
+        undefined,
+        { cause: error },
+      );
+    }
 
     if (!res.ok) {
       throw new VerificationError(
-        `MSISDN verification request failed with HTTP ${res.status}`
+        `MSISDN verification request failed with HTTP ${res.status}`,
+        "upstream",
+        res.status,
       );
     }
 
