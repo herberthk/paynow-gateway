@@ -14,9 +14,13 @@ import type { MomoPhase } from "../types";
 
 interface UseMomoPollingOptions {
   onClearError?: () => void;
+  successRedirectPath?: string;
 }
 
-export function useMomoPolling({ onClearError }: UseMomoPollingOptions = {}) {
+export function useMomoPolling({
+  onClearError,
+  successRedirectPath = "/dashboard/user/wallet/topup/success",
+}: UseMomoPollingOptions = {}) {
   const router = useRouter();
 
   const [momoPhase, setMomoPhase] = useState<MomoPhase>("confirm");
@@ -79,7 +83,7 @@ export function useMomoPolling({ onClearError }: UseMomoPollingOptions = {}) {
         if (result.success && result.status === "COMPLETED") {
           stopPolling();
           routerRef.current.push(
-            `/dashboard/user/wallet/topup/success?ref=${encodeURIComponent(ref)}`
+            `${successRedirectPath}?ref=${encodeURIComponent(ref)}`
           );
           return;
         }

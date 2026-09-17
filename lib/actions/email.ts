@@ -395,6 +395,51 @@ export const sendSupportReceiptEmail = async ({
   }
 };
 
+export const sendSupportFailureEmail = async ({
+  email,
+  userName,
+  recipientName,
+  amount,
+  reference,
+  method = "Mobile Money",
+}: {
+  email: string;
+  userName: string;
+  recipientName: string;
+  amount: number;
+  reference: string;
+  method?: string;
+}) => {
+  if (!isValidEmail(email)) {
+    console.warn("Skipping support failure email: invalid to-address");
+    return false;
+  }
+  try {
+    const emailHtml = await render(
+      SupportEmail({
+        userName,
+        amount,
+        recipientName,
+        reference,
+        method,
+        type: "SENDER_FAILURE",
+      }),
+    );
+    const mailOptions = {
+      from: '"ConnectPay" <support@connectappbiz.com>',
+      to: email,
+      subject: "Support Payment Unsuccessful - ConnectPay",
+      html: emailHtml,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Error sending support failure email:", error);
+    return false;
+  }
+};
+
 export const sendAdminSupportFeeEmail = async ({
   email,
   adminName,

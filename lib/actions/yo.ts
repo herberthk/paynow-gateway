@@ -12,6 +12,10 @@ import {
   sendDepositEmail,
   sendAdminDepositNoticeEmail,
   sendDepositFailureEmail,
+  sendSupportEmail,
+  sendSupportReceiptEmail,
+  sendSupportFailureEmail,
+  sendAdminSupportFeeEmail,
 } from "./email";
 import {
   yoAPI,
@@ -196,8 +200,11 @@ export const finalizeYoSuccess = async ({
 
   // Parallelize independent reads; the updateMany counts inside the
   // transaction below are authoritative against concurrent settlers.
-  const [user, admins] = await Promise.all([
+  const [user, recipient, admins] = await Promise.all([
     prisma.user.findUnique({ where: { id: txn.userId } }),
+    txn.type === "SUPPORT" && txn.recipientId
+      ? prisma.user.findUnique({ where: { id: txn.recipientId } })
+      : Promise.resolve(null),
     getCachedAdmins(),
   ]);
   if (!user) return { applied: false, reason: "unknown-ref" };
@@ -241,35 +248,93 @@ export const finalizeYoSuccess = async ({
       }
       if (claimed.count !== 1) throw new SettlementRace();
 
-      await tx.wallet.create({
-        data: {
-          userId: txn.userId,
-          amount,
-          type: "CREDIT",
-          reason: "Mobile Money Deposit",
-          refference: externalRef,
-          mobileMoneyProvider: provider ?? undefined,
-          paymentMethod: "MOBILE_MONEY",
-        },
-      });
+      if (txn.type === "SUPPORT") {
+        // Credit the recipient's wallet
+        await tx.wallet.create({
+          data: {
+            userId: txn.recipientId,
+            amount,
+            type: "CREDIT",
+            reason:
+              txn.reason ||
+              `Received support from ${user.name || "Unknown"}`,
+            refference: externalRef,
+            mobileMoneyProvider: provider ?? undefined,
+            paymentMethod: "MOBILE_MONEY",
+          },
+        });
 
-      await creditDepositFee(tx, {
-        fromUserId: txn.userId,
-        externalRef,
-        fee,
-        admins,
-      });
+        // Record support user link
+        await tx.supportUser.create({
+          data: {
+            fromUserId: txn.userId,
+            toUserId: txn.recipientId,
+            reference: externalRef,
+            amount,
+            currency: "UGX",
+            paymentMethod: "MOBILE_MONEY",
+            reason: txn.reason || `Supported ${recipient?.name || "User"}`,
+          },
+        });
 
-      await tx.systemNotification.create({
-        data: {
+        await creditDepositFee(tx, {
           fromUserId: txn.userId,
-          toUserId: txn.userId,
-          title: "Deposit Successful",
-          message: `Your deposit of UGX ${amount.toLocaleString()} has been processed successfully.`,
-          type: "SUCCESS",
-          path: `/dashboard/user/transactions?query=${encodeURIComponent(externalRef)}`,
-        },
-      });
+          externalRef,
+          fee,
+          admins,
+        });
+
+        await tx.systemNotification.createMany({
+          data: [
+            {
+              fromUserId: txn.userId,
+              toUserId: txn.userId,
+              title: "Support Successful",
+              message: `You successfully supported ${recipient?.name || "User"} with UGX ${amount.toLocaleString()}.`,
+              type: "SUCCESS",
+              path: `/dashboard/user/transactions?query=${encodeURIComponent(externalRef)}`,
+            },
+            {
+              fromUserId: txn.userId,
+              toUserId: txn.recipientId,
+              title: "Support Received",
+              message: `You received UGX ${amount.toLocaleString()} in support from ${user.name || "Someone"}.`,
+              type: "SUCCESS",
+              path: `/dashboard/user/transactions?query=${encodeURIComponent(externalRef)}`,
+            },
+          ],
+        });
+      } else {
+        await tx.wallet.create({
+          data: {
+            userId: txn.userId,
+            amount,
+            type: "CREDIT",
+            reason: "Mobile Money Deposit",
+            refference: externalRef,
+            mobileMoneyProvider: provider ?? undefined,
+            paymentMethod: "MOBILE_MONEY",
+          },
+        });
+
+        await creditDepositFee(tx, {
+          fromUserId: txn.userId,
+          externalRef,
+          fee,
+          admins,
+        });
+
+        await tx.systemNotification.create({
+          data: {
+            fromUserId: txn.userId,
+            toUserId: txn.userId,
+            title: "Deposit Successful",
+            message: `Your deposit of UGX ${amount.toLocaleString()} has been processed successfully.`,
+            type: "SUCCESS",
+            path: `/dashboard/user/transactions?query=${encodeURIComponent(externalRef)}`,
+          },
+        });
+      }
     });
   } catch (error) {
     if (error instanceof SettlementRace) {
@@ -281,31 +346,73 @@ export const finalizeYoSuccess = async ({
   // Emails after commit — never block settlement on mail delivery.
   runAfterSettlement(async () => {
     try {
-      if (user.email) {
-        await sendDepositEmail({
-          email: user.email,
-          userName: user.name || "User",
-          amount,
-          reference: externalRef,
-          fee,
-          method,
-        });
+      if (txn.type === "SUPPORT") {
+        if (recipient?.email) {
+          await sendSupportEmail({
+            email: recipient.email,
+            userName: recipient.name || "User",
+            senderName: user.name || "Someone",
+            amount,
+            reference: externalRef,
+            receiptUrl: receiptUrl ?? undefined,
+          });
+        }
+        if (user.email) {
+          await sendSupportReceiptEmail({
+            email: user.email,
+            userName: user.name || "User",
+            recipientName: recipient?.name || "User",
+            amount,
+            reference: externalRef,
+            fee,
+            method,
+            receiptUrl: receiptUrl ?? undefined,
+          });
+        }
+        if (fee > 0 && admins.length > 0) {
+          await Promise.all(
+            admins.map((admin) =>
+              admin.email
+                ? sendAdminSupportFeeEmail({
+                    email: admin.email,
+                    adminName: admin.name || "Admin",
+                    amount,
+                    senderName: user.name || "User",
+                    recipientName: recipient?.name || "User",
+                    reference: externalRef,
+                    fee,
+                  })
+                : Promise.resolve(),
+            ),
+          );
+        }
+      } else {
+        if (user.email) {
+          await sendDepositEmail({
+            email: user.email,
+            userName: user.name || "User",
+            amount,
+            reference: externalRef,
+            fee,
+            method,
+          });
+        }
+        await Promise.all(
+          admins.map((admin) =>
+            admin.email
+              ? sendAdminDepositNoticeEmail({
+                  email: admin.email,
+                  userName: user.name || "User",
+                  adminName: admin.name || "Admin",
+                  amount,
+                  reference: externalRef,
+                  fee,
+                  method,
+                })
+              : Promise.resolve(),
+          ),
+        );
       }
-      await Promise.all(
-        admins.map((admin) =>
-          admin.email
-            ? sendAdminDepositNoticeEmail({
-                email: admin.email,
-                userName: user.name || "User",
-                adminName: admin.name || "Admin",
-                amount,
-                reference: externalRef,
-                fee,
-                method,
-              })
-            : Promise.resolve(),
-        ),
-      );
     } catch (error) {
       console.error("yo success email failed", { externalRef, error });
     }
@@ -313,6 +420,7 @@ export const finalizeYoSuccess = async ({
 
   revalidatePath("/dashboard/user/wallet");
   revalidatePath("/dashboard/user/transactions");
+  revalidatePath("/dashboard/user/support/history");
   return { applied: true };
 };
 
@@ -403,7 +511,10 @@ export const finalizeYoFailure = async (
   });
   if (!txn) return { applied: false, reason: "unknown-ref" };
 
-  const user = await prisma.user.findUnique({ where: { id: txn.userId } });
+  const [user, recipient] = await Promise.all([
+    prisma.user.findUnique({ where: { id: txn.userId } }),
+    txn.recipientId ? prisma.user.findUnique({ where: { id: txn.recipientId } }) : null,
+  ]);
   const amount = txn.amount.toNumber();
 
   try {
@@ -436,16 +547,29 @@ export const finalizeYoFailure = async (
         });
       }
       if (claimed.count !== 1) throw new SettlementRace();
-      await tx.systemNotification.create({
-        data: {
-          fromUserId: txn.userId,
-          toUserId: txn.userId,
-          title: "Deposit Failed",
-          message: `Your deposit of UGX ${amount.toLocaleString()} could not be completed. No money was deducted from your wallet.`,
-          type: "ALERT",
-          path: `/dashboard/user/wallet/topup?ref=${encodeURIComponent(externalRef)}`,
-        },
-      });
+      if (txn.type === "SUPPORT") {
+        await tx.systemNotification.create({
+          data: {
+            fromUserId: txn.userId,
+            toUserId: txn.userId,
+            title: "Support Payment Failed",
+            message: `Your support payment of UGX ${amount.toLocaleString()} could not be completed. No money was deducted from your mobile money account.`,
+            type: "ALERT",
+            path: `/dashboard/user/wallet/support?ref=${encodeURIComponent(externalRef)}`,
+          },
+        });
+      } else {
+        await tx.systemNotification.create({
+          data: {
+            fromUserId: txn.userId,
+            toUserId: txn.userId,
+            title: "Deposit Failed",
+            message: `Your deposit of UGX ${amount.toLocaleString()} could not be completed. No money was deducted from your wallet.`,
+            type: "ALERT",
+            path: `/dashboard/user/wallet/topup?ref=${encodeURIComponent(externalRef)}`,
+          },
+        });
+      }
     });
   } catch (error) {
     if (error instanceof SettlementRace)
@@ -456,13 +580,24 @@ export const finalizeYoFailure = async (
   runAfterSettlement(async () => {
     try {
       if (user?.email) {
-        await sendDepositFailureEmail({
-          email: user.email,
-          userName: user.name || "User",
-          amount,
-          reference: externalRef,
-          method: txn.method,
-        });
+        if (txn.type === "SUPPORT") {
+          await sendSupportFailureEmail({
+            email: user.email,
+            userName: user.name || "User",
+            recipientName: recipient?.name || "Recipient",
+            amount,
+            reference: externalRef,
+            method: txn.method,
+          });
+        } else {
+          await sendDepositFailureEmail({
+            email: user.email,
+            userName: user.name || "User",
+            amount,
+            reference: externalRef,
+            method: txn.method,
+          });
+        }
       }
     } catch (error) {
       console.error("yo failure email failed", { externalRef, error });
@@ -471,6 +606,7 @@ export const finalizeYoFailure = async (
 
   revalidatePath("/dashboard/user/wallet");
   revalidatePath("/dashboard/user/transactions");
+  revalidatePath("/dashboard/user/support/history");
   return { applied: true };
 };
 
