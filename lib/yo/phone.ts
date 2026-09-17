@@ -83,7 +83,7 @@ export function parseTopupMsisdn(input: string):
 
 /** Display label used for Transaction.method / wallet reason. */
 export const methodLabelFor = (provider: MobileMoneyProviderName): string =>
-  provider === "MTN" ? "MTN Mobile Money" : "Airtel Mobile Money";
+  provider === "MTN" ? "MTN Mobile Money" : "Airtel Money";
 
 /** Display format: 256777123456 → 0777 123 456 */
 export function formatUgDisplay(msisdn256: string): string {

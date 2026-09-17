@@ -121,7 +121,7 @@ describe("formatUgDisplay", () => {
 describe("methodLabelFor", () => {
   it("maps providers to method labels", () => {
     expect(methodLabelFor("MTN")).toBe("MTN Mobile Money");
-    expect(methodLabelFor("AIRTEL")).toBe("Airtel Mobile Money");
+    expect(methodLabelFor("AIRTEL")).toBe("Airtel Money");
   });
 });
 
