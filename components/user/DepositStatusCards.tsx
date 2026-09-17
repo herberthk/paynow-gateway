@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   CheckCircle2,
@@ -15,11 +16,13 @@ export function DepositFailedCard({
   onRetry,
   onSecondary,
   secondaryLabel = "Change Amount",
+  description,
 }: {
   txnRef: string;
   onRetry?: () => void;
   onSecondary?: () => void;
   secondaryLabel?: string;
+  description?: ReactNode;
 }) {
   const reduceMotion = useReducedMotion();
   return (
@@ -42,8 +45,12 @@ export function DepositFailedCard({
         Payment failed
       </h2>
       <p className="text-gray-500 dark:text-gray-400 text-sm mb-2 font-medium">
-        This deposit could not be completed. No money was deducted from your
-        wallet.
+        {description ?? (
+          <>
+            This deposit could not be completed. No money was deducted from
+            your wallet.
+          </>
+        )}
       </p>
       <p className="text-xs text-gray-400 font-mono mb-8">
         Reference: {txnRef}
@@ -88,10 +95,12 @@ export function DepositTimeoutCard({
   txnRef,
   onKeepWaiting,
   keepWaitingExhausted = false,
+  description,
 }: {
   txnRef: string;
   onKeepWaiting?: () => void;
   keepWaitingExhausted?: boolean;
+  description?: ReactNode;
 }) {
   const reduceMotion = useReducedMotion();
   return (
@@ -114,9 +123,13 @@ export function DepositTimeoutCard({
         Still processing
       </h2>
       <p className="text-gray-500 dark:text-gray-400 text-sm mb-2 font-medium leading-relaxed">
-        We haven&apos;t received confirmation yet. If you approved the prompt,
-        your wallet will be credited automatically — otherwise no money moves.
-        We&apos;ll contact you within the next <strong>24 hours</strong>.
+        {description ?? (
+          <>
+            We haven&apos;t received confirmation yet. If you approved the prompt,
+            your wallet will be credited automatically — otherwise no money
+            moves. We&apos;ll contact you within the next <strong>24 hours</strong>.
+          </>
+        )}
       </p>
       <p className="text-xs text-gray-400 font-mono mb-8">
         Reference: {txnRef}

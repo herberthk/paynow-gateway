@@ -1,10 +1,26 @@
 "use server";
+import { z } from "zod";
 import prisma from "@/lib/prisma";
 import { getUserSession } from "./session";
 import {
   _processMobileMoneySupport,
   _processWalletSupportCore,
 } from "@/lib/server/support-core";
+import {
+  configureDepositRequest,
+  getYoClient,
+} from "@/lib/yo/client";
+import { YoAPIError } from "@herberthtk/yo-payments-api";
+import { parseTopupMsisdn, methodLabelFor } from "@/lib/yo/phone";
+import {
+  MAX_TOPUP,
+  MAX_PENDING_DEPOSITS,
+  RATE_LIMIT_WINDOW_MINUTES,
+} from "@/lib/yo/constants";
+import { getTransactionFee } from "./fee";
+import { generateTxRef } from "@/utils";
+import verifyNumber from "@/sdk/index";
+import { finalizeYoFailure } from "./yo";
 
 /**
  * Process Support via Wallet Balance (P2P Support) — public Server Action.
@@ -33,6 +49,325 @@ export const processWalletSupport = async ({
   }
   return _processWalletSupportCore({ sender, senderId, recipientId, amount });
 };
+
+const initiateSupportSchema = z.object({
+  amount: z.coerce.number().int().min(500, "Minimum support amount is UGX 500").max(MAX_TOPUP),
+  toUserId: z.coerce.number().positive("Valid recipient ID is required"),
+  payerMsisdn: z.string().trim().min(7).max(16),
+  recipientMsisdn: z.string().trim().min(7).max(16),
+  requestKey: z.string().trim().min(16).max(128),
+  narrative: z.string().trim().min(2).max(100).optional(),
+});
+
+/**
+ * Initiate Mobile Money Support:
+ * 1. Validates inputs and checks session.
+ * 2. Verifies payer phone and the selected recipient's canonical phone.
+ * 3. Calculates fee and creates PENDING Transaction + ProcessedTransaction.
+ * 4. Dispatches USSD prompt to payer's phone via Yo! Payments.
+ */
+export const initiateYoSupport = async (input: {
+  amount: number;
+  toUserId: number;
+  payerMsisdn: string;
+  recipientMsisdn: string;
+  requestKey: string;
+  narrative?: string;
+}): Promise<
+  | {
+      success: true;
+      externalRef: string;
+      provider: "MTN" | "AIRTEL";
+      fee: number;
+      totalCharged: number;
+    }
+  | { success: false; message: string }
+> => {
+  try {
+    const user = await getUserSession();
+    if (!user) return { success: false, message: "Unauthorized" };
+
+    const parsed = initiateSupportSchema.safeParse(input);
+    if (!parsed.success) {
+      return {
+        success: false,
+        message: parsed.error.issues[0]?.message ?? "Invalid input",
+      };
+    }
+
+    const {
+      amount,
+      toUserId,
+      payerMsisdn,
+      recipientMsisdn,
+      requestKey,
+      narrative,
+    } = parsed.data;
+
+    if (user.id === toUserId) {
+      return { success: false, message: "You cannot support yourself" };
+    }
+
+    const recipient = await prisma.user.findFirst({
+      where: { id: toUserId, deleted_at: null },
+      select: { id: true, name: true, tel: true },
+    });
+    if (!recipient) {
+      return { success: false, message: "Recipient user not found" };
+    }
+
+    // 1. Verify Payer Phone (the mobile line that receives the USSD PIN prompt)
+    const payerPhone = parseTopupMsisdn(payerMsisdn);
+    if (!payerPhone.ok) return { success: false, message: `Payer phone: ${payerPhone.error}` };
+
+    const recPhone = parseTopupMsisdn(recipientMsisdn);
+    if (!recPhone.ok) {
+      return { success: false, message: `Recipient phone: ${recPhone.error}` };
+    }
+    const storedRecipientPhone = recipient.tel
+      ? parseTopupMsisdn(recipient.tel)
+      : null;
+    if (
+      !storedRecipientPhone?.ok ||
+      storedRecipientPhone.msisdn !== recPhone.msisdn
+    ) {
+      return {
+        success: false,
+        message: "The verified recipient phone no longer matches the selected user.",
+      };
+    }
+
+    const existingRequest = await prisma.transaction.findUnique({
+      where: { requestKey },
+    });
+    if (existingRequest) {
+      if (
+        existingRequest.userId !== user.id ||
+        existingRequest.recipientId !== toUserId ||
+        existingRequest.type !== "SUPPORT" ||
+        existingRequest.amount.toNumber() !== amount ||
+        existingRequest.msisdn !== payerPhone.msisdn ||
+        !existingRequest.provider
+      ) {
+        return {
+          success: false,
+          message: "This support request key has already been used.",
+        };
+      }
+      return {
+        success: true,
+        externalRef: existingRequest.externalReference || existingRequest.txn_ref,
+        provider: existingRequest.provider,
+        fee: existingRequest.fee.toNumber(),
+        totalCharged:
+          existingRequest.amount.toNumber() + existingRequest.fee.toNumber(),
+      };
+    }
+
+    try {
+      const payerVerification = await verifyNumber.verify(payerPhone.msisdn);
+      if (payerVerification?.response !== "OK" || !payerVerification?.data) {
+        return {
+          success: false,
+          message:
+            payerVerification?.message ||
+            "Payer phone number verification failed. Ensure the number is active on Mobile Money.",
+        };
+      }
+    } catch (verErr: unknown) {
+      console.error("SDK verification error for payer:", verErr);
+      return {
+        success: false,
+        message: "Failed to verify payer phone number on mobile network.",
+      };
+    }
+
+    // 2. Verify the canonical phone associated with the selected recipient.
+    const normRecipientPhone = recPhone.msisdn;
+    try {
+      const recVerification = await verifyNumber.verify(normRecipientPhone);
+      if (recVerification?.response !== "OK" || !recVerification?.data) {
+        return {
+          success: false,
+          message:
+            recVerification?.message ||
+            "Recipient phone number is not registered on Mobile Money.",
+        };
+      }
+    } catch (verErr: unknown) {
+      console.error("SDK verification error for recipient:", verErr);
+      return {
+        success: false,
+        message: "Failed to verify recipient phone number on mobile network.",
+      };
+    }
+
+    // 3. Fee calculation
+    const feeResult = await getTransactionFee({
+      amount,
+      type: "SUPPORT",
+    });
+    if (!feeResult.success) {
+      return {
+        success: false,
+        message: feeResult.message || "Fee calculation failed",
+      };
+    }
+    const fee = user.privilege === "super_admin" ? 0 : (feeResult.amount || 0);
+    const totalCharged = amount + fee;
+
+    // 4. Rate-limiting check
+    const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MINUTES * 60_000);
+    const pendingCount = await prisma.transaction.count({
+      where: {
+        userId: user.id,
+        type: "SUPPORT",
+        status: { in: ["PENDING", "INDETERMINATE"] },
+        createdAt: { gt: windowStart },
+      },
+    });
+    if (pendingCount >= MAX_PENDING_DEPOSITS) {
+      return {
+        success: false,
+        message: "Too many pending support transactions. Please wait for them to complete.",
+      };
+    }
+
+    const method = methodLabelFor(payerPhone.provider);
+    const externalRef = await generateTxRef(14);
+    const txnReason =
+      narrative ||
+      `Supported ${recipient.name || "User"}${normRecipientPhone ? ` (${normRecipientPhone})` : ""} via Mobile Money`;
+
+    let api: ReturnType<typeof getYoClient>;
+    try {
+      api = getYoClient();
+      configureDepositRequest(api, externalRef);
+    } catch (error) {
+      console.error("yo support configuration failed", { error });
+      return {
+        success: false,
+        message: "Mobile Money payments are temporarily unavailable.",
+      };
+    }
+
+    try {
+      await prisma.$transaction([
+        prisma.transaction.create({
+          data: {
+            userId: user.id,
+            recipientId: toUserId,
+            displayName: user.name || "User",
+            amount,
+            currency: "UGX",
+            type: "SUPPORT",
+            status: "PENDING",
+            category: "Support",
+            method,
+            txn_ref: externalRef,
+            externalReference: externalRef,
+            requestKey,
+            msisdn: payerPhone.msisdn,
+            provider: payerPhone.provider,
+            fee,
+            reason: txnReason,
+          },
+        }),
+        prisma.processedTransaction.create({
+          data: { externalReference: externalRef },
+        }),
+      ]);
+    } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        (error as { code?: string }).code === "P2002"
+      ) {
+        const duplicate = await prisma.transaction.findUnique({
+          where: { requestKey },
+        });
+        if (
+          duplicate &&
+          duplicate.userId === user.id &&
+          duplicate.recipientId === toUserId &&
+          duplicate.type === "SUPPORT" &&
+          duplicate.amount.toNumber() === amount &&
+          duplicate.msisdn === payerPhone.msisdn &&
+          duplicate.provider
+        ) {
+          return {
+            success: true,
+            externalRef: duplicate.externalReference || duplicate.txn_ref,
+            provider: duplicate.provider,
+            fee: duplicate.fee.toNumber(),
+            totalCharged:
+              duplicate.amount.toNumber() + duplicate.fee.toNumber(),
+          };
+        }
+      }
+      console.error("yo support initiate persist failed", { error });
+      return {
+        success: false,
+        message: "Could not start support transaction. Please try again.",
+      };
+    }
+
+    try {
+      const res = await api.acDepositFunds(
+        payerPhone.msisdn,
+        totalCharged,
+        `Support for ${recipient.name || "User"}`,
+      );
+      console.log("yo initiate support res", res);
+      if (res.Status === "OK") {
+        if (res.TransactionReference) {
+          await prisma.$transaction([
+            prisma.transaction.updateMany({
+              where: { externalReference: externalRef, status: "PENDING" },
+              data: { providerRef: res.TransactionReference },
+            }),
+            prisma.processedTransaction.updateMany({
+              where: { externalReference: externalRef, processed: false },
+              data: { transactionReference: res.TransactionReference },
+            }),
+          ]);
+        }
+        return {
+          success: true,
+          externalRef,
+          provider: payerPhone.provider,
+          fee,
+          totalCharged,
+        };
+      }
+      await finalizeYoFailure(externalRef);
+      return {
+        success: false,
+        message: res.ErrorMessage || "Support deposit rejected. Please try again.",
+      };
+    } catch (error) {
+      console.error("yo support dispatch outcome unknown", {
+        externalRef,
+        message:
+          error instanceof YoAPIError ? error.message : "Unexpected gateway error",
+      });
+      // The request may have reached the gateway. Keep the persisted payment
+      // pending so polling can establish a terminal status; never re-dispatch.
+      return {
+        success: true,
+        externalRef,
+        provider: payerPhone.provider,
+        fee,
+        totalCharged,
+      };
+    }
+  } catch (error) {
+    console.error("Error initiating Yo support:", error);
+    return { success: false, message: "Could not start support payment" };
+  }
+};
+
 /**
  * Process Mobile Money Support — public Server Action.
  */

@@ -34,6 +34,12 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isValidEmail = (value: string): boolean =>
   typeof value === "string" && value.length <= 254 && EMAIL_RE.test(value);
 
+const getSupportPageUrl = (): string => {
+  const baseUrl = process.env.APP_BASE_URL;
+  if (!baseUrl) throw new Error("Set APP_BASE_URL.");
+  return new URL("/dashboard/user/wallet/support", baseUrl).toString();
+};
+
 type Props = {
   id: number;
   email: string;
@@ -330,6 +336,7 @@ export const sendSupportEmail = async ({
         senderName,
         reference,
         receiptUrl,
+        supportUrl: getSupportPageUrl(),
         type: "RECEIVER",
       }),
     );
@@ -377,6 +384,7 @@ export const sendSupportReceiptEmail = async ({
         fee,
         method,
         receiptUrl,
+        supportUrl: getSupportPageUrl(),
         type: "SENDER_RECEIPT",
       }),
     );
@@ -391,6 +399,52 @@ export const sendSupportReceiptEmail = async ({
     return true;
   } catch (error) {
     console.error("Error sending support receipt email:", error);
+    return false;
+  }
+};
+
+export const sendSupportFailureEmail = async ({
+  email,
+  userName,
+  recipientName,
+  amount,
+  reference,
+  method = "Mobile Money",
+}: {
+  email: string;
+  userName: string;
+  recipientName: string;
+  amount: number;
+  reference: string;
+  method?: string;
+}) => {
+  if (!isValidEmail(email)) {
+    console.warn("Skipping support failure email: invalid to-address");
+    return false;
+  }
+  try {
+    const emailHtml = await render(
+      SupportEmail({
+        userName,
+        amount,
+        recipientName,
+        reference,
+        method,
+        supportUrl: getSupportPageUrl(),
+        type: "SENDER_FAILURE",
+      }),
+    );
+    const mailOptions = {
+      from: '"ConnectPay" <support@connectappbiz.com>',
+      to: email,
+      subject: "Support Payment Unsuccessful - ConnectPay",
+      html: emailHtml,
+    };
+
+    await transporter.sendMail(mailOptions);
+    return true;
+  } catch (error) {
+    console.error("Error sending support failure email:", error);
     return false;
   }
 };
