@@ -167,8 +167,15 @@ export const StepAmount = memo(function StepAmount({
                 type="tel"
                 value={phone.startsWith("256") ? phone.slice(3) : phone}
                 onChange={(e) => {
-                  // Strip everything that isn't a digit
-                  const digits = e.target.value.replace(/\D/g, "");
+                  const rawValue = e.target.value;
+                  // Match normalizeUgMsisdn: digits, spaces, dashes, parentheses,
+                  // dots, and one leading international-prefix plus sign.
+                  if (!/^\+?[\d\s\-().]*$/.test(rawValue)) return;
+
+                  const normalizedInput = rawValue.replace(/[\s\-().]/g, "");
+                  const digits = normalizedInput.startsWith("+")
+                    ? normalizedInput.slice(1)
+                    : normalizedInput;
                   if (digits.startsWith("256")) {
                     // Already has the country prefix — pass as-is
                     onPhoneChange(digits);
