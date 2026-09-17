@@ -335,6 +335,7 @@ Returned when the header is missing, malformed, or the decrypted token does not 
    - [Get Support History (Paginated)](#get-support-history-paginated)
 4. [Utility Operations](#4-utility-operations)
    - [Calculate Transaction Fee](#calculate-transaction-fee)
+   - [Verify Mobile Money MSISDN](#verify-mobile-money-msisdn)
 5. [User Operations](#5-user-operations)
    - [Get User By ID](#get-user-by-id)
    - [Get User By Email](#get-user-by-email)
@@ -830,6 +831,58 @@ Calculate the expected fee for a transaction type and amount before executing it
     {
       "success": true,
       "amount": 1000
+    }
+    ```
+
+---
+
+### Verify Mobile Money MSISDN
+
+Validate a Ugandan Mobile Money phone number and retrieve the registered account holder's name. Normalizes common phone number formats (e.g., `0779XXXXXX`, `+256779XXXXXX`, `256779XXXXXX`) before verification, then confirms the number is active on either MTN or Airtel Uganda Mobile Money.
+
+- **URL**: `/api/v1/wallet/verifyMsisdn`
+- **Request Body Parameters**:
+  - `msisdn` (string, required): The phone number to verify. Accepts formats: `256XXXXXXXXX`, `0XXXXXXXXX`, or `+256XXXXXXXXX`.
+- **Example Request**:
+  ```json
+  {
+    "msisdn": "256779159642"
+  }
+  ```
+- **Response Examples**:
+  - **Success (`200 OK`)**:
+    ```json
+    {
+      "success": true,
+      "name": "John Doe",
+      "msisdn": "256779159642",
+      "provider": "MTN",
+      "data": {
+        "firstName": "John",
+        "surname": "Doe",
+        "msisdn": "256779159642"
+      }
+    }
+    ```
+  - **Validation Error (`400 Bad Request` / Invalid format)**:
+    ```json
+    {
+      "success": false,
+      "message": "Phone number must be in 12-digit format '256XXXXXXXXX' (e.g. 256779133640)"
+    }
+    ```
+  - **Validation Error (`400 Bad Request` / Unsupported network)**:
+    ```json
+    {
+      "success": false,
+      "message": "Only MTN and Airtel Uganda numbers are supported for Mobile Money top-up"
+    }
+    ```
+  - **Verification Failure (`400 Bad Request` / Number not on Mobile Money)**:
+    ```json
+    {
+      "success": false,
+      "message": "No registered name found for this phone number. Please verify the number."
     }
     ```
 
