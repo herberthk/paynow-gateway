@@ -22,6 +22,7 @@ interface SupportEmailProps {
   method?: string;
   fee?: number;
   receiptUrl?: string;
+  supportUrl: string;
   type: "RECEIVER" | "SENDER_RECEIPT" | "SENDER_FAILURE";
 }
 
@@ -34,6 +35,7 @@ export const SupportEmail = ({
   method,
   fee,
   receiptUrl,
+  supportUrl,
   type,
 }: SupportEmailProps) => {
   const isReceiver = type === "RECEIVER";
@@ -202,10 +204,7 @@ export const SupportEmail = ({
 
             {isFailure && (
               <Section style={buttonContainer}>
-                <Button
-                  style={retryButton}
-                  href="#"
-                >
+                <Button style={retryButton} href={supportUrl}>
                   Try Support Again
                 </Button>
               </Section>

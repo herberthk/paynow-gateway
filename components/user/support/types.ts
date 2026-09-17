@@ -69,7 +69,6 @@ export interface StepSupportMomoPaymentProps {
   error: string | null;
   onAuthorize: () => void;
   onBackToStep1: () => void;
-  onCancelPending: () => void;
   onRetryConfirm: () => void;
   onKeepWaiting: () => void;
 }
@@ -89,4 +88,5 @@ export interface SupportHeaderProps {
   step: number;
   onBack: () => void;
   onViewHistory: () => void;
+  backDisabled?: boolean;
 }

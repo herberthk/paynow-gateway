@@ -13,6 +13,7 @@ export const SupportHeader = memo(function SupportHeader({
   step,
   onBack,
   onViewHistory,
+  backDisabled = false,
 }: SupportHeaderProps) {
   return (
     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
@@ -20,8 +21,9 @@ export const SupportHeader = memo(function SupportHeader({
         <button
           type="button"
           onClick={onBack}
+          disabled={backDisabled}
           aria-label={step === 1 ? "Return to wallet" : "Back to step 1"}
-          className="p-3 hover:bg-white dark:hover:bg-slate-800 rounded-2xl text-gray-500 shadow-sm border border-gray-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-all active:scale-95 group cursor-pointer"
+          className="p-3 hover:bg-white dark:hover:bg-slate-800 rounded-2xl text-gray-500 shadow-sm border border-gray-100 dark:border-slate-800 hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-all active:scale-95 group cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
         >
           <ArrowLeft
             size={22}

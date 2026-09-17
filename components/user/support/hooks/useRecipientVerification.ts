@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { normalizeUgMsisdn, detectProvider } from "@/lib/yo/phone";
 import { verifyMsisdnAction } from "@/lib/actions/msisdn";
 import type { VerifiedAccount, PhonePreview, RecipientUser } from "../types";
@@ -18,20 +18,26 @@ export function useRecipientVerification({
   const [verifiedRecipient, setVerifiedRecipient] = useState<VerifiedAccount | null>(null);
   const [isVerifyingRecipient, setIsVerifyingRecipient] = useState(false);
   const [recipientVerificationError, setRecipientVerificationError] = useState<string | null>(null);
+  const recipientPhoneRef = useRef("");
+  const verificationRequestRef = useRef(0);
 
   // Sync with selected recipient's phone if available
   useEffect(() => {
     if (selectedRecipient?.tel) {
       const normalized = normalizeUgMsisdn(selectedRecipient.tel);
       const phoneToSet = normalized.ok ? normalized.msisdn : selectedRecipient.tel;
+      recipientPhoneRef.current = phoneToSet;
       setRecipientPhone(phoneToSet);
       setVerifiedRecipient(null);
       setRecipientVerificationError(null);
     } else {
+      recipientPhoneRef.current = "";
       setRecipientPhone("");
       setVerifiedRecipient(null);
       setRecipientVerificationError(null);
     }
+    verificationRequestRef.current += 1;
+    setIsVerifyingRecipient(false);
   }, [selectedRecipient]);
 
   const recipientPhonePreview = useMemo<PhonePreview>(() => {
@@ -64,13 +70,18 @@ export function useRecipientVerification({
       cleaned = cleaned.slice(0, 12);
     }
 
+    recipientPhoneRef.current = cleaned;
+    verificationRequestRef.current += 1;
     setRecipientPhone(cleaned);
+    setIsVerifyingRecipient(false);
     setVerifiedRecipient((prev) => (prev && prev.msisdn !== cleaned ? null : prev));
     setRecipientVerificationError(null);
     onClearError?.();
   }, [onClearError]);
 
   const triggerRecipientVerification = useCallback(async (targetPhone: string) => {
+    const requestGeneration = verificationRequestRef.current + 1;
+    verificationRequestRef.current = requestGeneration;
     const normalized = normalizeUgMsisdn(targetPhone);
     if (!normalized.ok) {
       setRecipientVerificationError(normalized.error);
@@ -79,6 +90,17 @@ export function useRecipientVerification({
     }
 
     const msisdn = normalized.msisdn;
+    const isCurrentRequest = () => {
+      const currentPhone = normalizeUgMsisdn(recipientPhoneRef.current);
+      return (
+        verificationRequestRef.current === requestGeneration &&
+        currentPhone.ok &&
+        currentPhone.msisdn === msisdn
+      );
+    };
+
+    if (!isCurrentRequest()) return;
+
     if (!/^256\d{9}$/.test(msisdn)) {
       setRecipientVerificationError("Format must be '256XXXXXXXXX' (12 digits, e.g. 256779123456)");
       setVerifiedRecipient(null);
@@ -97,6 +119,7 @@ export function useRecipientVerification({
 
     try {
       const res = await verifyMsisdnAction(msisdn);
+      if (!isCurrentRequest()) return;
       if (res.success) {
         const normalizedResult = normalizeUgMsisdn(res.msisdn);
         const canonicalMsisdn = normalizedResult.ok ? normalizedResult.msisdn : msisdn;
@@ -113,10 +136,11 @@ export function useRecipientVerification({
         );
       }
     } catch {
+      if (!isCurrentRequest()) return;
       setVerifiedRecipient(null);
       setRecipientVerificationError("Failed to verify recipient phone number. Please try again.");
     } finally {
-      setIsVerifyingRecipient(false);
+      if (isCurrentRequest()) setIsVerifyingRecipient(false);
     }
   }, []);
 

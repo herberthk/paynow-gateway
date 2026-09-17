@@ -34,6 +34,12 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const isValidEmail = (value: string): boolean =>
   typeof value === "string" && value.length <= 254 && EMAIL_RE.test(value);
 
+const getSupportPageUrl = (): string => {
+  const baseUrl = process.env.APP_BASE_URL;
+  if (!baseUrl) throw new Error("Set APP_BASE_URL.");
+  return new URL("/dashboard/user/wallet/support", baseUrl).toString();
+};
+
 type Props = {
   id: number;
   email: string;
@@ -330,6 +336,7 @@ export const sendSupportEmail = async ({
         senderName,
         reference,
         receiptUrl,
+        supportUrl: getSupportPageUrl(),
         type: "RECEIVER",
       }),
     );
@@ -377,6 +384,7 @@ export const sendSupportReceiptEmail = async ({
         fee,
         method,
         receiptUrl,
+        supportUrl: getSupportPageUrl(),
         type: "SENDER_RECEIPT",
       }),
     );
@@ -422,6 +430,7 @@ export const sendSupportFailureEmail = async ({
         recipientName,
         reference,
         method,
+        supportUrl: getSupportPageUrl(),
         type: "SENDER_FAILURE",
       }),
     );

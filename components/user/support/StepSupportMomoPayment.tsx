@@ -35,7 +35,6 @@ export const StepSupportMomoPayment = memo(function StepSupportMomoPayment({
   error,
   onAuthorize,
   onBackToStep1,
-  onCancelPending,
   onRetryConfirm,
   onKeepWaiting,
 }: StepSupportMomoPaymentProps) {
@@ -242,10 +241,12 @@ export const StepSupportMomoPayment = memo(function StepSupportMomoPayment({
 
         <button
           type="button"
-          onClick={onCancelPending}
-          className="w-full bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-bold py-4 rounded-2xl transition-all hover:bg-gray-200 dark:hover:bg-slate-700 cursor-pointer text-sm"
+          disabled
+          aria-disabled="true"
+          title="Wait for a final transaction status before changing support details"
+          className="w-full bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-gray-500 font-bold py-4 rounded-2xl opacity-60 cursor-not-allowed text-sm"
         >
-          Cancel
+          Payment Pending
         </button>
       </motion.div>
     );
@@ -264,6 +265,7 @@ export const StepSupportMomoPayment = memo(function StepSupportMomoPayment({
           onRetry={onRetryConfirm}
           onSecondary={onBackToStep1}
           secondaryLabel="Change Support Details"
+          description="This support payment could not be completed. No money was deducted from the payer’s Mobile Money account."
         />
       </motion.div>
     );
@@ -281,6 +283,13 @@ export const StepSupportMomoPayment = memo(function StepSupportMomoPayment({
           txnRef={externalRef}
           keepWaitingExhausted={pollWindowCount >= 3}
           onKeepWaiting={pollWindowCount >= 3 ? undefined : onKeepWaiting}
+          description={
+            <>
+              We haven&apos;t received confirmation yet. If the payment succeeds,
+              the recipient&apos;s wallet will be credited automatically — otherwise
+              no money moves. We&apos;ll contact you within the next <strong>24 hours</strong>.
+            </>
+          }
         />
       </motion.div>
     );

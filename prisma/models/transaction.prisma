@@ -23,6 +23,8 @@ model Transaction {
   // For Yo top-ups it equals txn_ref. Webhooks echo it back as
   // success.external_ref / failure.failed_transaction_reference.
   externalReference String? @unique
+  // Stable caller key for idempotent support-payment initiation.
+  requestKey String? @unique
   // Gateway-side reference returned by acDepositFunds (polling/support).
   providerRef String?
   // Payer MSISDN in 256XXXXXXXXX format + detected network.
@@ -38,6 +40,7 @@ model Transaction {
 
   @@index([recipientId])
   @@index([externalReference])
+  @@index([requestKey])
   @@index([status])
   @@index([type])
   @@index([method])

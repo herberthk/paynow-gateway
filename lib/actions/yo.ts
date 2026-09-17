@@ -210,6 +210,7 @@ export const finalizeYoSuccess = async ({
   if (!user) return { applied: false, reason: "unknown-ref" };
   const method = txn.method;
   const provider = txn.provider;
+  const supportFeeAdmins = admins.slice(0, 1);
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -281,7 +282,7 @@ export const finalizeYoSuccess = async ({
           fromUserId: txn.userId,
           externalRef,
           fee,
-          admins,
+          admins: supportFeeAdmins,
         });
 
         await tx.systemNotification.createMany({
@@ -369,9 +370,9 @@ export const finalizeYoSuccess = async ({
             receiptUrl: receiptUrl ?? undefined,
           });
         }
-        if (fee > 0 && admins.length > 0) {
+        if (fee > 0 && supportFeeAdmins.length > 0) {
           await Promise.all(
-            admins.map((admin) =>
+            supportFeeAdmins.map((admin) =>
               admin.email
                 ? sendAdminSupportFeeEmail({
                     email: admin.email,

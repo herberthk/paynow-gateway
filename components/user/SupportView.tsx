@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Wallet,
@@ -55,6 +55,7 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [txRef, setTxRef] = useState<string>("");
   const [stripePromise] = useState(() => getStripe());
+  const momoRequestKeyRef = useRef("");
 
   const clearError = useCallback(() => setError(null), []);
 
@@ -100,7 +101,6 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
     startPolling,
     enterMomoConfirm,
     handleKeepWaiting,
-    handleCancelPending,
     resetMomoState,
   } = useMomoPolling({
     onClearError: clearError,
@@ -109,27 +109,33 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
 
   // Debounced search for users
   useEffect(() => {
+    let isActive = true;
     const delayDebounceFn = setTimeout(async () => {
       if (searchQuery.trim().length >= 2 && user?.id) {
         setIsSearching(true);
         try {
           const res = await searchUsers(searchQuery, user.id);
+          if (!isActive) return;
           if (res.success) {
             setSearchResults(res.users);
           } else {
             setSearchResults([]);
           }
         } catch {
-          setSearchResults([]);
+          if (isActive) setSearchResults([]);
         } finally {
-          setIsSearching(false);
+          if (isActive) setIsSearching(false);
         }
       } else {
         setSearchResults([]);
+        setIsSearching(false);
       }
     }, 400);
 
-    return () => clearTimeout(delayDebounceFn);
+    return () => {
+      isActive = false;
+      clearTimeout(delayDebounceFn);
+    };
   }, [searchQuery, user?.id]);
 
   const handleSelectMethod = useCallback(
@@ -137,17 +143,32 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
       setSelectedMethod(method);
       setClientSecret(null);
       setTxRef("");
+      momoRequestKeyRef.current = "";
       resetMomoState();
       clearError();
     },
     [resetMomoState, clearError]
   );
 
+  const isMomoTransactionLocked =
+    selectedMethod === "momo" &&
+    (momoPhase === "sending" ||
+      (Boolean(externalRef) &&
+        (momoPhase === "pending" || momoPhase === "timeout")));
+
   const goBackToStep1 = useCallback(() => {
+    if (isMomoTransactionLocked) {
+      setError(
+        "This Mobile Money payment is still pending. Wait for a final status before changing details or authorizing another payment."
+      );
+      return;
+    }
     setError(null);
     setFee(0);
+    momoRequestKeyRef.current = "";
+    resetMomoState();
     setStep(1);
-  }, []);
+  }, [isMomoTransactionLocked, resetMomoState]);
 
   const handleSelectRecipient = useCallback((recipient: RecipientUser) => {
     setSelectedRecipient(recipient);
@@ -189,6 +210,8 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
     !isVerifyingRecipient &&
     !isVerifyingPayer &&
     selectedRecipient &&
+    verifiedRecipient &&
+    verifiedRecipient.msisdn === recipientPhone &&
     (isWalletReady || isCardReady || isMomoReady) &&
     isAmountValid
   );
@@ -196,6 +219,13 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
   const handleContinue = async () => {
     if (!selectedRecipient) {
       setError("Please select a recipient to support");
+      return;
+    }
+    if (
+      !verifiedRecipient ||
+      verifiedRecipient.msisdn !== recipientPhone
+    ) {
+      setError("The recipient’s Mobile Money number must be verified before continuing");
       return;
     }
 
@@ -277,6 +307,7 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
         setTxRef(stripeResult.transactionReference || "");
         setStep(2);
       } else if (selectedMethod === "momo") {
+        momoRequestKeyRef.current = crypto.randomUUID();
         enterMomoConfirm();
         setStep(2);
       }
@@ -291,8 +322,19 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
 
   // Authorize Mobile Money Support via Yo! Payments
   const handleMomoPayment = async () => {
-    if (!selectedRecipient || !verifiedPayer) {
-      setError("Missing recipient or verified payer details");
+    if (isLoading || isMomoTransactionLocked) {
+      setError(
+        "A Mobile Money payment is already in progress. Wait for its final status before trying again."
+      );
+      return;
+    }
+    if (
+      !selectedRecipient ||
+      !verifiedRecipient ||
+      verifiedRecipient.msisdn !== recipientPhone ||
+      !verifiedPayer
+    ) {
+      setError("Missing verified recipient or payer details");
       return;
     }
 
@@ -302,6 +344,8 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
       return;
     }
     const momoAmount = parseInt(rawMomoAmount, 10);
+    const requestKey = momoRequestKeyRef.current || crypto.randomUUID();
+    momoRequestKeyRef.current = requestKey;
 
     setIsLoading(true);
     setError(null);
@@ -312,7 +356,8 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
         amount: momoAmount,
         toUserId: selectedRecipient.id,
         payerMsisdn: verifiedPayer.msisdn,
-        recipientMsisdn: verifiedRecipient?.msisdn,
+        recipientMsisdn: verifiedRecipient.msisdn,
+        requestKey,
         narrative: `Support for ${selectedRecipient.name || "User"}`,
       });
 
@@ -339,6 +384,11 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
       setIsLoading(false);
     }
   };
+
+  const handleRetryMomo = useCallback(() => {
+    momoRequestKeyRef.current = crypto.randomUUID();
+    enterMomoConfirm();
+  }, [enterMomoConfirm]);
 
   // Authorize Wallet Balance P2P Support
   const handleWalletPayment = async () => {
@@ -377,6 +427,7 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
         step={step}
         onBack={step === 1 ? () => router.push("/dashboard/user/wallet") : goBackToStep1}
         onViewHistory={() => router.push("/dashboard/user/support/history")}
+        backDisabled={step === 2 && isMomoTransactionLocked}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
@@ -543,8 +594,7 @@ const SupportView = ({ user, wallet }: SupportViewProps) => {
                     error={error}
                     onAuthorize={handleMomoPayment}
                     onBackToStep1={goBackToStep1}
-                    onCancelPending={handleCancelPending}
-                    onRetryConfirm={enterMomoConfirm}
+                    onRetryConfirm={handleRetryMomo}
                     onKeepWaiting={handleKeepWaiting}
                   />
                 )}
